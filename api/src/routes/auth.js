@@ -1,5 +1,6 @@
 import express from 'express';
-import { generateGuestToken } from '../middleware/auth.js';
+import { generateGuestToken, generateUserToken } from '../middleware/auth.js';
+import { User, Incident, Validation } from '../models/index.js';
 
 const router = express.Router();
 
@@ -25,27 +26,52 @@ router.post('/guest-token', (req, res) => {
  * POST /auth/dev-login
  * Auto-login con credenciales por defecto (solo desarrollo)
  */
-router.post('/dev-login', (req, res) => {
+router.post('/dev-login', async (req, res) => {
   try {
     const defaultUser = process.env.DEFAULT_USER || 'admin';
     const defaultPass = process.env.DEFAULT_PASS || 'admin';
 
-    // Crear sesión de usuario
+    const userId = `${defaultUser}-uid`;
+
+    // Find or create user in database
+    let user = await User.findOne({ uid: userId });
+    if (!user) {
+      user = await User.create({
+        uid: userId,
+        reputacion: defaultUser === 'admin' ? 100 : 50,
+        role: defaultUser === 'admin' ? 'admin' : 'user'
+      });
+    }
+
+    // Crear sesión de usuario (para admin panel)
     req.session.user = {
-      id: 'dev-user-1',
+      id: user._id,
+      uid: userId,
       username: defaultUser,
       email: `${defaultUser}@nexus.dev`,
-      role: defaultUser === 'admin' ? 'admin' : 'user',
-      createdAt: new Date()
+      role: user.role,
+      createdAt: user.createdAt
     };
+
+    // Generate JWT token
+    const token = generateUserToken(userId, []);
 
     res.json({
       success: true,
-      user: req.session.user,
-      role: req.session.user.role,
+      user: {
+        id: user._id,
+        uid: userId,
+        username: defaultUser,
+        email: `${defaultUser}@nexus.dev`,
+        role: user.role,
+        reputacion: user.reputacion
+      },
+      token,
+      expiresIn: 604800, // 7 days in seconds
       message: 'Login exitoso (modo desarrollo)'
     });
   } catch (error) {
+    console.error('Error in dev-login:', error);
     res.status(500).json({ error: 'Error al iniciar sesión' });
   }
 });
@@ -54,44 +80,63 @@ router.post('/dev-login', (req, res) => {
  * GET /auth/profile
  * Obtener datos del perfil del usuario actual
  */
-router.get('/profile', (req, res) => {
+router.get('/profile', async (req, res) => {
   try {
     if (!req.session.user) {
       return res.status(401).json({ error: 'No autenticado' });
     }
 
-    // En desarrollo, retornamos datos simulados
-    // En producción, esto consultaría la base de datos
+    // Get user from database with real stats
+    const user = await User.findOne({ uid: req.session.user.uid });
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Get recent activity (last 10 actions)
+    const recentIncidents = await Incident.find({
+      reporterUid: user.uid
+    })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('type createdAt');
+
+    const recentValidations = await Validation.find({
+      uid: user.uid
+    })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('vote createdAt incidentId');
+
+    // Combine and sort activities
+    const activities = [
+      ...recentIncidents.map(inc => ({
+        type: 'report',
+        description: `Reportó un incidente de ${inc.type}`,
+        timestamp: inc.createdAt
+      })),
+      ...recentValidations.map(val => ({
+        type: 'validation',
+        description: `Validó un reporte como ${val.vote === 1 ? 'válido' : 'inválido'}`,
+        timestamp: val.createdAt
+      }))
+    ]
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 10);
+
     const profileData = {
       user: {
-        id: req.session.user.id,
-        username: req.session.user.username,
-        email: req.session.user.email,
-        role: req.session.user.role,
-        createdAt: req.session.user.createdAt
+        id: user._id,
+        username: user.uid,
+        email: req.session.user.email || '',
+        role: user.role,
+        createdAt: user.createdAt
       },
       stats: {
-        totalReports: Math.floor(Math.random() * 20) + 5, // Simulado
-        totalValidations: Math.floor(Math.random() * 15) + 2, // Simulado
-        reputation: Math.floor(Math.random() * 100) + 50 // Simulado
+        totalReports: user.reportCount || 0,
+        totalValidations: user.validationCount || 0,
+        reputation: user.reputacion || 50
       },
-      recentActivity: [
-        {
-          type: 'report',
-          description: 'Reporte de incidente en Montevideo',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000)
-        },
-        {
-          type: 'validation',
-          description: 'Validó un reporte de rapiña',
-          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000)
-        },
-        {
-          type: 'report',
-          description: 'Reporte de hurto en Pocitos',
-          timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
-        }
-      ],
+      recentActivity: activities,
       settings: {
         emailNotifications: true,
         publicProfile: false,

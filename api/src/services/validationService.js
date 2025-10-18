@@ -89,15 +89,39 @@ export async function validateIncident(incidentId) {
 }
 
 /**
- * Update reputation of validators based on final outcome
+ * Update reputation of validators and reporter based on final outcome
  * @param {String} incidentId - Incident ID
  * @param {String} finalStatus - Final status (verified/rejected)
  */
 async function updateValidatorReputations(incidentId, finalStatus) {
   try {
+    const incident = await Incident.findById(incidentId);
+    if (!incident) return;
+
     const validations = await Validation.find({ incidentId });
     const correctVote = finalStatus === 'verified' ? 1 : -1;
 
+    // Update reporter reputation
+    const reporter = await User.findOne({ uid: incident.reporterUid });
+    if (reporter) {
+      if (finalStatus === 'verified') {
+        // Report was verified - increase reporter reputation
+        await reporter.updateReputation(+10);
+        logger.info('Reporter reputation increased (verified report)', {
+          uid: reporter.uid,
+          newReputation: reporter.reputacion
+        });
+      } else if (finalStatus === 'rejected') {
+        // Report was rejected - decrease reporter reputation
+        await reporter.updateReputation(-15);
+        logger.info('Reporter reputation decreased (rejected report)', {
+          uid: reporter.uid,
+          newReputation: reporter.reputacion
+        });
+      }
+    }
+
+    // Update validators reputation
     for (const val of validations) {
       const user = await User.findOne({ uid: val.uid });
       if (!user) continue;

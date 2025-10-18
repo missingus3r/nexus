@@ -5,7 +5,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import { createClient } from 'redis';
 import session from 'express-session';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -24,6 +23,7 @@ import heatmapRoutes from './src/routes/heatmap.js';
 import newsRoutes from './src/routes/news.js';
 import linksRoutes from './src/routes/links.js';
 import adminRoutes from './src/routes/admin.js';
+import notificationRoutes from './src/routes/notifications.js';
 
 // View Routes
 import viewRoutes from './src/routes/views.js';
@@ -56,6 +56,7 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Session middleware
 app.use(session({
@@ -92,31 +93,6 @@ mongoose.connect(process.env.MONGO_URI, {
   process.exit(1);
 });
 
-// Redis connection (optional - app will work without it)
-export let redisClient = null;
-
-try {
-  if (process.env.REDIS_URL && process.env.REDIS_URL !== 'disabled') {
-    redisClient = createClient({
-      url: process.env.REDIS_URL
-    });
-
-    redisClient.on('error', err => {
-      logger.error('Redis error:', err);
-      logger.warn('Redis connection failed - app will continue without caching');
-    });
-    redisClient.on('connect', () => logger.info('Redis connected'));
-
-    await redisClient.connect();
-    logger.info('Redis is enabled and connected');
-  } else {
-    logger.info('Redis is disabled - app will run without caching');
-  }
-} catch (error) {
-  logger.warn('Failed to connect to Redis - app will continue without caching:', error.message);
-  redisClient = null;
-}
-
 // Make io accessible to routes
 app.set('io', io);
 
@@ -134,6 +110,7 @@ app.use('/api/heatmap', heatmapRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/links', linksRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // View Routes (serve HTML pages)
 app.use('/', viewRoutes);
@@ -143,8 +120,7 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    mongo: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-    redis: redisClient?.isOpen ? 'connected' : 'disabled'
+    mongo: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
   });
 });
 
@@ -171,9 +147,6 @@ process.on('SIGTERM', async () => {
     logger.info('HTTP server closed');
   });
   await mongoose.connection.close();
-  if (redisClient) {
-    await redisClient.quit();
-  }
   process.exit(0);
 });
 

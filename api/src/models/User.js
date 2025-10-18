@@ -15,6 +15,18 @@ const userSchema = new mongoose.Schema({
     max: 100,
     description: 'User reputation score (0-100)'
   },
+  reportCount: {
+    type: Number,
+    default: 0,
+    min: 0,
+    description: 'Number of incidents reported by user'
+  },
+  validationCount: {
+    type: Number,
+    default: 0,
+    min: 0,
+    description: 'Number of validations performed by user'
+  },
   strikes: {
     type: Number,
     default: 0,
@@ -50,6 +62,16 @@ const userSchema = new mongoose.Schema({
 // Methods
 userSchema.methods.updateReputation = function(delta) {
   this.reputacion = Math.max(0, Math.min(100, this.reputacion + delta));
+  return this.save();
+};
+
+userSchema.methods.incrementReportCount = function() {
+  this.reportCount += 1;
+  return this.save();
+};
+
+userSchema.methods.incrementValidationCount = function() {
+  this.validationCount += 1;
   return this.save();
 };
 

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm uninstall redis)",
+      "Bash(npm run clean-fake-data)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

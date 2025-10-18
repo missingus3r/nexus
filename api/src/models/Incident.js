@@ -44,9 +44,21 @@ const incidentSchema = new mongoose.Schema({
       }
     }
   },
+  locationType: {
+    type: String,
+    enum: ['exact', 'approximate'],
+    default: 'exact',
+    description: 'Whether location is exact or approximate area'
+  },
+  approximateRadius: {
+    type: Number,
+    min: 50,
+    max: 500,
+    description: 'Radius in meters for approximate locations'
+  },
   geohash: {
     type: String,
-    required: true,
+    required: false, // Auto-generated in pre-save hook
     index: true,
     description: 'Geohash precision 6-7 for heatmap cells'
   },
@@ -116,9 +128,16 @@ incidentSchema.index({ status: 1, createdAt: -1 });
 
 // Pre-save middleware: calculate geohash if not provided
 incidentSchema.pre('save', function(next) {
-  if (!this.geohash && this.location && this.location.coordinates) {
+  if (!this.geohash) {
+    if (!this.location || !this.location.coordinates || this.location.coordinates.length !== 2) {
+      return next(new Error('Cannot generate geohash: invalid location coordinates'));
+    }
     const [lon, lat] = this.location.coordinates;
-    this.geohash = geohash.encode(lat, lon, 7); // precision 7 (~153m x 153m)
+    try {
+      this.geohash = geohash.encode(lat, lon, 7); // precision 7 (~153m x 153m)
+    } catch (error) {
+      return next(new Error(`Failed to generate geohash: ${error.message}`));
+    }
   }
   next();
 });
@@ -140,6 +159,9 @@ incidentSchema.methods.toGeoJSON = function() {
       status: this.status,
       validationScore: this.validationScore,
       createdAt: this.createdAt,
+      reporterUid: this.reporterUid,
+      locationType: this.locationType,
+      approximateRadius: this.approximateRadius,
       media: this.media.map(m => ({ url: m.url, type: m.type }))
     }
   };

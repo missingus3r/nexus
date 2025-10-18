@@ -24,19 +24,7 @@
    - `validate:incident`
 6. Copiar Domain, Client ID, Client Secret
 
-## Paso 3: Configurar Redis (Local o Cloud)
-
-### Opción A: Local (Docker)
-```bash
-docker run -d -p 6379:6379 redis:alpine
-```
-
-### Opción B: Redis Cloud (Free)
-1. Crear cuenta en [Redis Cloud](https://redis.com/try-free/)
-2. Crear database (30MB gratis)
-3. Copiar URL de conexión
-
-## Paso 4: Configurar e Iniciar la Aplicación
+## Paso 3: Configurar e Iniciar la Aplicación
 
 ```bash
 # Navegar a directorio API
@@ -48,7 +36,6 @@ cp .env.example .env
 # Editar .env con tus credenciales:
 # - MONGO_URI (de Atlas)
 # - AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET
-# - REDIS_URL
 # - SESSION_SECRET (generar con: openssl rand -base64 32)
 # - JWT_SIGNING_KEY (generar con: openssl rand -base64 32)
 
@@ -63,7 +50,6 @@ npm run dev
 
 # Deberías ver:
 # ✓ MongoDB connected successfully
-# ✓ Redis connected
 # ✓ Server running on port 3000
 ```
 
@@ -76,12 +62,11 @@ curl http://localhost:3000/health
 open http://localhost:3000
 ```
 
-## Paso 5: Verificar Funcionamiento
+## Paso 4: Verificar Funcionamiento
 
 ### Backend
 - [ ] `/health` retorna `{"status":"ok"}`
 - [ ] MongoDB conectado
-- [ ] Redis conectado
 - [ ] No errores en `logs/combined.log`
 
 ### Frontend
@@ -94,7 +79,7 @@ open http://localhost:3000
 - [ ] Filtros de incidentes funcionan
 - [ ] Login muestra modal de Auth0
 
-## Paso 6: Crear Primer Incidente (Testing)
+## Paso 5: Crear Primer Incidente (Testing)
 
 ### Con Postman/cURL:
 
@@ -122,7 +107,7 @@ curl -X POST http://localhost:3000/api/map/incidents \
 # Deberías ver un punto en el mapa
 ```
 
-## Paso 7: Configurar Ingesta de Noticias (Opcional)
+## Paso 6: Configurar Ingesta de Noticias (Opcional)
 
 Para que el job de noticias funcione:
 
@@ -146,10 +131,6 @@ node --loader ./node_modules/dotenv/config.js \
 - Verificar `AUTH0_DOMAIN` en `.env` (sin `https://`)
 - Verificar token está bien formado
 - Revisar logs en Auth0 Dashboard
-
-### Error: "Redis connection refused"
-- Si local: `redis-cli ping` debería retornar `PONG`
-- Si cloud: verificar URL y puerto
 
 ### Error: "Cannot find module"
 - Ejecutar: `npm install`

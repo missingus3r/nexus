@@ -22,7 +22,7 @@
 - **Frontend**: EJS (templates embebidos)
 - **Base de datos**: MongoDB Atlas
 - **Autenticación**: Auth0 JWT + express-session
-- **Cache**: Redis
+- **Cache**: MongoDB (caché de geocodificación)
 - **Storage**: S3-compatible (Backblaze B2)
 - **Mapas**: MapLibre GL (OpenStreetMap)
 
@@ -48,7 +48,6 @@
 └── Servicios Externos
     ├── MongoDB Atlas (M0/M10)
     ├── Auth0 (autenticación)
-    ├── Redis (cache)
     ├── S3 / Backblaze B2 (media)
     └── Nominatim (geocoding)
 ```
@@ -58,7 +57,6 @@
 ### Prerrequisitos
 - Node.js 18+
 - MongoDB Atlas cuenta
-- Redis (local o cloud)
 - Auth0 cuenta
 
 ### Instalación y Ejecución

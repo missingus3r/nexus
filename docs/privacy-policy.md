@@ -68,9 +68,8 @@ Procesamos sus datos bajo las siguientes bases legales (Art. 11, Ley 18.331):
 
 ### 6.1 Terceros Autorizados
 - **Auth0** (autenticación)
-- **MongoDB Atlas** (almacenamiento)
+- **MongoDB Atlas** (almacenamiento y caché)
 - **Backblaze B2** (almacenamiento de media)
-- **Redis Cloud** (cache)
 
 Todos los proveedores cumplen con GDPR/equivalentes.
 

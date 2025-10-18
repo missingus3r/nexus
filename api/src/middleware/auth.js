@@ -1,32 +1,34 @@
-import { expressjwt } from 'express-jwt';
-import jwksRsa from 'jwks-rsa';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/index.js';
 
-// Auth0 JWT verification middleware
-export const checkJwt = expressjwt({
-  secret: jwksRsa.expressJwtSecret({
-    cache: true,
-    rateLimit: true,
-    jwksRequestsPerMinute: 5,
-    jwksUri: `https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`
-  }),
-  audience: process.env.AUTH0_AUDIENCE,
-  issuer: `https://${process.env.AUTH0_DOMAIN}/`,
-  algorithms: ['RS256'],
-  credentialsRequired: false, // Allow requests without JWT (for guest access)
-  getToken: function fromHeaderOrQuerystring(req) {
-    // Try header first
+// Simple JWT verification middleware (no Auth0)
+export const checkJwt = (req, res, next) => {
+  try {
+    // Get token from header or query string
+    let token = null;
+
     if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
-      return req.headers.authorization.split(' ')[1];
+      token = req.headers.authorization.split(' ')[1];
+    } else if (req.query && req.query.token) {
+      token = req.query.token;
     }
-    // Then query string
-    if (req.query && req.query.token) {
-      return req.query.token;
+
+    // If no token, allow as guest (credentialsRequired: false)
+    if (!token) {
+      req.auth = null;
+      return next();
     }
-    return null;
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SIGNING_KEY);
+    req.auth = decoded;
+    next();
+  } catch (error) {
+    // Invalid token - allow as guest
+    req.auth = null;
+    next();
   }
-});
+};
 
 // Middleware to check user permissions and scopes
 export const requireScope = (...requiredScopes) => {
@@ -85,6 +87,19 @@ export const attachUser = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+// Generate user JWT token
+export const generateUserToken = (userId, permissions = []) => {
+  const payload = {
+    sub: userId,
+    permissions,
+    type: 'user',
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7) // 7 days
+  };
+
+  return jwt.sign(payload, process.env.JWT_SIGNING_KEY);
 };
 
 // Generate guest JWT (read-only, limited)

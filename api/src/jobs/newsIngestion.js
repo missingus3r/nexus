@@ -14,16 +14,35 @@ const parseXml = promisify(parseString);
 // News source configurations
 const NEWS_SOURCES = [
   {
-    name: 'El País',
-    rssUrl: 'https://www.elpais.com.uy/rss/seccion/policiales',
+    name: 'El Observador - Sociales',
+    rssUrl: 'https://www.elobservador.com.uy/rss/pages/sociales.xml',
     type: 'rss'
   },
   {
-    name: 'El Observador',
-    rssUrl: 'https://www.elobservador.com.uy/rss/seccion/policiales',
+    name: 'El Observador - Último Momento',
+    rssUrl: 'https://www.elobservador.com.uy/rss/pages/ultimo-momento.xml',
+    type: 'rss'
+  },
+  {
+    name: 'El Observador - Home',
+    rssUrl: 'https://www.elobservador.com.uy/rss/pages/home.xml',
+    type: 'rss'
+  },
+  {
+    name: 'Portal Montevideo',
+    rssUrl: 'https://www.montevideo.com.uy/anxml.aspx?59',
+    type: 'rss'
+  },
+  {
+    name: 'Subrayado - Nacional',
+    rssUrl: 'https://www.subrayado.com.uy/rss/pages/nacional.xml',
+    type: 'rss'
+  },
+  {
+    name: 'Subrayado - Policiales',
+    rssUrl: 'https://www.subrayado.com.uy/rss/pages/policiales.xml',
     type: 'rss'
   }
-  // Add more sources as needed
 ];
 
 // Category classification keywords
@@ -56,11 +75,105 @@ function classifyCategory(text) {
 }
 
 /**
+ * List of all countries (Spanish and English names)
+ */
+const COUNTRIES = [
+  // América del Sur
+  'argentina', 'bolivia', 'brasil', 'brazil', 'chile', 'colombia', 'ecuador',
+  'guyana', 'paraguay', 'perú', 'peru', 'surinam', 'suriname', 'uruguay', 'venezuela',
+
+  // América Central
+  'belice', 'belize', 'costa rica', 'el salvador', 'guatemala', 'honduras',
+  'nicaragua', 'panamá', 'panama',
+
+  // América del Norte
+  'canadá', 'canada', 'estados unidos', 'united states', 'usa', 'méxico', 'mexico',
+
+  // Caribe
+  'antigua', 'bahamas', 'barbados', 'cuba', 'dominica', 'granada', 'grenada',
+  'haití', 'haiti', 'jamaica', 'república dominicana', 'dominican republic',
+  'san cristóbal', 'santa lucía', 'saint lucia', 'trinidad', 'tobago',
+
+  // Europa Occidental
+  'alemania', 'germany', 'austria', 'bélgica', 'belgium', 'dinamarca', 'denmark',
+  'españa', 'spain', 'finlandia', 'finland', 'francia', 'france', 'grecia', 'greece',
+  'irlanda', 'ireland', 'islandia', 'iceland', 'italia', 'italy', 'luxemburgo',
+  'noruega', 'norway', 'países bajos', 'netherlands', 'holanda', 'holland',
+  'portugal', 'reino unido', 'united kingdom', 'inglaterra', 'england', 'escocia',
+  'scotland', 'gales', 'wales', 'suecia', 'sweden', 'suiza', 'switzerland',
+
+  // Europa Oriental
+  'albania', 'bielorrusia', 'belarus', 'bosnia', 'herzegovina', 'bulgaria',
+  'croacia', 'croatia', 'eslovaquia', 'slovakia', 'eslovenia', 'slovenia',
+  'estonia', 'hungría', 'hungary', 'letonia', 'latvia', 'lituania', 'lithuania',
+  'macedonia', 'moldavia', 'moldova', 'montenegro', 'polonia', 'poland',
+  'república checa', 'czech republic', 'rumania', 'romania', 'rusia', 'russia',
+  'serbia', 'ucrania', 'ukraine',
+
+  // Medio Oriente
+  'afganistán', 'afghanistan', 'arabia saudita', 'saudi arabia', 'baréin', 'bahrain',
+  'catar', 'qatar', 'emiratos árabes', 'uae', 'irak', 'iraq', 'irán', 'iran',
+  'israel', 'jordania', 'jordan', 'kuwait', 'líbano', 'lebanon', 'omán', 'oman',
+  'pakistán', 'pakistan', 'siria', 'syria', 'turquía', 'turkey', 'yemen',
+
+  // Asia
+  'bangladesh', 'brunéi', 'brunei', 'camboya', 'cambodia', 'china', 'corea del norte',
+  'north korea', 'corea del sur', 'south korea', 'corea', 'korea', 'filipinas',
+  'philippines', 'india', 'indonesia', 'japón', 'japan', 'kazajistán', 'kazakhstan',
+  'kirguistán', 'kyrgyzstan', 'laos', 'malasia', 'malaysia', 'maldivas', 'maldives',
+  'mongolia', 'myanmar', 'nepal', 'singapur', 'singapore', 'sri lanka', 'tailandia',
+  'thailand', 'taiwán', 'taiwan', 'tayikistán', 'tajikistan', 'turkmenistán',
+  'uzbekistán', 'uzbekistan', 'vietnam',
+
+  // África
+  'argelia', 'algeria', 'angola', 'benín', 'benin', 'botsuana', 'botswana',
+  'burkina faso', 'burundi', 'camerún', 'cameroon', 'chad', 'congo', 'costa de marfil',
+  'ivory coast', 'egipto', 'egypt', 'etiopía', 'ethiopia', 'gabón', 'gabon', 'gambia',
+  'ghana', 'guinea', 'kenia', 'kenya', 'lesoto', 'lesotho', 'liberia', 'libia', 'libya',
+  'madagascar', 'malaui', 'malawi', 'malí', 'mali', 'marruecos', 'morocco', 'mauricio',
+  'mauritius', 'mauritania', 'mozambique', 'namibia', 'níger', 'niger', 'nigeria',
+  'ruanda', 'rwanda', 'senegal', 'somalia', 'sudáfrica', 'south africa', 'sudán', 'sudan',
+  'tanzania', 'togo', 'túnez', 'tunisia', 'uganda', 'zambia', 'zimbabue', 'zimbabwe',
+
+  // Oceanía
+  'australia', 'fiyi', 'fiji', 'nueva zelanda', 'new zealand', 'papúa nueva guinea',
+  'papua new guinea', 'samoa', 'tonga', 'vanuatu'
+];
+
+/**
+ * Extract country from text, prioritizing title
+ * @param {String} title - Article title
+ * @param {String} text - Article text
+ * @returns {String|null} Country name or null
+ */
+function extractCountry(title, text) {
+  const combinedText = `${title} ${text}`.toLowerCase();
+
+  // Check title first for countries
+  const titleLower = title.toLowerCase();
+  for (const country of COUNTRIES) {
+    if (titleLower.includes(country)) {
+      return country;
+    }
+  }
+
+  // Then check full text
+  for (const country of COUNTRIES) {
+    if (combinedText.includes(country)) {
+      return country;
+    }
+  }
+
+  return null;
+}
+
+/**
  * Extract place names from text using NLP
  * @param {String} text - Article text
+ * @param {Boolean} prioritize - If true, these places are higher priority
  * @returns {Array} Array of place names
  */
-function extractPlaces(text) {
+function extractPlaces(text, prioritize = false) {
   const doc = nlp(text);
   const places = doc.places().out('array');
 
@@ -75,7 +188,24 @@ function extractPlaces(text) {
   const lowerText = text.toLowerCase();
   const foundPlaces = uruguayanPlaces.filter(place => lowerText.includes(place));
 
-  return [...new Set([...places, ...foundPlaces])];
+  // Combine and filter out noise words
+  const allPlaces = [...new Set([...places, ...foundPlaces])];
+
+  // Filter out common noise words that NLP might incorrectly identify as places
+  const noiseWords = ['las', 'los', 'la', 'el', 'de', 'del', 'para', 'por', 'con', 'sin',
+                      'que', 'como', 'donde', 'cuando', 'sobre', 'entre', 'hasta', 'desde'];
+
+  return allPlaces
+    .map(place => {
+      // Clean up place names: remove punctuation, trim whitespace
+      return place.replace(/[,;.!?]/g, '').trim();
+    })
+    .filter(place => {
+      const lowerPlace = place.toLowerCase().trim();
+      // Filter out single character places, noise words, and empty strings
+      return lowerPlace.length > 1 && !noiseWords.includes(lowerPlace);
+    })
+    .map(place => ({ name: place, priority: prioritize }));
 }
 
 /**
@@ -153,6 +283,21 @@ async function fetchArticleContent(url) {
 }
 
 /**
+ * Check if article matches any of the keywords
+ * @param {Object} article - Article data
+ * @param {Array} keywords - Array of keywords to match
+ * @returns {Boolean} True if matches
+ */
+function matchesKeywords(article, keywords) {
+  if (!keywords || keywords.length === 0) {
+    return true; // No filter, accept all
+  }
+
+  const searchText = `${article.title} ${article.description}`.toLowerCase();
+  return keywords.some(keyword => searchText.includes(keyword));
+}
+
+/**
  * Process a single article
  * @param {Object} article - Article data
  * @param {String} sourceName - News source name
@@ -170,19 +315,65 @@ async function processArticle(article, sourceName, io) {
     // Classify category
     const category = classifyCategory(combinedText);
 
-    // Extract places
-    const places = extractPlaces(combinedText);
-    if (places.length === 0) {
+    // Extract country from title/description (prioritize title)
+    const country = extractCountry(article.title, article.description);
+
+    // Extract places from title (high priority) and content (low priority)
+    const titlePlaces = extractPlaces(`${article.title} ${article.description}`, true);
+    const contentPlaces = extractPlaces(fullText, false);
+
+    // Combine places: title places first, then content places
+    const allPlaces = [...titlePlaces, ...contentPlaces];
+
+    if (allPlaces.length === 0) {
       logger.warn('No places found in article', { url: article.link });
       return null;
     }
 
-    // Geocode the first place
-    const primaryPlace = places[0];
-    const geoResult = await geocode(primaryPlace);
+    // Sort by priority (true = from title comes first)
+    allPlaces.sort((a, b) => (b.priority === true ? 1 : 0) - (a.priority === true ? 1 : 0));
+
+    // Try to geocode places in order of priority (title first, then content)
+    // Stop at the first successful geocoding
+    let geoResult = null;
+    let successfulPlace = null;
+    let geocodeQuery = null;
+
+    for (const place of allPlaces) {
+      // Build geocoding query
+      if (country) {
+        // Country explicitly mentioned in title/description
+        geocodeQuery = `${place.name}, ${country}`;
+      } else {
+        // No country mentioned - assume Uruguay (all RSS feeds are Uruguayan)
+        // Add "Uruguay" context for better geocoding
+        geocodeQuery = `${place.name}, Uruguay`;
+      }
+
+      logger.debug('Attempting geocoding', { query: geocodeQuery, priority: place.priority });
+
+      geoResult = await geocode(geocodeQuery);
+
+      if (geoResult) {
+        successfulPlace = place.name;
+        logger.info('Geocoding successful', {
+          place: place.name,
+          query: geocodeQuery,
+          priority: place.priority ? 'title' : 'content',
+          result: geoResult.displayName
+        });
+        break; // Stop at first successful geocoding
+      }
+
+      // Rate limit: wait 1 second between attempts
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
 
     if (!geoResult) {
-      logger.warn('Geocoding failed', { place: primaryPlace, url: article.link });
+      logger.warn('Geocoding failed for all places', {
+        placesAttempted: allPlaces.length,
+        url: article.link
+      });
       return null;
     }
 
@@ -209,19 +400,25 @@ async function processArticle(article, sourceName, io) {
       category,
       location,
       locationName: geoResult.displayName,
+      country: geoResult.countryCode || null, // Use detected country or null
       date: article.pubDate,
-      confidence: 0.7, // Base confidence
+      confidence: country ? 0.8 : 0.7, // Higher confidence if country was detected
       dedupKey,
       excerpt: article.description,
-      entities: places.map(p => ({
-        text: p,
-        type: 'PLACE',
-        confidence: 0.8
+      entities: allPlaces.map(p => ({
+        text: p.name,
+        entityType: 'PLACE',
+        confidence: p.priority ? 0.9 : 0.7 // Higher confidence for title places
       })),
       metadata: {
         fetchedAt: new Date(),
         processingTime: Date.now() - startTime,
-        geocodingMethod: 'nominatim'
+        geocodingMethod: 'nominatim',
+        detectedCountry: country,
+        geocodeQuery: geocodeQuery,
+        successfulPlace: successfulPlace,
+        placesFound: allPlaces.length,
+        placesAttempted: allPlaces.findIndex(p => p.name === successfulPlace) + 1
       }
     });
 
@@ -248,15 +445,25 @@ async function processArticle(article, sourceName, io) {
 
 /**
  * Run news ingestion job
+ * Always filters articles by security keywords from .env
  * @param {SocketIO.Server} io - Socket.IO instance
  */
 export async function runNewsIngestion(io) {
-  logger.info('Starting news ingestion job');
+  // Get security keywords from environment (always filter by security topics)
+  const securityKeywords = process.env.NEWS_SECURITY_KEYWORDS
+    ? process.env.NEWS_SECURITY_KEYWORDS.split(',').map(k => k.trim().toLowerCase())
+    : [];
+
+  logger.info('Starting news ingestion job', {
+    securityKeywordsCount: securityKeywords.length,
+    filteringEnabled: securityKeywords.length > 0
+  });
   const startTime = Date.now();
 
   let totalProcessed = 0;
   let totalCreated = 0;
   let totalFailed = 0;
+  let totalFiltered = 0;
 
   for (const source of NEWS_SOURCES) {
     try {
@@ -266,6 +473,15 @@ export async function runNewsIngestion(io) {
       logger.info(`Found ${articles.length} articles from ${source.name}`);
 
       for (const article of articles) {
+        // Filter by security keywords (always enabled)
+        if (!matchesKeywords(article, securityKeywords)) {
+          totalFiltered++;
+          logger.debug('Article filtered out (no security keywords)', {
+            title: article.title.substring(0, 100)
+          });
+          continue;
+        }
+
         totalProcessed++;
         const result = await processArticle(article, source.name, io);
 
@@ -291,6 +507,7 @@ export async function runNewsIngestion(io) {
     totalProcessed,
     totalCreated,
     totalFailed,
+    totalFiltered,
     durationMs: duration
   });
 
@@ -298,6 +515,7 @@ export async function runNewsIngestion(io) {
     totalProcessed,
     totalCreated,
     totalFailed,
+    totalFiltered,
     durationMs: duration
   };
 }

@@ -1,21 +1,24 @@
 import express from 'express';
-import { Incident, Validation } from '../models/index.js';
-import { checkJwt, attachUser, requireScope } from '../middleware/auth.js';
+import { Incident, Validation, Notification } from '../models/index.js';
+import { checkJwt, attachUser } from '../middleware/auth.js';
 import { writeRateLimiter } from '../middleware/rateLimiter.js';
 import { validateIncident } from '../services/validationService.js';
 import { updateHeatmapForIncident } from '../services/heatmapService.js';
+import { uploadIncidentPhotos, handleUploadErrors } from '../middleware/upload.js';
 import logger from '../utils/logger.js';
+import crypto from 'crypto';
+import fs from 'fs';
 
 const router = express.Router();
 
 /**
  * GET /map/incidents
  * Fetch incidents within a bounding box
- * Query params: bbox (lon1,lat1,lon2,lat2), from, to, type, status
+ * Query params: bbox (lon1,lat1,lon2,lat2), from, to, type, status, limit
  */
 router.get('/', checkJwt, async (req, res, next) => {
   try {
-    const { bbox, from, to, type, status } = req.query;
+    const { bbox, from, to, type, status, limit } = req.query;
 
     const query = { hidden: false };
 
@@ -45,16 +48,21 @@ router.get('/', checkJwt, async (req, res, next) => {
       query.type = type;
     }
 
-    // Status filter (default to verified for guests)
+    // Status filter
     if (status) {
       query.status = status;
-    } else if (!req.auth || req.auth.sub === 'guest') {
-      query.status = 'verified'; // Guests only see verified
+    } else if (!req.auth || req.auth.sub === 'guest' || req.auth.type === 'guest') {
+      // Guests only see verified incidents
+      query.status = 'verified';
     }
+    // Authenticated users see all incidents (pending, verified, rejected) by default
+
+    // Limit filter (default 500, max 500)
+    const maxResults = limit ? Math.min(parseInt(limit), 500) : 500;
 
     const incidents = await Incident.find(query)
       .sort({ createdAt: -1 })
-      .limit(500); // Max 500 incidents
+      .limit(maxResults);
 
     // Convert to GeoJSON FeatureCollection
     const featureCollection = {
@@ -70,32 +78,107 @@ router.get('/', checkJwt, async (req, res, next) => {
 
 /**
  * POST /map/incidents
- * Create a new incident report
- * Requires: create:incident scope
+ * Create a new incident report with optional photos
+ * Requires: authenticated user
+ * Body: multipart/form-data with fields: type, severity, location, description, photos (optional)
  */
-router.post('/', checkJwt, attachUser, requireScope('create:incident'), writeRateLimiter, async (req, res, next) => {
+router.post('/', checkJwt, attachUser, writeRateLimiter, uploadIncidentPhotos, handleUploadErrors, async (req, res, next) => {
   try {
-    const { type, severity, location, description, media } = req.body;
+    // Check if user is authenticated
+    if (!req.user) {
+      // Clean up uploaded files if auth fails
+      if (req.files) {
+        req.files.forEach(file => fs.unlinkSync(file.path));
+      }
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const { type, severity, description, locationType, approximateRadius } = req.body;
+
+    // Parse location from JSON string (multipart/form-data sends everything as strings)
+    let location;
+    try {
+      location = typeof req.body.location === 'string'
+        ? JSON.parse(req.body.location)
+        : req.body.location;
+    } catch (e) {
+      // Clean up uploaded files if parsing fails
+      if (req.files) {
+        req.files.forEach(file => fs.unlinkSync(file.path));
+      }
+      return res.status(400).json({
+        error: 'Invalid location format. Must be valid JSON with coordinates.'
+      });
+    }
 
     if (!type || !location || !location.coordinates) {
+      // Clean up uploaded files if validation fails
+      if (req.files) {
+        req.files.forEach(file => fs.unlinkSync(file.path));
+      }
       return res.status(400).json({
         error: 'Missing required fields: type, location.coordinates'
       });
     }
 
-    // Create incident
-    const incident = new Incident({
-      type,
-      severity: severity || 3,
-      location,
-      description,
-      media: media || [],
+    // Check if user has pending reports
+    const pendingReport = await Incident.findOne({
       reporterUid: req.user.uid,
-      reporterReputation: req.user.reputacion,
       status: 'pending'
     });
 
+    if (pendingReport) {
+      // Clean up uploaded files if user has pending report
+      if (req.files) {
+        req.files.forEach(file => fs.unlinkSync(file.path));
+      }
+      return res.status(403).json({
+        error: 'You have a pending report that needs to be validated before creating a new one',
+        pendingReportId: pendingReport._id
+      });
+    }
+
+    // Process uploaded photos
+    const media = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        // Generate file hash for integrity
+        const fileBuffer = fs.readFileSync(file.path);
+        const fileHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+
+        media.push({
+          url: `/uploads/${file.filename}`,
+          type: 'image',
+          hash: fileHash,
+          uploadedAt: new Date()
+        });
+      }
+    }
+
+    // Create incident
+    const incidentData = {
+      type,
+      severity: severity ? parseInt(severity) : 3,
+      location,
+      description,
+      media,
+      reporterUid: req.user.uid,
+      reporterReputation: req.user.reputacion,
+      status: 'pending',
+      locationType: locationType || 'exact'
+    };
+
+    // Add approximate radius if location type is approximate
+    if (locationType === 'approximate' && approximateRadius) {
+      incidentData.approximateRadius = parseInt(approximateRadius);
+    }
+
+    const incident = new Incident(incidentData);
+
     await incident.save();
+
+    // Increment user's report count
+    await req.user.incrementReportCount();
 
     logger.info('Incident created', {
       id: incident._id,
@@ -125,10 +208,15 @@ router.post('/', checkJwt, attachUser, requireScope('create:incident'), writeRat
 /**
  * POST /map/incidents/:id/validate
  * Validate (vote on) an incident
- * Requires: validate:incident scope
+ * Requires: authenticated user
  */
-router.post('/:id/validate', checkJwt, attachUser, requireScope('validate:incident'), writeRateLimiter, async (req, res, next) => {
+router.post('/:id/validate', checkJwt, attachUser, writeRateLimiter, async (req, res, next) => {
   try {
+    // Check if user is authenticated
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
     const { id } = req.params;
     const { vote, confidence, comment } = req.body;
 
@@ -139,6 +227,11 @@ router.post('/:id/validate', checkJwt, attachUser, requireScope('validate:incide
     const incident = await Incident.findById(id);
     if (!incident) {
       return res.status(404).json({ error: 'Incident not found' });
+    }
+
+    // Check if user is trying to validate their own report
+    if (incident.reporterUid === req.user.uid) {
+      return res.status(403).json({ error: 'You cannot validate your own report' });
     }
 
     // Check if user already validated this incident
@@ -163,14 +256,38 @@ router.post('/:id/validate', checkJwt, attachUser, requireScope('validate:incide
 
     await validation.save();
 
+    // Increment user's validation count
+    await req.user.incrementValidationCount();
+
+    // Give small reputation boost for participating in validation
+    await req.user.updateReputation(+2);
+
     // Update incident validation score
     const result = await validateIncident(id);
+
+    // Create notification for reporter
+    const statusMessages = {
+      'verified': '✅ Tu reporte fue verificado',
+      'rejected': '❌ Tu reporte fue rechazado',
+      'pending': 'Tu reporte recibió una nueva validación'
+    };
+
+    if (incident.reporterUid && incident.reporterUid !== req.user.uid) {
+      await Notification.createNotification(
+        incident.reporterUid,
+        'incident_validated',
+        statusMessages[result.status] || 'Tu reporte fue validado',
+        `Tu reporte de ${incident.type} recibió ${result.validationCount} validaciones. Estado: ${result.status}`,
+        { incidentId: id, status: result.status, validationScore: result.validationScore }
+      );
+    }
 
     logger.info('Incident validated', {
       incidentId: id,
       validator: req.user.uid,
       vote,
-      newStatus: result.status
+      newStatus: result.status,
+      validatorReputation: req.user.reputacion
     });
 
     // Emit socket event
@@ -198,6 +315,116 @@ router.post('/:id/validate', checkJwt, attachUser, requireScope('validate:incide
       }
     });
   } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /map/incidents/:id/photos
+ * Add photos to an existing incident
+ * Requires: authenticated user and must be the reporter
+ */
+router.post('/:id/photos', checkJwt, attachUser, writeRateLimiter, uploadIncidentPhotos, handleUploadErrors, async (req, res, next) => {
+  try {
+    if (!req.user) {
+      // Clean up uploaded files if auth fails
+      if (req.files) {
+        req.files.forEach(file => fs.unlinkSync(file.path));
+      }
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const incident = await Incident.findById(req.params.id);
+    if (!incident) {
+      // Clean up uploaded files if incident not found
+      if (req.files) {
+        req.files.forEach(file => fs.unlinkSync(file.path));
+      }
+      return res.status(404).json({ error: 'Incident not found' });
+    }
+
+    // Check if user is the reporter
+    if (incident.reporterUid !== req.user.uid) {
+      // Clean up uploaded files if not the reporter
+      if (req.files) {
+        req.files.forEach(file => fs.unlinkSync(file.path));
+      }
+      return res.status(403).json({ error: 'Only the reporter can add photos to this incident' });
+    }
+
+    // Check if incident already has 3 photos
+    if (incident.media.length >= 3) {
+      // Clean up uploaded files if already has 3 photos
+      if (req.files) {
+        req.files.forEach(file => fs.unlinkSync(file.path));
+      }
+      return res.status(400).json({
+        error: 'Maximum 3 photos allowed per incident',
+        currentCount: incident.media.length
+      });
+    }
+
+    // Check if adding these files would exceed the limit
+    const totalPhotos = incident.media.length + (req.files ? req.files.length : 0);
+    if (totalPhotos > 3) {
+      // Clean up uploaded files if would exceed limit
+      if (req.files) {
+        req.files.forEach(file => fs.unlinkSync(file.path));
+      }
+      return res.status(400).json({
+        error: `Cannot add ${req.files.length} photos. Only ${3 - incident.media.length} more photo(s) allowed`,
+        currentCount: incident.media.length,
+        maxAllowed: 3
+      });
+    }
+
+    // Process uploaded photos
+    const newMedia = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        // Generate file hash for integrity
+        const fileBuffer = fs.readFileSync(file.path);
+        const fileHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+
+        newMedia.push({
+          url: `/uploads/${file.filename}`,
+          type: 'image',
+          hash: fileHash,
+          uploadedAt: new Date()
+        });
+      }
+
+      // Add new photos to existing media
+      incident.media.push(...newMedia);
+      await incident.save();
+
+      logger.info('Photos added to incident', {
+        incidentId: incident._id,
+        photosAdded: newMedia.length,
+        totalPhotos: incident.media.length,
+        addedBy: req.user.uid
+      });
+
+      res.json({
+        message: 'Photos added successfully',
+        photosAdded: newMedia.length,
+        totalPhotos: incident.media.length,
+        incident: incident.toGeoJSON()
+      });
+    } else {
+      return res.status(400).json({ error: 'No photos provided' });
+    }
+  } catch (error) {
+    // Clean up uploaded files on error
+    if (req.files) {
+      req.files.forEach(file => {
+        try {
+          fs.unlinkSync(file.path);
+        } catch (e) {
+          logger.error('Error deleting file:', e);
+        }
+      });
+    }
     next(error);
   }
 });

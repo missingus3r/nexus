@@ -1,6 +1,6 @@
 import geohash from 'ngeohash';
 import axios from 'axios';
-import { redisClient } from '../../server.js';
+import GeoCache from '../models/GeoCache.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -59,21 +59,23 @@ export function getGeohashesInBbox(lat1, lon1, lat2, lon2, precision = 7) {
 
 /**
  * Geocode a place name to coordinates using Nominatim
- * Uses Redis cache to avoid repeated API calls
+ * Uses MongoDB cache to avoid repeated API calls
  * @param {String} placeName - Place name to geocode
  * @returns {Object} { lat, lon, displayName } or null
  */
 export async function geocode(placeName) {
   try {
-    // Check cache first (if Redis is available)
-    if (redisClient) {
-      const cacheKey = `geo:${placeName.toLowerCase().trim()}`;
-      const cached = await redisClient.get(cacheKey);
+    const cacheKey = `geo:${placeName.toLowerCase().trim()}`;
 
-      if (cached) {
-        logger.info('Geocode cache hit', { placeName });
-        return JSON.parse(cached);
-      }
+    // Check cache first
+    const cached = await GeoCache.findOne({
+      cacheKey,
+      expiresAt: { $gt: new Date() }
+    });
+
+    if (cached) {
+      logger.info('Geocode cache hit', { placeName });
+      return cached.data;
     }
 
     // Call Nominatim API
@@ -83,8 +85,8 @@ export async function geocode(placeName) {
         params: {
           q: placeName,
           format: 'json',
-          countrycodes: 'uy', // Limit to Uruguay
           limit: 1
+          // No country restriction - allow worldwide geocoding
         },
         headers: {
           'User-Agent': 'Nexus-UY/1.0'
@@ -100,13 +102,18 @@ export async function geocode(placeName) {
     const result = {
       lat: parseFloat(response.data[0].lat),
       lon: parseFloat(response.data[0].lon),
-      displayName: response.data[0].display_name
+      displayName: response.data[0].display_name,
+      country: response.data[0].address?.country,
+      countryCode: response.data[0].address?.country_code?.toUpperCase()
     };
 
-    // Cache for 7 days (if Redis is available)
-    if (redisClient) {
-      await redisClient.setEx(cacheKey, 7 * 24 * 60 * 60, JSON.stringify(result));
-    }
+    // Cache for 7 days
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await GeoCache.findOneAndUpdate(
+      { cacheKey },
+      { cacheKey, data: result, expiresAt },
+      { upsert: true, new: true }
+    );
 
     logger.info('Geocoded successfully', { placeName, result });
     return result;
@@ -117,21 +124,23 @@ export async function geocode(placeName) {
 }
 
 /**
- * Reverse geocode coordinates to place name
+ * Reverse geocode coordinates to place name and country
  * @param {Number} lat - Latitude
  * @param {Number} lon - Longitude
- * @returns {String} Place name
+ * @returns {Object} { displayName, country, countryCode } or null
  */
 export async function reverseGeocode(lat, lon) {
   try {
-    // Check cache first (if Redis is available)
-    if (redisClient) {
-      const cacheKey = `reverse:${lat.toFixed(4)},${lon.toFixed(4)}`;
-      const cached = await redisClient.get(cacheKey);
+    const cacheKey = `reverse:${lat.toFixed(4)},${lon.toFixed(4)}`;
 
-      if (cached) {
-        return cached;
-      }
+    // Check cache first
+    const cached = await GeoCache.findOne({
+      cacheKey,
+      expiresAt: { $gt: new Date() }
+    });
+
+    if (cached) {
+      return cached.data;
     }
 
     const response = await axios.get(
@@ -149,14 +158,21 @@ export async function reverseGeocode(lat, lon) {
       }
     );
 
-    const placeName = response.data.display_name;
+    const result = {
+      displayName: response.data.display_name,
+      country: response.data.address?.country,
+      countryCode: response.data.address?.country_code?.toUpperCase()
+    };
 
-    // Cache for 7 days (if Redis is available)
-    if (redisClient) {
-      await redisClient.setEx(cacheKey, 7 * 24 * 60 * 60, placeName);
-    }
+    // Cache for 7 days
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await GeoCache.findOneAndUpdate(
+      { cacheKey },
+      { cacheKey, data: result, expiresAt },
+      { upsert: true, new: true }
+    );
 
-    return placeName;
+    return result;
   } catch (error) {
     logger.error('Reverse geocoding error:', error);
     return null;

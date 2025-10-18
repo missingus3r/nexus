@@ -48,6 +48,11 @@ const newsEventSchema = new mongoose.Schema({
     type: String,
     description: 'Extracted place name from article'
   },
+  country: {
+    type: String,
+    index: true,
+    description: 'Country code (e.g., UY, AR, BR) extracted from geocoding'
+  },
   date: {
     type: Date,
     required: true,
@@ -75,7 +80,7 @@ const newsEventSchema = new mongoose.Schema({
   },
   entities: [{
     text: String,
-    type: String, // PERSON, PLACE, ORG, etc.
+    entityType: String, // PERSON, PLACE, ORG, etc.
     confidence: Number
   }],
   metadata: {

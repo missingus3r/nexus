@@ -17,36 +17,81 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initializeMap() {
-    const centerLat = -34.9011; // Montevideo
-    const centerLon = -56.1645;
-    const zoom = 12;
+    const defaultCenterLat = -34.9011; // Montevideo (default)
+    const defaultCenterLon = -56.1645;
+    const defaultZoom = 12;
 
-    // Initialize MapLibre GL map
+    // Initialize MapLibre GL map with default center
     map = new maplibregl.Map({
         container: 'map',
         style: 'https://tiles.openfreemap.org/styles/liberty', // OSM-based style
-        center: [centerLon, centerLat],
-        zoom: zoom
+        center: [defaultCenterLon, defaultCenterLat],
+        zoom: defaultZoom
     });
+
+    // Expose map globally for external access
+    window.map = map;
 
     map.on('load', () => {
         addIncidentsLayer();
         addHeatmapLayer();
         loadMapData();
+
+        // Try to center on user's location
+        centerOnUserLocation();
     });
 
     // Add navigation controls
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
     // Add geolocate control
-    map.addControl(
-        new maplibregl.GeolocateControl({
-            positionOptions: {
-                enableHighAccuracy: true
-            },
-            trackUserLocation: true
-        }),
-        'top-right'
+    const geolocateControl = new maplibregl.GeolocateControl({
+        positionOptions: {
+            enableHighAccuracy: true
+        },
+        trackUserLocation: true,
+        showUserHeading: true
+    });
+
+    map.addControl(geolocateControl, 'top-right');
+
+    // Automatically trigger geolocation on load
+    map.on('load', () => {
+        geolocateControl.trigger();
+    });
+}
+
+/**
+ * Center map on user's location
+ */
+function centerOnUserLocation() {
+    if (!navigator.geolocation) {
+        console.log('Geolocation not supported');
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const { latitude, longitude } = position.coords;
+            console.log('Centering map on user location:', latitude, longitude);
+
+            // Animate to user's location
+            map.flyTo({
+                center: [longitude, latitude],
+                zoom: 13,
+                essential: true, // This animation is considered essential
+                duration: 2000
+            });
+        },
+        (error) => {
+            console.log('Error getting user location:', error.message);
+            // Keep default center (Montevideo)
+        },
+        {
+            timeout: 10000,
+            maximumAge: 300000, // 5 minutes
+            enableHighAccuracy: false
+        }
     );
 }
 
@@ -59,11 +104,101 @@ function addIncidentsLayer() {
         }
     });
 
-    // Add circle layer for incidents
+    // Add outer glow layer for approximate locations (renders first, bottom layer)
+    map.addLayer({
+        id: 'incidents-approximate-glow',
+        type: 'circle',
+        source: 'incidents',
+        filter: ['==', ['get', 'locationType'], 'approximate'],
+        paint: {
+            'circle-radius': [
+                'interpolate', ['linear'], ['zoom'],
+                10, ['*', ['/', ['get', 'approximateRadius'], 20], 1],
+                16, ['*', ['/', ['get', 'approximateRadius'], 3], 1],
+                20, ['*', ['get', 'approximateRadius'], 0.8]
+            ],
+            'circle-color': [
+                'match', ['get', 'type'],
+                'homicidio', '#d32f2f',
+                'rapiña', '#f57c00',
+                'hurto', '#fbc02d',
+                'copamiento', '#c62828',
+                '#757575' // default
+            ],
+            'circle-opacity': [
+                'interpolate', ['linear'], ['zoom'],
+                10, 0.1,
+                16, 0.15,
+                20, 0.2
+            ],
+            'circle-blur': 1
+        }
+    });
+
+    // Add middle layer for approximate locations
+    map.addLayer({
+        id: 'incidents-approximate-middle',
+        type: 'circle',
+        source: 'incidents',
+        filter: ['==', ['get', 'locationType'], 'approximate'],
+        paint: {
+            'circle-radius': [
+                'interpolate', ['linear'], ['zoom'],
+                10, ['*', ['/', ['get', 'approximateRadius'], 30], 1],
+                16, ['*', ['/', ['get', 'approximateRadius'], 5], 1],
+                20, ['*', ['get', 'approximateRadius'], 0.5]
+            ],
+            'circle-color': [
+                'match', ['get', 'type'],
+                'homicidio', '#d32f2f',
+                'rapiña', '#f57c00',
+                'hurto', '#fbc02d',
+                'copamiento', '#c62828',
+                '#757575' // default
+            ],
+            'circle-opacity': [
+                'interpolate', ['linear'], ['zoom'],
+                10, 0.25,
+                16, 0.3,
+                20, 0.35
+            ],
+            'circle-blur': 0.8
+        }
+    });
+
+    // Add center marker for approximate locations
+    map.addLayer({
+        id: 'incidents-approximate-center',
+        type: 'circle',
+        source: 'incidents',
+        filter: ['==', ['get', 'locationType'], 'approximate'],
+        paint: {
+            'circle-radius': [
+                'interpolate', ['linear'], ['get', 'severity'],
+                1, 8,
+                5, 18
+            ],
+            'circle-color': [
+                'match', ['get', 'type'],
+                'homicidio', '#d32f2f',
+                'rapiña', '#f57c00',
+                'hurto', '#fbc02d',
+                'copamiento', '#c62828',
+                '#757575' // default
+            ],
+            'circle-opacity': 0.85,
+            'circle-stroke-width': 3,
+            'circle-stroke-color': '#fff',
+            'circle-stroke-opacity': 0.9
+        }
+    });
+
+    // Add circle layer for exact location incidents
     map.addLayer({
         id: 'incidents-circle',
         type: 'circle',
         source: 'incidents',
+        filter: ['!=', ['get', 'locationType'], 'approximate'],
         paint: {
             'circle-radius': [
                 'interpolate', ['linear'], ['get', 'severity'],
@@ -84,26 +219,65 @@ function addIncidentsLayer() {
         }
     });
 
-    // Add popup on click
-    map.on('click', 'incidents-circle', (e) => {
+    // Add popup on click for exact locations
+    map.on('click', 'incidents-circle', async (e) => {
         const props = e.features[0].properties;
-        new maplibregl.Popup()
+        const incidentId = props.id;
+
+        // Fetch full incident details
+        const incidentDetails = await fetchIncidentDetails(incidentId);
+
+        const popup = new maplibregl.Popup({
+            maxWidth: '350px',
+            className: 'incident-popup'
+        })
             .setLngLat(e.lngLat)
-            .setHTML(`
-                <h3>${props.type}</h3>
-                <p>Severidad: ${props.severity}/5</p>
-                <p>${props.description || 'Sin descripción'}</p>
-                <p><small>${new Date(props.createdAt).toLocaleString()}</small></p>
-            `)
+            .setHTML(createIncidentPopupHTML(incidentDetails))
             .addTo(map);
+
+        // Setup validation button listeners after popup is added
+        setTimeout(() => {
+            setupValidationButtons(incidentId);
+        }, 100);
     });
 
-    // Change cursor on hover
+    // Add popup on click for approximate locations
+    map.on('click', 'incidents-approximate-center', async (e) => {
+        const props = e.features[0].properties;
+        const incidentId = props.id;
+
+        // Fetch full incident details
+        const incidentDetails = await fetchIncidentDetails(incidentId);
+
+        const popup = new maplibregl.Popup({
+            maxWidth: '350px',
+            className: 'incident-popup'
+        })
+            .setLngLat(e.lngLat)
+            .setHTML(createIncidentPopupHTML(incidentDetails))
+            .addTo(map);
+
+        // Setup validation button listeners after popup is added
+        setTimeout(() => {
+            setupValidationButtons(incidentId);
+        }, 100);
+    });
+
+    // Change cursor on hover - exact locations
     map.on('mouseenter', 'incidents-circle', () => {
         map.getCanvas().style.cursor = 'pointer';
     });
 
     map.on('mouseleave', 'incidents-circle', () => {
+        map.getCanvas().style.cursor = '';
+    });
+
+    // Change cursor on hover - approximate locations
+    map.on('mouseenter', 'incidents-approximate-center', () => {
+        map.getCanvas().style.cursor = 'pointer';
+    });
+
+    map.on('mouseleave', 'incidents-approximate-center', () => {
         map.getCanvas().style.cursor = '';
     });
 
@@ -289,9 +463,18 @@ function setupEventListeners() {
 }
 
 function toggleIncidentsLayer(show) {
-    if (map.getLayer('incidents-circle')) {
-        map.setLayoutProperty('incidents-circle', 'visibility', show ? 'visible' : 'none');
-    }
+    const layers = [
+        'incidents-circle',
+        'incidents-approximate-glow',
+        'incidents-approximate-middle',
+        'incidents-approximate-center'
+    ];
+
+    layers.forEach(layer => {
+        if (map.getLayer(layer)) {
+            map.setLayoutProperty(layer, 'visibility', show ? 'visible' : 'none');
+        }
+    });
 }
 
 function toggleHeatmapLayer(show) {
@@ -558,39 +741,52 @@ async function handleReportSubmit(e) {
         return;
     }
 
-    const formData = new FormData(e.target);
+    const form = e.target;
+    const formData = new FormData(form);
     const locationType = formData.get('locationType');
 
-    const data = {
-        type: formData.get('type'),
-        severity: parseInt(formData.get('severity')),
-        description: formData.get('description'),
-        location: {
-            type: 'Point',
-            coordinates: [selectedLocation.lng, selectedLocation.lat]
-        },
-        locationType: locationType
+    // Prepare location as JSON string (required for multipart/form-data)
+    const location = {
+        type: 'Point',
+        coordinates: [selectedLocation.lng, selectedLocation.lat]
     };
+
+    // Create new FormData with all fields including photos
+    const submitData = new FormData();
+    submitData.append('type', formData.get('type'));
+    submitData.append('severity', formData.get('severity'));
+    submitData.append('description', formData.get('description') || '');
+    submitData.append('location', JSON.stringify(location));
+    submitData.append('locationType', locationType);
 
     // Add radius for approximate locations
     if (locationType === 'approximate') {
-        data.approximateRadius = parseInt(formData.get('approximateRadius'));
+        submitData.append('approximateRadius', formData.get('approximateRadius'));
+    }
+
+    // Add photos if any
+    const photosInput = document.getElementById('photos');
+    if (photosInput && photosInput.files) {
+        for (let i = 0; i < photosInput.files.length; i++) {
+            submitData.append('photos', photosInput.files[i]);
+        }
     }
 
     try {
         const response = await fetch('/api/map/incidents', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+                'Authorization': `Bearer ${token}`
+                // Don't set Content-Type - let browser set it with boundary
             },
-            body: JSON.stringify(data)
+            body: submitData
         });
 
         if (response.ok) {
             alert('Incidente reportado exitosamente. Aguardando validación.');
             document.getElementById('reportModal').classList.remove('active');
-            e.target.reset();
+            document.getElementById('photoPreview').innerHTML = ''; // Clear photo preview
+            form.reset();
             cancelLocationSelection();
             loadMapData();
         } else {
@@ -605,3 +801,290 @@ async function handleReportSubmit(e) {
 
 // Make cancelLocationSelection global so it can be called from inline onclick
 window.cancelLocationSelection = cancelLocationSelection;
+
+/**
+ * Fetch full incident details including validations
+ */
+async function fetchIncidentDetails(incidentId) {
+    try {
+        const token = localStorage.getItem('jwt');
+        const response = await fetch(`/api/map/incidents/${incidentId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (response.ok) {
+            return await response.json();
+        } else {
+            console.error('Error fetching incident details');
+            return null;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        return null;
+    }
+}
+
+/**
+ * Create HTML for incident popup with validation buttons
+ */
+function createIncidentPopupHTML(incident) {
+    if (!incident) {
+        return '<p>Error al cargar detalles del incidente</p>';
+    }
+
+    const props = incident.properties || incident;
+    const validations = incident.validations || [];
+
+    // Status badge
+    const statusColors = {
+        'pending': '#ffa726',
+        'verified': '#66bb6a',
+        'rejected': '#ef5350'
+    };
+    const statusLabels = {
+        'pending': 'Pendiente',
+        'verified': 'Verificado',
+        'rejected': 'Rechazado'
+    };
+    const status = props.status || 'pending';
+    const statusColor = statusColors[status];
+    const statusLabel = statusLabels[status];
+
+    // Media section
+    let mediaHTML = '';
+    if (props.media && props.media.length > 0) {
+        mediaHTML = '<div style="margin: 10px 0;">';
+        props.media.forEach(m => {
+            if (m.type === 'image') {
+                mediaHTML += `<img src="${m.url}" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 4px; margin: 5px 0;">`;
+            }
+        });
+        mediaHTML += '</div>';
+    }
+
+    // Validation section
+    const validationScore = props.validationScore || 0;
+    const validationCount = validations.length;
+
+    let validationHTML = `
+        <div style="margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>Validaciones:</strong> ${validationCount}
+                    <br>
+                    <small>Score: ${validationScore.toFixed(2)}</small>
+                </div>
+                <div style="padding: 4px 12px; background: ${statusColor}; color: white; border-radius: 12px; font-size: 0.85em;">
+                    ${statusLabel}
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Check if user is authenticated (not guest)
+    const token = localStorage.getItem('jwt');
+    const isAuthenticated = token && !isGuestToken(token);
+    let actionsHTML = '';
+
+    if (isAuthenticated && status === 'pending') {
+        actionsHTML = `
+            <div style="margin-top: 10px; display: flex; gap: 8px;">
+                <button id="validate-valid-btn" style="flex: 1; padding: 8px; background: #66bb6a; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">
+                    ✓ Válido
+                </button>
+                <button id="validate-invalid-btn" style="flex: 1; padding: 8px; background: #ef5350; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">
+                    ✗ No Válido
+                </button>
+            </div>
+            <div id="validation-message" style="margin-top: 8px; padding: 8px; border-radius: 4px; display: none;"></div>
+        `;
+    } else if (!isAuthenticated) {
+        actionsHTML = `
+            <div style="margin-top: 10px; padding: 8px; background: #fff3cd; border-radius: 4px; font-size: 0.9em; text-align: center;">
+                Inicia sesión para validar incidentes
+            </div>
+        `;
+    } else if (status !== 'pending') {
+        actionsHTML = `
+            <div style="margin-top: 10px; padding: 8px; background: #e8f5e9; border-radius: 4px; font-size: 0.9em; text-align: center;">
+                Este incidente ya fue ${statusLabel.toLowerCase()}
+            </div>
+        `;
+    }
+
+    // Location type info
+    let locationHTML = '';
+    if (props.locationType === 'approximate' && props.approximateRadius) {
+        locationHTML = `
+            <p style="margin: 4px 0; color: #666; font-size: 0.9em;">
+                <strong>📍 Ubicación:</strong> Zona aproximada (~${props.approximateRadius}m de radio)
+            </p>
+        `;
+    }
+
+    return `
+        <div style="font-family: system-ui, -apple-system, sans-serif;">
+            <h3 style="margin: 0 0 8px 0; color: #333;">${props.type}</h3>
+            <p style="margin: 4px 0; color: #666;">
+                <strong>Severidad:</strong> ${props.severity}/5
+            </p>
+            ${locationHTML}
+            ${props.description ? `<p style="margin: 8px 0; color: #555;">${props.description}</p>` : ''}
+            ${mediaHTML}
+            <p style="margin: 4px 0; font-size: 0.9em; color: #999;">
+                ${new Date(props.createdAt).toLocaleString('es-UY')}
+            </p>
+            ${validationHTML}
+            ${actionsHTML}
+        </div>
+    `;
+}
+
+/**
+ * Setup validation button event listeners
+ */
+function setupValidationButtons(incidentId) {
+    const validBtn = document.getElementById('validate-valid-btn');
+    const invalidBtn = document.getElementById('validate-invalid-btn');
+
+    if (validBtn) {
+        validBtn.onclick = () => validateIncident(incidentId, 1);
+    }
+
+    if (invalidBtn) {
+        invalidBtn.onclick = () => validateIncident(incidentId, -1);
+    }
+}
+
+/**
+ * Show incident popup (exposed globally)
+ */
+window.showIncidentPopup = async function(lon, lat, incidentId) {
+    if (!map) return;
+
+    try {
+        // Fetch full incident details
+        const incidentDetails = await fetchIncidentDetails(incidentId);
+
+        const popup = new maplibregl.Popup({
+            maxWidth: '350px',
+            className: 'incident-popup'
+        })
+            .setLngLat([lon, lat])
+            .setHTML(createIncidentPopupHTML(incidentDetails))
+            .addTo(map);
+
+        // Setup validation button listeners after popup is added
+        setTimeout(() => {
+            setupValidationButtons(incidentId);
+        }, 100);
+    } catch (error) {
+        console.error('Error showing incident popup:', error);
+    }
+};
+
+/**
+ * Validate an incident
+ */
+async function validateIncident(incidentId, vote) {
+    const messageDiv = document.getElementById('validation-message');
+
+    // Disable buttons during validation
+    const validBtn = document.getElementById('validate-valid-btn');
+    const invalidBtn = document.getElementById('validate-invalid-btn');
+
+    if (validBtn) validBtn.disabled = true;
+    if (invalidBtn) invalidBtn.disabled = true;
+
+    try {
+        const token = localStorage.getItem('jwt');
+
+        if (!token) {
+            showValidationMessage('Debes iniciar sesión para validar', 'error');
+            return;
+        }
+
+        const response = await fetch(`/api/map/incidents/${incidentId}/validate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                vote: vote, // 1 = valid, -1 = invalid
+                confidence: 0.8
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showValidationMessage(
+                `✓ Validación registrada. ${vote === 1 ? 'Marcaste como válido' : 'Marcaste como no válido'}`,
+                'success'
+            );
+
+            // Reload map data after a short delay
+            setTimeout(() => {
+                loadMapData();
+            }, 2000);
+        } else {
+            let errorMessage = data.error || 'Error al validar';
+
+            if (response.status === 403) {
+                errorMessage = '⚠️ No puedes validar tu propio reporte';
+            } else if (response.status === 409) {
+                errorMessage = '⚠️ Ya validaste este incidente';
+            }
+
+            showValidationMessage(errorMessage, 'error');
+        }
+    } catch (error) {
+        console.error('Error validating incident:', error);
+        showValidationMessage('Error de conexión', 'error');
+    } finally {
+        // Re-enable buttons
+        if (validBtn) validBtn.disabled = false;
+        if (invalidBtn) invalidBtn.disabled = false;
+    }
+}
+
+/**
+ * Show validation message in popup
+ */
+function showValidationMessage(message, type) {
+    const messageDiv = document.getElementById('validation-message');
+    if (!messageDiv) return;
+
+    const colors = {
+        success: { bg: '#e8f5e9', text: '#2e7d32', border: '#66bb6a' },
+        error: { bg: '#ffebee', text: '#c62828', border: '#ef5350' },
+        info: { bg: '#e3f2fd', text: '#1565c0', border: '#42a5f5' }
+    };
+
+    const color = colors[type] || colors.info;
+
+    messageDiv.style.display = 'block';
+    messageDiv.style.background = color.bg;
+    messageDiv.style.color = color.text;
+    messageDiv.style.borderLeft = `4px solid ${color.border}`;
+    messageDiv.textContent = message;
+}
+
+/**
+ * Check if token is a guest token
+ */
+function isGuestToken(token) {
+    try {
+        // Decode JWT payload (without verification)
+        const payload = JSON.parse(atob(token.split('.')[1]));
+
+        // Check if it's a guest token
+        return payload.sub === 'guest' || payload.type === 'guest';
+    } catch (error) {
+        console.error('Error decoding token:', error);
+        return true; // Assume guest if error
+    }
+}
