@@ -19,6 +19,18 @@
     height: 700px; /* Increased from 600px */
 }
 
+/* Desktop-specific map page layout */
+@media (min-width: 769px) {
+    .map-page .main-content {
+        min-height: auto;
+        padding: 1rem 0;
+    }
+
+    .map-page .footer {
+        margin-top: -1rem;
+    }
+}
+
 /* Mobile Styles */
 @media (max-width: 768px) {
     /* Show/Hide elements */
