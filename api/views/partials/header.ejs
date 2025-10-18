@@ -1,0 +1,68 @@
+<div class="header">
+    <div class="container">
+        <a href="/" class="logo">
+            <span class="logo-text">NEXUS</span>
+        </a>
+
+        <button class="hamburger" id="hamburger" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <nav class="nav" id="nav">
+            <a href="/map" class="nav-link <%= page === 'map' ? 'active' : '' %>">Mapa</a>
+            <a href="/news" class="nav-link <%= page === 'news' ? 'active' : '' %>">Noticias</a>
+            <a href="/forum" class="nav-link <%= page === 'forum' ? 'active' : '' %>">Foro</a>
+            <a href="/links" class="nav-link <%= page === 'links' ? 'active' : '' %>">Enlaces MI</a>
+            <a href="#" class="nav-link mobile-only" id="aboutLink">Acerca de</a>
+
+            <% if (isAuthenticated) { %>
+                <a href="/perfil" class="nav-link <%= page === 'perfil' ? 'active' : '' %>">Perfil</a>
+                <a href="/logout" class="btn btn-secondary">Salir</a>
+            <% } else { %>
+                <a href="/login" class="btn btn-primary">Iniciar Sesión</a>
+            <% } %>
+        </nav>
+    </div>
+</div>
+
+<script>
+    // Hamburger menu toggle
+    document.addEventListener('DOMContentLoaded', function() {
+        const hamburger = document.getElementById('hamburger');
+        const nav = document.getElementById('nav');
+
+        if (hamburger) {
+            hamburger.addEventListener('click', function() {
+                hamburger.classList.toggle('active');
+                nav.classList.toggle('active');
+            });
+
+            // Close menu when clicking on a link (except "Acerca de")
+            const navLinks = nav.querySelectorAll('a:not(#aboutLink)');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    hamburger.classList.remove('active');
+                    nav.classList.remove('active');
+                });
+            });
+
+            // About link handler
+            const aboutLink = document.getElementById('aboutLink');
+            if (aboutLink) {
+                aboutLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    hamburger.classList.remove('active');
+                    nav.classList.remove('active');
+
+                    // Open about modal if it exists (only on map page)
+                    const aboutModal = document.getElementById('aboutModal');
+                    if (aboutModal) {
+                        aboutModal.classList.add('active');
+                    }
+                });
+            }
+        }
+    });
+</script>

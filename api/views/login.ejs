@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('partials/header', { page: page, isAuthenticated: isAuthenticated }) %>
+
+    <div class="main-content">
+        <div class="container">
+            <div style="max-width: 500px; margin: 4rem auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <h2 class="text-center mb-3">Iniciar Sesión</h2>
+
+                <p class="text-center mb-4">Inicia sesión con Auth0 para reportar y validar incidentes.</p>
+
+                <div class="text-center">
+                    <button id="loginBtn" class="btn btn-primary" style="width: 100%; padding: 1rem;">
+                        Iniciar Sesión con Auth0
+                    </button>
+                </div>
+
+                <div class="mt-4">
+                    <h3>Beneficios de registrarse:</h3>
+                    <ul>
+                        <li>Reportar incidentes de seguridad</li>
+                        <li>Validar reportes de otros usuarios</li>
+                        <li>Ganar reputación en la comunidad</li>
+                        <li>Acceso a estadísticas avanzadas</li>
+                    </ul>
+                </div>
+
+                <p class="text-center mt-4">
+                    <small>
+                        Al iniciar sesión, aceptas nuestros
+                        <a href="/terms">Términos de Servicio</a> y
+                        <a href="/privacy">Política de Privacidad</a>.
+                    </small>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+    <script>
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/auth/dev-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Login exitoso, redirigir según el rol
+                    if (data.role === 'admin') {
+                        window.location.href = '/admin';
+                    } else {
+                        window.location.href = '/';
+                    }
+                } else {
+                    alert('Error al iniciar sesión: ' + (data.error || 'Error desconocido'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al conectar con el servidor');
+            }
+        });
+    </script>
+</body>
+</html>

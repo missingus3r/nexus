@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('partials/header', { page: page, isAuthenticated: isAuthenticated }) %>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="content-page">
+                <h1>Política de Privacidad</h1>
+                <p><em>Última actualización: Enero 2025</em></p>
+
+                <h2>1. Información que Recopilamos</h2>
+                <p>Nexus recopila la siguiente información:</p>
+                <ul>
+                    <li><strong>Reportes de incidentes:</strong> Ubicación aproximada (geohash), tipo de incidente, descripción y archivos multimedia opcionales</li>
+                    <li><strong>Datos de cuenta:</strong> Email, nombre de usuario y perfil de Auth0 (si decides crear una cuenta)</li>
+                    <li><strong>Datos técnicos:</strong> Dirección IP, navegador, y logs de acceso para seguridad del sistema</li>
+                </ul>
+
+                <h2>2. Uso de la Información</h2>
+                <p>Utilizamos tu información para:</p>
+                <ul>
+                    <li>Mostrar incidentes en el mapa público de forma anónima</li>
+                    <li>Generar estadísticas y mapas de calor sobre seguridad ciudadana</li>
+                    <li>Mejorar la plataforma y detectar uso indebido</li>
+                    <li>Cumplir con requerimientos legales si es necesario</li>
+                </ul>
+
+                <h2>3. Privacidad y Anonimato</h2>
+                <p>Tu privacidad es fundamental:</p>
+                <ul>
+                    <li><strong>Ubicaciones difusas:</strong> Usamos geohashing para proteger ubicaciones exactas</li>
+                    <li><strong>Reportes anónimos:</strong> Puedes reportar incidentes sin crear cuenta</li>
+                    <li><strong>Sin venta de datos:</strong> Nunca vendemos tu información a terceros</li>
+                </ul>
+
+                <h2>4. Compartir Información</h2>
+                <p>Solo compartimos datos con:</p>
+                <ul>
+                    <li><strong>Autoridades:</strong> Si recibimos una orden judicial válida</li>
+                    <li><strong>Servicios técnicos:</strong> MongoDB Atlas, Auth0, Backblaze B2 (bajo acuerdos de confidencialidad)</li>
+                </ul>
+
+                <h2>5. Tus Derechos</h2>
+                <p>Tienes derecho a:</p>
+                <ul>
+                    <li>Acceder a tus datos personales</li>
+                    <li>Solicitar corrección o eliminación de tu información</li>
+                    <li>Retirar tu consentimiento en cualquier momento</li>
+                    <li>Exportar tus datos en formato legible</li>
+                </ul>
+
+                <h2>6. Cookies y Seguimiento</h2>
+                <p>Usamos cookies esenciales para:</p>
+                <ul>
+                    <li>Mantener tu sesión activa</li>
+                    <li>Recordar tus preferencias</li>
+                    <li>Proteger contra ataques CSRF</li>
+                </ul>
+                <p>No usamos cookies de terceros para publicidad o tracking.</p>
+
+                <h2>7. Seguridad</h2>
+                <p>Protegemos tu información mediante:</p>
+                <ul>
+                    <li>Cifrado HTTPS en todas las comunicaciones</li>
+                    <li>Almacenamiento seguro en MongoDB Atlas</li>
+                    <li>Limitación de acceso solo a personal autorizado</li>
+                    <li>Auditorías de seguridad periódicas</li>
+                </ul>
+
+                <h2>8. Menores de Edad</h2>
+                <p>Nexus no está dirigido a menores de 13 años. No recopilamos intencionalmente información de niños.</p>
+
+                <h2>9. Cambios a esta Política</h2>
+                <p>Nos reservamos el derecho de actualizar esta política. Te notificaremos de cambios significativos mediante aviso en la plataforma.</p>
+
+                <h2>10. Contacto</h2>
+                <p>Para preguntas sobre privacidad o ejercer tus derechos, contáctanos a: <strong>privacy@nexus.uy</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+</body>
+</html>

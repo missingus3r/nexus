@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/mobile-map.css">
+</head>
+<body class="map-page">
+    <%- include('partials/header', { page: page, isAuthenticated: isAuthenticated }) %>
+
+    <div class="main-content map-main">
+        <div class="map-container fullscreen-map">
+            <div id="map"></div>
+
+            <!-- Controles flotantes para mobile -->
+            <div class="floating-controls mobile-only">
+                <button id="filtersBtn" class="floating-btn" title="Filtros">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <line x1="4" y1="6" x2="20" y2="6"></line>
+                        <line x1="4" y1="12" x2="20" y2="12"></line>
+                        <line x1="4" y1="18" x2="20" y2="18"></line>
+                        <circle cx="8" cy="6" r="2"></circle>
+                        <circle cx="16" cy="12" r="2"></circle>
+                        <circle cx="12" cy="18" r="2"></circle>
+                    </svg>
+                </button>
+
+                <% if (isAuthenticated) { %>
+                    <button id="reportBtnMobile" class="floating-btn primary">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                <% } %>
+
+                <button id="layersBtn" class="floating-btn" title="Capas">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                        <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Desktop controls -->
+            <div class="map-controls desktop-only">
+                <h3>Filtros</h3>
+                <div class="form-group">
+                    <label for="typeFilter">Tipo de Incidente:</label>
+                    <select id="typeFilter">
+                        <option value="todos">Todos</option>
+                        <option value="homicidio">Homicidio</option>
+                        <option value="rapiña">Rapiña</option>
+                        <option value="hurto">Hurto</option>
+                        <option value="copamiento">Copamiento</option>
+                        <option value="violencia_domestica">Violencia Doméstica</option>
+                        <option value="narcotrafico">Narcotráfico</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+
+                <% if (isAuthenticated) { %>
+                    <button id="reportBtn" class="btn btn-danger" style="width: 100%; margin-top: 0.5rem;">
+                        Reportar Incidente
+                    </button>
+                <% } %>
+
+                <div class="layer-controls">
+                    <label>
+                        <input type="checkbox" id="showIncidents" checked>
+                        Incidentes
+                    </label>
+                    <label>
+                        <input type="checkbox" id="showHeatmap" checked>
+                        Heatmap
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Filtros Mobile -->
+        <div id="filtersModal" class="bottom-sheet mobile-only">
+            <div class="bottom-sheet-content">
+                <div class="bottom-sheet-header">
+                    <h3>Filtros</h3>
+                    <button class="close-sheet">&times;</button>
+                </div>
+                <div class="bottom-sheet-body">
+                    <div class="form-group">
+                        <label for="typeFilterMobile">Tipo de Incidente:</label>
+                        <select id="typeFilterMobile">
+                            <option value="todos">Todos</option>
+                            <option value="homicidio">Homicidio</option>
+                            <option value="rapiña">Rapiña</option>
+                            <option value="hurto">Hurto</option>
+                            <option value="copamiento">Copamiento</option>
+                            <option value="violencia_domestica">Violencia Doméstica</option>
+                            <option value="narcotrafico">Narcotráfico</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Capas Mobile -->
+        <div id="layersModal" class="bottom-sheet mobile-only">
+            <div class="bottom-sheet-content">
+                <div class="bottom-sheet-header">
+                    <h3>Capas del Mapa</h3>
+                    <button class="close-sheet">&times;</button>
+                </div>
+                <div class="bottom-sheet-body">
+                    <div class="layer-controls">
+                        <label>
+                            <input type="checkbox" id="showIncidentsMobile" checked>
+                            Mostrar Incidentes
+                        </label>
+                        <label>
+                            <input type="checkbox" id="showHeatmapMobile" checked>
+                            Mostrar Heatmap
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Acerca de Mobile -->
+        <div id="aboutModal" class="bottom-sheet mobile-only">
+            <div class="bottom-sheet-content">
+                <div class="bottom-sheet-header">
+                    <h3>Acerca de Nexus</h3>
+                    <button class="close-sheet">&times;</button>
+                </div>
+                <div class="bottom-sheet-body">
+                    <p>&copy; 2025 Nexus - Plataforma de Seguridad Ciudadana</p>
+                    <p style="margin-top: 1rem;">
+                        <a href="/privacy" style="color: var(--primary-color); text-decoration: none;">Privacidad</a> |
+                        <a href="/terms" style="color: var(--primary-color); text-decoration: none;">Términos</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div id="reportModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Reportar Incidente</h2>
+                    <button id="modalClose" class="modal-close">&times;</button>
+                </div>
+                <form id="reportForm">
+                    <div class="form-group">
+                        <label for="locationType">Tipo de Ubicación:</label>
+                        <select id="locationType" name="locationType" required>
+                            <option value="exact">Ubicación Exacta</option>
+                            <option value="approximate">Zona Aproximada</option>
+                        </select>
+                        <small style="color: var(--text-secondary);">
+                            <span id="locationTypeHelp">Haz click en el mapa para marcar la ubicación exacta</span>
+                        </small>
+                    </div>
+
+                    <div class="form-group" id="radiusGroup" style="display: none;">
+                        <label for="approximateRadius">Radio de la zona (metros):</label>
+                        <input type="range" id="approximateRadius" name="approximateRadius" min="50" max="500" value="100" step="50">
+                        <span id="radiusValue">100m</span>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="button" id="selectLocationBtn" class="btn btn-primary" style="width: 100%;">
+                            📍 Seleccionar en el Mapa
+                        </button>
+                        <div id="locationInfo" style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary); display: none;">
+                            <strong>Ubicación seleccionada:</strong><br>
+                            Lat: <span id="selectedLat">-</span>, Lon: <span id="selectedLon">-</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="type">Tipo:</label>
+                        <select id="type" name="type" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="homicidio">Homicidio</option>
+                            <option value="rapiña">Rapiña</option>
+                            <option value="hurto">Hurto</option>
+                            <option value="copamiento">Copamiento</option>
+                            <option value="violencia_domestica">Violencia Doméstica</option>
+                            <option value="narcotrafico">Narcotráfico</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="severity">Severidad (1-5):</label>
+                        <input type="range" id="severity" name="severity" min="1" max="5" value="3">
+                        <span id="severityValue">3</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Descripción:</label>
+                        <textarea id="description" name="description" maxlength="1000" placeholder="Describe el incidente..."></textarea>
+                        <small><span id="charCount">0</span>/1000</small>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Reportar</button>
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('reportModal').classList.remove('active'); cancelLocationSelection();">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer desktop-only">
+        <%- include('partials/footer') %>
+    </div>
+
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/map.js"></script>
+    <script>
+        document.getElementById('severity')?.addEventListener('input', (e) => {
+            document.getElementById('severityValue').textContent = e.target.value;
+        });
+
+        document.getElementById('description')?.addEventListener('input', (e) => {
+            document.getElementById('charCount').textContent = e.target.value.length;
+        });
+
+        // Mobile bottom sheets functionality
+        function openBottomSheet(sheetId) {
+            const sheet = document.getElementById(sheetId);
+            if (sheet) {
+                sheet.classList.add('active');
+            }
+        }
+
+        function closeBottomSheet(sheet) {
+            sheet.classList.remove('active');
+        }
+
+        // Filtros button
+        document.getElementById('filtersBtn')?.addEventListener('click', () => {
+            openBottomSheet('filtersModal');
+        });
+
+        // Layers button
+        document.getElementById('layersBtn')?.addEventListener('click', () => {
+            openBottomSheet('layersModal');
+        });
+
+        // Report button mobile
+        document.getElementById('reportBtnMobile')?.addEventListener('click', () => {
+            document.getElementById('reportModal').classList.add('active');
+        });
+
+        // Close buttons for bottom sheets
+        document.querySelectorAll('.close-sheet').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const sheet = e.target.closest('.bottom-sheet');
+                closeBottomSheet(sheet);
+            });
+        });
+
+        // Click outside to close
+        document.querySelectorAll('.bottom-sheet').forEach(sheet => {
+            sheet.addEventListener('click', (e) => {
+                if (e.target === sheet) {
+                    closeBottomSheet(sheet);
+                }
+            });
+        });
+
+        // Sync filters between mobile and desktop
+        const typeFilter = document.getElementById('typeFilter');
+        const typeFilterMobile = document.getElementById('typeFilterMobile');
+
+        typeFilter?.addEventListener('change', (e) => {
+            if (typeFilterMobile) typeFilterMobile.value = e.target.value;
+        });
+
+        typeFilterMobile?.addEventListener('change', (e) => {
+            if (typeFilter) typeFilter.value = e.target.value;
+            closeBottomSheet(document.getElementById('filtersModal'));
+        });
+
+        // Sync layers checkboxes
+        const showIncidents = document.getElementById('showIncidents');
+        const showIncidentsMobile = document.getElementById('showIncidentsMobile');
+        const showHeatmap = document.getElementById('showHeatmap');
+        const showHeatmapMobile = document.getElementById('showHeatmapMobile');
+
+        showIncidents?.addEventListener('change', (e) => {
+            if (showIncidentsMobile) showIncidentsMobile.checked = e.target.checked;
+        });
+
+        showIncidentsMobile?.addEventListener('change', (e) => {
+            if (showIncidents) showIncidents.checked = e.target.checked;
+        });
+
+        showHeatmap?.addEventListener('change', (e) => {
+            if (showHeatmapMobile) showHeatmapMobile.checked = e.target.checked;
+        });
+
+        showHeatmapMobile?.addEventListener('change', (e) => {
+            if (showHeatmap) showHeatmap.checked = e.target.checked;
+        });
+    </script>
+</body>
+</html>

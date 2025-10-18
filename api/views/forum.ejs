@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('partials/header', { page: page, isAuthenticated: isAuthenticated }) %>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="forum-container">
+                <h2>Foro de la Comunidad</h2>
+                <p>Participa en la discusión sobre seguridad ciudadana en nuestra comunidad de Reddit.</p>
+
+                <div id="reddit-embed">
+                    <iframe src="https://www.reddit.com/r/uruguay/new/"
+                            width="100%"
+                            height="700"
+                            frameborder="0"
+                            scrolling="yes">
+                    </iframe>
+                </div>
+
+                <p class="text-center mt-3">
+                    <a href="https://www.reddit.com/r/uruguay/" target="_blank" class="btn btn-primary">
+                        Ir a Reddit para comentar
+                    </a>
+                </p>
+
+                <div class="mt-4">
+                    <h3>Normas del Foro</h3>
+                    <ul>
+                        <li>Mantén el respeto y la cordialidad</li>
+                        <li>No publiques información personal de terceros</li>
+                        <li>Reporta contenido inapropiado a los moderadores</li>
+                        <li>Verifica la información antes de compartirla</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .stat-card.success .value {
+            color: var(--success-color);
+        }
+
+        .stat-card.warning .value {
+            color: var(--warning-color);
+        }
+
+        .stat-card.danger .value {
+            color: var(--danger-color);
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, var(--primary-color), #1565c0);
+            color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .admin-header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        .admin-header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .recent-activity {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+
+        .recent-activity h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        .activity-item {
+            padding: 1rem;
+            border-left: 3px solid var(--primary-color);
+            margin-bottom: 1rem;
+            background: var(--background);
+            border-radius: 4px;
+        }
+
+        .activity-item .time {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/header', { page: page, isAuthenticated: isAuthenticated }) %>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="admin-header">
+                <h1>Panel de Administración</h1>
+                <p>Vista general de estadísticas y métricas de la plataforma</p>
+            </div>
+
+            <div id="statsContainer" class="loading">
+                <p>Cargando estadísticas...</p>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', loadStats);
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/admin/stats');
+                const stats = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(stats.error || 'Error al cargar estadísticas');
+                }
+
+                displayStats(stats);
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                document.getElementById('statsContainer').innerHTML = `
+                    <div class="text-center" style="padding: 3rem;">
+                        <p style="color: var(--danger-color);">Error al cargar estadísticas: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayStats(stats) {
+            const container = document.getElementById('statsContainer');
+
+            container.innerHTML = `
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <h3>Total Incidentes</h3>
+                        <div class="value">${stats.totalIncidents || 0}</div>
+                        <div class="subtitle">Reportes totales</div>
+                    </div>
+
+                    <div class="stat-card success">
+                        <h3>Incidentes Hoy</h3>
+                        <div class="value">${stats.incidentsToday || 0}</div>
+                        <div class="subtitle">Últimas 24 horas</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <h3>Usuarios Registrados</h3>
+                        <div class="value">${stats.totalUsers || 0}</div>
+                        <div class="subtitle">Cuentas activas</div>
+                    </div>
+
+                    <div class="stat-card warning">
+                        <h3>Usuarios Anónimos</h3>
+                        <div class="value">${stats.guestUsers || 0}</div>
+                        <div class="subtitle">Sessions activas</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <h3>Total Noticias</h3>
+                        <div class="value">${stats.totalNews || 0}</div>
+                        <div class="subtitle">Noticias indexadas</div>
+                    </div>
+
+                    <div class="stat-card success">
+                        <h3>Páginas Visitadas</h3>
+                        <div class="value">${stats.totalPageViews || 0}</div>
+                        <div class="subtitle">Total de vistas</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid" style="margin-top: 2rem;">
+                    <div class="stat-card">
+                        <h3>Incidentes por Tipo</h3>
+                        <div style="font-size: 0.875rem; margin-top: 1rem;">
+                            ${stats.incidentsByType ? Object.entries(stats.incidentsByType).map(([type, count]) => `
+                                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--background);">
+                                    <span>${type}</span>
+                                    <strong>${count}</strong>
+                                </div>
+                            `).join('') : '<p>Sin datos</p>'}
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <h3>Estado del Sistema</h3>
+                        <div style="margin-top: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 1rem; padding: 0.5rem 0;">
+                                <span style="width: 12px; height: 12px; border-radius: 50%; background: ${stats.mongoConnected ? 'var(--success-color)' : 'var(--danger-color)'}"></span>
+                                <span>MongoDB: ${stats.mongoConnected ? 'Conectado' : 'Desconectado'}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem; padding: 0.5rem 0;">
+                                <span style="width: 12px; height: 12px; border-radius: 50%; background: ${stats.redisConnected ? 'var(--success-color)' : 'var(--warning-color)'}"></span>
+                                <span>Redis: ${stats.redisConnected ? 'Conectado' : 'Deshabilitado'}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem; padding: 0.5rem 0;">
+                                <span style="width: 12px; height: 12px; border-radius: 50%; background: var(--success-color)"></span>
+                                <span>Servidor: Activo</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                ${stats.recentIncidents && stats.recentIncidents.length > 0 ? `
+                    <div class="recent-activity">
+                        <h2>Incidentes Recientes</h2>
+                        ${stats.recentIncidents.map(incident => `
+                            <div class="activity-item">
+                                <strong>${incident.type || 'Desconocido'}</strong>
+                                <div>${incident.description || 'Sin descripción'}</div>
+                                <div class="time">${new Date(incident.timestamp).toLocaleString('es-UY')}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            `;
+        }
+    </script>
+</body>
+</html>

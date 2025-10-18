@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('partials/header', { page: page, isAuthenticated: isAuthenticated }) %>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="news-container">
+                <h2>Noticias de Seguridad</h2>
+                <div id="newsTimeline">
+                    <p class="text-center">Cargando noticias...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadNews();
+        });
+
+        async function loadNews() {
+            try {
+                const token = localStorage.getItem('jwt') || await getGuestToken();
+                const bbox = '-58.5,-35,-53,-30';
+                const response = await fetch(`/api/news?bbox=${bbox}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                displayNews(data.features);
+            } catch (error) {
+                console.error('Error loading news:', error);
+                document.getElementById('newsTimeline').innerHTML = '<p class="text-center">Error al cargar noticias</p>';
+            }
+        }
+
+        function displayNews(newsItems) {
+            const timeline = document.getElementById('newsTimeline');
+
+            if (newsItems.length === 0) {
+                timeline.innerHTML = '<p class="text-center">No hay noticias disponibles</p>';
+                return;
+            }
+
+            timeline.innerHTML = newsItems.map(item => {
+                const props = item.properties;
+                const date = new Date(props.date).toLocaleDateString('es-UY');
+
+                return `
+                    <div class="news-item">
+                        <h3>${props.title}</h3>
+                        <div class="news-meta">
+                            <strong>${props.source}</strong> - ${date} - ${props.locationName || 'Uruguay'}
+                        </div>
+                        <p>${props.excerpt || ''}</p>
+                        <a href="${props.url}" target="_blank">Leer más &rarr;</a>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function getGuestToken() {
+            try {
+                const response = await fetch('/api/auth/guest-token', { method: 'POST' });
+                const data = await response.json();
+                localStorage.setItem('jwt', data.token);
+                return data.token;
+            } catch (error) {
+                console.error('Error getting guest token:', error);
+                return null;
+            }
+        }
+    </script>
+</body>
+</html>
