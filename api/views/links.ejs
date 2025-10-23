@@ -4,16 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
+    <%- include('partials/theme-init') %>
     <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/theme-toggle.js" defer></script>
 </head>
 <body>
-    <%- include('partials/header', { page: page, isAuthenticated: isAuthenticated }) %>
+    <%- include('partials/header-centinel', { page: page, isAuthenticated: isAuthenticated }) %>
 
     <div class="main-content">
         <div class="container">
             <div class="links-container">
                 <h2>Enlaces Oficiales - Ministerio del Interior</h2>
                 <p>Accede a información oficial del Ministerio del Interior de Uruguay.</p>
+                <br>
 
                 <div id="linksList">
                     <p class="text-center">Cargando enlaces...</p>

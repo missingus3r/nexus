@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <%- include('partials/theme-init') %>
+    <link rel="stylesheet" href="/css/style.css">
+
+    <!-- Quill.js CSS -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+
+    <script src="/js/theme-toggle.js" defer></script>
+
+    <!-- Quill.js -->
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <script src="/js/forum.js" defer></script>
+</head>
+<body>
+    <%- include('partials/header-forum-nexus', { page: page, isAuthenticated: isAuthenticated }) %>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="forum-thread-container" style="max-width: 900px; margin: 0 auto;">
+
+                <!-- Back Button -->
+                <a href="/forum-nexus" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; text-decoration: none;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Volver al Foro
+                </a>
+
+                <!-- Thread Content -->
+                <div id="threadContent">
+                    <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        Cargando thread...
+                    </div>
+                </div>
+
+                <!-- Comments Section -->
+                <div class="comments-section" style="margin-top: 3rem;">
+                    <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        Comentarios
+                        <span id="commentsCount" style="color: var(--text-secondary); font-size: 0.9rem; font-weight: normal;"></span>
+                    </h3>
+
+                    <!-- New Comment Form -->
+                    <% if (isAuthenticated) { %>
+                        <div class="new-comment-form" style="margin-bottom: 2rem;">
+                            <form id="newCommentForm" enctype="multipart/form-data">
+                                <div class="form-group">
+                                    <textarea id="commentContent" name="content" maxlength="5000" required placeholder="Escribe tu comentario..." style="min-height: 100px;"></textarea>
+                                    <small><span id="commentCharCount">0</span>/5000</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="commentImages">Imágenes (opcional - máximo 5)</label>
+                                    <input type="file" id="commentImages" name="images" accept="image/jpeg,image/jpg,image/png,image/webp" multiple>
+                                    <div id="commentImagePreview" style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <button type="submit" class="btn btn-primary">Publicar Comentario</button>
+                                </div>
+                            </form>
+                        </div>
+                    <% } else { %>
+                        <div style="text-align: center; padding: 2rem; background: var(--surface); border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+                            <p style="margin-bottom: 1rem; color: var(--text-secondary);">Inicia sesión para comentar</p>
+                            <a href="/login" class="btn btn-primary">Iniciar Sesión</a>
+                        </div>
+                    <% } %>
+
+                    <!-- Comments List -->
+                    <div id="commentsList"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Reply Modal -->
+    <div id="replyModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Responder Comentario</h2>
+                <button class="modal-close" onclick="closeReplyModal()">&times;</button>
+            </div>
+            <form id="replyForm" enctype="multipart/form-data">
+                <input type="hidden" id="parentCommentId" name="parentCommentId">
+
+                <div class="form-group">
+                    <label for="replyContent">Respuesta *</label>
+                    <textarea id="replyContent" name="content" maxlength="5000" required placeholder="Escribe tu respuesta..." style="min-height: 150px;"></textarea>
+                    <small><span id="replyCharCount">0</span>/5000</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="replyImages">Imágenes (opcional - máximo 5)</label>
+                    <input type="file" id="replyImages" name="images" accept="image/jpeg,image/jpg,image/png,image/webp" multiple>
+                    <div id="replyImagePreview" style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;"></div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Publicar Respuesta</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeReplyModal()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Thread Modal -->
+    <div id="editThreadModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Editar Thread</h2>
+                <button class="modal-close" onclick="closeEditThreadModal()">&times;</button>
+            </div>
+            <form id="editThreadForm" enctype="multipart/form-data">
+                <input type="hidden" id="editThreadId" name="threadId">
+
+                <div class="form-group">
+                    <label for="editThreadTitle">Título *</label>
+                    <input type="text" id="editThreadTitle" name="title" maxlength="200" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editThreadContentEditor">Contenido *</label>
+                    <div id="editThreadContentEditor" style="min-height: 250px; background: var(--surface); border: 1px solid var(--border-color); border-radius: 4px;"></div>
+                    <input type="hidden" id="editThreadContent" name="content" required>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditThreadModal()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Comment Modal -->
+    <div id="editCommentModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Editar Comentario</h2>
+                <button class="modal-close" onclick="closeEditCommentModal()">&times;</button>
+            </div>
+            <form id="editCommentForm" enctype="multipart/form-data">
+                <input type="hidden" id="editCommentId" name="commentId">
+
+                <div class="form-group">
+                    <label for="editCommentContent">Contenido *</label>
+                    <textarea id="editCommentContent" name="content" maxlength="5000" required style="min-height: 150px;"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditCommentModal()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Image Modal (Lightbox) -->
+    <div id="imageModal" class="modal" style="background: rgba(0,0,0,0.9);" onclick="closeImageModal()">
+        <div style="position: relative; max-width: 90vw; max-height: 90vh; margin: auto;">
+            <button class="modal-close" style="position: absolute; top: -40px; right: 0; background: transparent; color: white; font-size: 2rem; border: none; cursor: pointer;" onclick="closeImageModal()">&times;</button>
+            <img id="modalImage" src="" alt="Image" style="max-width: 100%; max-height: 90vh; display: block; border-radius: 8px;">
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+</body>
+</html>

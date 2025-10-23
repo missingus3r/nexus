@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <%- include('partials/theme-init') %>
+    <link rel="stylesheet" href="/css/style.css">
+
+    <!-- Quill.js CSS -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+
+    <script src="/js/theme-toggle.js" defer></script>
+
+    <!-- Quill.js -->
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <script src="/js/forum.js" defer></script>
+</head>
+<body>
+    <%- include('partials/header-forum-nexus', { page: page, isAuthenticated: isAuthenticated }) %>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="forum-nexus-container" style="max-width: 900px; margin: 0 auto;">
+
+                <!-- Header -->
+                <div class="forum-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h2 style="margin: 0 0 0.5rem 0;">Foro Nexus</h2>
+                        <p style="margin: 0; color: var(--text-secondary);">Comparte y discute sobre Centinel, Surlink y todos los servicios de Nexus</p>
+                    </div>
+                    <% if (isAuthenticated) { %>
+                        <button id="newThreadBtn" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Nuevo Thread
+                        </button>
+                    <% } else { %>
+                        <a href="/login" class="btn btn-primary">Iniciar Sesión para Postear</a>
+                    <% } %>
+                </div>
+
+                <!-- Filter/Sort Options -->
+                <div class="forum-controls" style="display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center; flex-wrap: wrap;">
+                    <button id="sortRecent" class="sort-btn active" data-sort="recent">🕒 Recientes</button>
+                    <button id="sortPopular" class="sort-btn" data-sort="popular">🔥 Populares</button>
+                </div>
+
+                <!-- Threads List -->
+                <div id="threadsList">
+                    <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        Cargando threads...
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div id="pagination" style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem;"></div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome Modal (shown only first time) -->
+    <div id="welcomeForumModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: flex-start;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0;">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <h2 style="margin: 0;">Bienvenido al Foro Nexus</h2>
+                </div>
+                <button class="modal-close" onclick="closeWelcomeForumModal()">&times;</button>
+            </div>
+            <div style="padding: 1.5rem;">
+                <p style="margin-bottom: 1.5rem; color: var(--text-secondary); line-height: 1.6;">
+                    El Foro Nexus es un espacio de discusión comunitaria para todos los temas relacionados con Nexus: seguridad ciudadana (Centinel), inmuebles y autos (Surlink), y más. Comparte experiencias, haz preguntas y participa en debates constructivos.
+                </p>
+
+                <h3 style="margin-bottom: 1rem; color: var(--primary-color);">✨ Características del Foro</h3>
+                <ul style="margin-bottom: 1.5rem; line-height: 1.8; color: var(--text-secondary);">
+                    <li><strong>Threads de discusión:</strong> Crea temas sobre Centinel, Surlink, o cualquier servicio de Nexus</li>
+                    <li><strong>Comentarios anidados:</strong> Responde a otros usuarios (hasta 5 niveles)</li>
+                    <li><strong>Editor de texto enriquecido:</strong> Formato, enlaces, listas y más</li>
+                    <li><strong>Imágenes:</strong> Sube hasta 5 imágenes por publicación</li>
+                    <li><strong>Sistema de likes:</strong> Valora el contenido de la comunidad</li>
+                    <li><strong>Editar/Eliminar:</strong> Modifica tu contenido durante los primeros 5 minutos</li>
+                </ul>
+
+                <h3 style="margin-bottom: 1rem; color: var(--primary-color);">📋 Límites de Publicación</h3>
+                <ul style="margin-bottom: 1.5rem; line-height: 1.8; color: var(--text-secondary);">
+                    <li><strong>Threads:</strong> Uno cada 30 minutos</li>
+                    <li><strong>Comentarios:</strong> Máximo 100 por día</li>
+                    <li><strong>Imágenes:</strong> Máximo 5 por publicación (JPG, PNG, WEBP)</li>
+                </ul>
+
+                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; text-align: center;">
+                    <h3 style="margin-bottom: 0.75rem; color: #ef4444; font-size: 1rem;">⚠️ Normas de Conducta</h3>
+                    <p style="margin-bottom: 0.75rem; color: var(--text-secondary); line-height: 1.6; font-size: 0.9rem;">
+                        <strong>El administrador se reserva el derecho de eliminar cualquier contenido, suspender o banear permanentemente a cualquier usuario que no respete las normas del foro, sin previo aviso.</strong>
+                    </p>
+                    <ul style="line-height: 1.6; color: var(--text-secondary); font-size: 0.9rem; display: inline-block; text-align: left; margin: 0 auto;">
+                        <li>Trata a otros usuarios con respeto</li>
+                        <li>No publiques contenido ofensivo, ilegal o spam</li>
+                        <li>Mantén las discusiones relevantes a los servicios de Nexus</li>
+                        <li>No difundas información falsa o rumores</li>
+                        <li>Respeta los límites de publicación establecidos</li>
+                    </ul>
+                </div>
+
+                <div style="text-align: center; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                    <p style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                        Al usar el foro, aceptas nuestros <a href="/terms" target="_blank" style="color: var(--primary-color);">Términos de Servicio</a> y <a href="/privacy" target="_blank" style="color: var(--primary-color);">Política de Privacidad</a>.
+                    </p>
+                    <button class="btn btn-primary" onclick="closeWelcomeForumModal()" style="width: 100%;">
+                        Entendido, comenzar a participar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Thread Modal -->
+    <div id="newThreadModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Crear Nuevo Thread</h2>
+                <button class="modal-close" onclick="closeNewThreadModal()">&times;</button>
+            </div>
+            <form id="newThreadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="threadTitle">Título *</label>
+                    <input type="text" id="threadTitle" name="title" maxlength="200" required placeholder="Título del thread...">
+                    <small><span id="titleCharCount">0</span>/200</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="threadContent">Contenido *</label>
+                    <div id="threadContentEditor" style="min-height: 250px; background: var(--surface); border: 1px solid var(--border-color); border-radius: 4px;"></div>
+                    <input type="hidden" id="threadContent" name="content" required>
+                    <small><span id="contentCharCount">0</span>/10000 caracteres</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="threadImages">Imágenes (opcional - máximo 5)</label>
+                    <input type="file" id="threadImages" name="images" accept="image/jpeg,image/jpg,image/png,image/webp" multiple>
+                    <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                        Formatos: JPG, PNG, WEBP. Máximo 5MB por imagen.
+                    </small>
+                    <div id="imagePreview" style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;"></div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Publicar Thread</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeNewThreadModal()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+</body>
+</html>

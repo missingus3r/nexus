@@ -4,78 +4,634 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
-    <link rel="stylesheet" href="/css/style.css">
+    <%- include('partials/theme-init') %>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            color-scheme: dark;
+            --bg-primary: #06070f;
+            --bg-secondary: #101228;
+            --accent: #7c5cff;
+            --accent-soft: rgba(124, 92, 255, 0.25);
+            --text-primary: #f5f6ff;
+            --text-muted: rgba(245, 246, 255, 0.68);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: radial-gradient(120% 120% at 10% 10%, rgba(124, 92, 255, 0.28) 0%, transparent 55%),
+                        radial-gradient(120% 140% at 90% 15%, rgba(16, 198, 255, 0.22) 0%, transparent 60%),
+                        linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            padding: 40px 24px;
+            color: var(--text-primary);
+        }
+
+        .page {
+            position: relative;
+            max-width: 1180px;
+            width: 100%;
+            min-height: calc(100vh - 80px);
+            border-radius: 32px;
+            overflow: hidden;
+            padding: 56px clamp(24px, 5vw, 72px);
+            backdrop-filter: blur(18px);
+            background: rgba(6, 7, 15, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 60px;
+        }
+
+        .glow {
+            position: absolute;
+            filter: blur(60px);
+            opacity: 0.85;
+            z-index: -1;
+        }
+
+        .glow.one {
+            top: -160px;
+            left: -120px;
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle, rgba(124, 92, 255, 0.55) 0%, transparent 70%);
+        }
+
+        .glow.two {
+            bottom: -200px;
+            right: -120px;
+            width: 420px;
+            height: 420px;
+            background: radial-gradient(circle, rgba(16, 198, 255, 0.45) 0%, transparent 70%);
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-weight: 600;
+            letter-spacing: 0.16em;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .brand::before {
+            content: "";
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            background: linear-gradient(135deg, #7c5cff, #54e0ff);
+            box-shadow: 0 0 18px rgba(124, 92, 255, 0.55);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 0.95rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+
+        .nav-links a.platform-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #7c5cff, #667eea);
+            color: white !important;
+            box-shadow: 0 2px 8px rgba(124, 92, 255, 0.3);
+        }
+
+        .nav-links a.platform-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124, 92, 255, 0.4);
+            background: linear-gradient(135deg, #667eea, #7c5cff);
+        }
+
+        .hero-nav {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .login-container {
+            max-width: 500px;
+            width: 100%;
+            background: rgba(12, 15, 32, 0.48);
+            padding: 3rem;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #7c5cff, #54e0ff);
+            color: #0c0f23;
+            border: none;
+            border-radius: 999px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 15px 35px rgba(124, 92, 255, 0.35);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 45px rgba(124, 92, 255, 0.45);
+        }
+
+        .btn-anonymous:hover {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary) !important;
+        }
+
+        .benefits {
+            margin-top: 2rem;
+        }
+
+        .benefits h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .benefits ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .benefits li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .benefits li:last-child {
+            border-bottom: none;
+        }
+
+        .benefits li::before {
+            content: "✓";
+            color: var(--accent);
+            font-weight: bold;
+            margin-right: 0.75rem;
+        }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .footer-note a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .footer-note a:hover {
+            color: var(--text-primary);
+        }
+
+        footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            gap: 18px;
+        }
+
+        footer a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        footer a:hover {
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 20px 16px;
+            }
+
+            .page {
+                border-radius: 24px;
+                min-height: calc(100vh - 40px);
+                gap: 40px;
+                padding: 40px clamp(20px, 8vw, 32px);
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 18px;
+            }
+
+            .hero-nav {
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .hero-nav .nav-links {
+                width: 100%;
+                justify-content: space-between;
+                gap: 12px;
+            }
+
+            footer {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .login-container {
+                padding: 2rem 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.75rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <%- include('partials/header', { page: page, isAuthenticated: isAuthenticated }) %>
+    <div class="page">
+        <div class="glow one"></div>
+        <div class="glow two"></div>
 
-    <div class="main-content">
-        <div class="container">
-            <div style="max-width: 500px; margin: 4rem auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <h2 class="text-center mb-3">Iniciar Sesión</h2>
+        <header>
+            <div class="brand">NEXUS</div>
+            <div class="hero-nav">
+                <nav class="nav-links">
+                    <a href="/">Inicio</a>
+                    <a href="/centinel" class="platform-btn">Centinel</a>
+                    <a href="/forum-nexus" class="platform-btn">Forums</a>
+                    <a href="/surlink" class="platform-btn">Surlink</a>
+                    <a href="/pricing">Planes</a>
+                </nav>
+            </div>
+        </header>
 
-                <p class="text-center mb-4">Inicia sesión con Auth0 para reportar y validar incidentes.</p>
+        <main>
+            <div class="login-container">
+                <h2>Iniciar Sesión</h2>
 
-                <div class="text-center">
-                    <button id="loginBtn" class="btn btn-primary" style="width: 100%; padding: 1rem;">
-                        Iniciar Sesión con Auth0
-                    </button>
-                </div>
+                <p class="subtitle">Únete a la comunidad de seguridad ciudadana más activa de Uruguay.</p>
 
-                <div class="mt-4">
-                    <h3>Beneficios de registrarse:</h3>
+                <button id="loginBtn" class="btn-login">
+                    Iniciar Sesión / Registrar
+                </button>
+
+                <button id="anonymousBtn" class="btn-anonymous" style="width: 100%; padding: 1rem; background: transparent; color: var(--text-muted); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 999px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease; margin-top: 1rem;">
+                    Entrar de forma anónima
+                </button>
+
+                <div class="benefits">
+                    <h3>¿Qué puedes hacer con tu cuenta?</h3>
                     <ul>
-                        <li>Reportar incidentes de seguridad</li>
-                        <li>Validar reportes de otros usuarios</li>
-                        <li>Ganar reputación en la comunidad</li>
-                        <li>Acceso a estadísticas avanzadas</li>
+                        <li><strong>Centinel - Reportes en tiempo real:</strong> Reporta incidentes de seguridad con fotos y ubicación, valida reportes de otros usuarios y gana reputación</li>
+                        <li><strong>Mapas de calor:</strong> Visualiza zonas de riesgo en tu ciudad con datos actualizados en tiempo real</li>
+                        <li><strong>Foro Nexus:</strong> Participa en discusiones sobre Centinel, Surlink y todos los servicios de Nexus, comparte experiencias y consejos con la comunidad</li>
+                        <li><strong>Surlink:</strong> Accede a listados de inmuebles y autos, con planes premium disponibles</li>
+                        <li><strong>Perfil personalizado:</strong> Trackea tu actividad, reputación y contribuciones a la comunidad</li>
+                        <li><strong>Notificaciones:</strong> Recibe alertas de seguridad en tu zona</li>
                     </ul>
                 </div>
 
-                <p class="text-center mt-4">
-                    <small>
-                        Al iniciar sesión, aceptas nuestros
-                        <a href="/terms">Términos de Servicio</a> y
-                        <a href="/privacy">Política de Privacidad</a>.
-                    </small>
+                <div class="benefits" style="margin-top: 1.5rem;">
+                    <h3 style="font-size: 1rem;">📱 Acceso desde cualquier dispositivo</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">
+                        Usa Nexus desde tu computadora, tablet o celular. Tu cuenta se sincroniza automáticamente en todos tus dispositivos.
+                    </p>
+                </div>
+
+                <p class="footer-note">
+                    Al iniciar sesión, aceptas nuestros
+                    <a href="/terms">Términos de Servicio</a> y
+                    <a href="/privacy">Política de Privacidad</a>.
                 </p>
             </div>
+        </main>
+
+        <footer>
+            <span>© <%= new Date().getFullYear() %> Nexus. Nexus. Diseñado en Uruguay con 💙.</span>
+            <span>
+                <a href="/privacy">Privacidad</a> ·
+                <a href="/terms">Términos</a>
+            </span>
+        </footer>
+    </div>
+
+    <!-- Anonymous Access Modal -->
+    <div id="anonymousModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 9999; align-items: center; justify-content: center;">
+        <div class="modal-content" style="max-width: 600px; width: 90%; background: rgba(12, 15, 32, 0.95); border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.1); padding: 2.5rem; position: relative;">
+            <button class="modal-close" onclick="closeAnonymousModal()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text-muted); font-size: 2rem; cursor: pointer; line-height: 1; transition: color 0.2s;">&times;</button>
+
+            <h2 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.75rem;">Acceso Anónimo</h2>
+
+            <p style="margin-bottom: 1.5rem; color: var(--text-muted); line-height: 1.6;">
+                Puedes explorar Nexus sin crear una cuenta, pero tendrás acceso limitado a las funcionalidades de la plataforma.
+            </p>
+
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 1.25rem; margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 0.75rem; color: #ef4444; font-size: 1rem;">⚠️ Limitaciones del acceso anónimo:</h3>
+                <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-muted); line-height: 1.8; font-size: 0.95rem;">
+                    <li>No podrás crear reportes de seguridad en Centinel</li>
+                    <li>No podrás validar reportes de otros usuarios</li>
+                    <li>No podrás participar en el Foro Nexus (crear threads ni comentar)</li>
+                    <li>No podrás publicar listados en Surlink</li>
+                    <li>No tendrás perfil personalizado ni historial de actividad</li>
+                    <li>No recibirás notificaciones de seguridad</li>
+                </ul>
+            </div>
+
+            <div style="background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 12px; padding: 1.25rem; margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 0.75rem; color: #667eea; font-size: 1rem;">✅ Podrás acceder a:</h3>
+                <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-muted); line-height: 1.8; font-size: 0.95rem;">
+                    <li>Visualizar el mapa de reportes de seguridad en Centinel</li>
+                    <li>Leer noticias geolocalizadas</li>
+                    <li>Ver threads y comentarios del Foro Nexus (solo lectura)</li>
+                    <li>Explorar listados de Surlink</li>
+                </ul>
+            </div>
+
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.1rem; text-align: center;">¿A dónde quieres ir?</h3>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                <a href="/centinel" class="platform-btn" style="display: flex; align-items: center; justify-content: center; padding: 1rem; text-decoration: none; border-radius: 12px; font-weight: 600; background: linear-gradient(135deg, #7c5cff, #667eea); color: white; box-shadow: 0 4px 12px rgba(124, 92, 255, 0.3); transition: all 0.2s ease;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem;">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                        <path d="M2 17l10 5 10-5"></path>
+                        <path d="M2 12l10 5 10-5"></path>
+                    </svg>
+                    Centinel
+                </a>
+
+                <a href="/forum-nexus" class="platform-btn" style="display: flex; align-items: center; justify-content: center; padding: 1rem; text-decoration: none; border-radius: 12px; font-weight: 600; background: linear-gradient(135deg, #667eea, #764ba2); color: white; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); transition: all 0.2s ease;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem;">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    Forums
+                </a>
+
+                <a href="/surlink" class="platform-btn" style="display: flex; align-items: center; justify-content: center; padding: 1rem; text-decoration: none; border-radius: 12px; font-weight: 600; background: linear-gradient(135deg, #10c6ff, #667eea); color: white; box-shadow: 0 4px 12px rgba(16, 198, 255, 0.3); transition: all 0.2s ease;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem;">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    Surlink
+                </a>
+            </div>
+
+            <p style="margin-top: 1.5rem; text-align: center; color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">
+                ¿Quieres acceso completo? <a href="/login" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">Crea una cuenta gratis</a>
+            </p>
         </div>
     </div>
 
-    <%- include('partials/footer') %>
+    <!-- Auth0 SPA SDK -->
+    <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
 
     <script>
-        document.getElementById('loginBtn').addEventListener('click', async () => {
+        let auth0Client = null;
+
+        // Auth0 configuration
+        const AUTH0_CONFIG = {
+            domain: '<%= process.env.AUTH0_DOMAIN %>',
+            clientId: '<%= process.env.AUTH0_CLIENT_ID %>',
+            authorizationParams: {
+                redirect_uri: window.location.origin + '/login'
+            }
+        };
+
+        async function initAuth0() {
             try {
-                const response = await fetch('/api/auth/dev-login', {
+                // Validate Auth0 configuration
+                if (!AUTH0_CONFIG.domain || !AUTH0_CONFIG.clientId ||
+                    AUTH0_CONFIG.domain === '' || AUTH0_CONFIG.domain.includes('your-domain')) {
+                    throw new Error('Auth0 no está configurado. Por favor configura AUTH0_DOMAIN y AUTH0_CLIENT_ID en las variables de entorno.');
+                }
+
+                // Create Auth0 client
+                auth0Client = await window.auth0.createAuth0Client(AUTH0_CONFIG);
+
+                // Check if we're returning from Auth0
+                const query = window.location.search;
+                if (query.includes('code=') && query.includes('state=')) {
+                    // Handle the redirect callback
+                    await handleAuth0Callback();
+                }
+            } catch (error) {
+                console.error('Error initializing Auth0:', error);
+                showError('Error al inicializar autenticación: ' + error.message);
+                throw error;
+            }
+        }
+
+        async function handleAuth0Callback() {
+            try {
+                // Get the authorization code
+                const params = new URLSearchParams(window.location.search);
+                const code = params.get('code');
+
+                if (!code) {
+                    throw new Error('No authorization code found');
+                }
+
+                // Send code to our backend
+                const response = await fetch('/api/auth/auth0/callback', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify({
+                        code,
+                        redirect_uri: AUTH0_CONFIG.authorizationParams.redirect_uri
+                    })
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Guardar JWT en localStorage para peticiones de API
+                    // Save JWT token
                     if (data.token) {
                         localStorage.setItem('jwt', data.token);
-                        console.log('JWT token saved:', data.token.substring(0, 20) + '...');
+                        console.log('JWT token saved');
                     }
 
-                    // Login exitoso, redirigir según el rol
+                    // Show success message
+                    alert(data.message || 'Autenticación exitosa');
+
+                    // Redirect based on role
                     if (data.user && data.user.role === 'admin') {
                         window.location.href = '/admin';
                     } else {
-                        window.location.href = '/map';
+                        window.location.href = '/centinel';
                     }
                 } else {
-                    alert('Error al iniciar sesión: ' + (data.error || 'Error desconocido'));
+                    throw new Error(data.error || 'Error al procesar autenticación');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('Error al conectar con el servidor');
+                console.error('Error in Auth0 callback:', error);
+                alert('Error al iniciar sesión: ' + error.message);
+                // Clear URL parameters
+                window.history.replaceState({}, document.title, '/login');
+            }
+        }
+
+        async function loginWithAuth0() {
+            try {
+                if (!auth0Client) {
+                    throw new Error('Cliente de autenticación no inicializado');
+                }
+
+                // Disable button during redirect
+                const btn = document.getElementById('loginBtn');
+                btn.disabled = true;
+                btn.textContent = 'Redirigiendo...';
+
+                // Redirect to Auth0 Universal Login
+                await auth0Client.loginWithRedirect({
+                    authorizationParams: {
+                        redirect_uri: AUTH0_CONFIG.authorizationParams.redirect_uri,
+                        scope: 'openid profile email'
+                    }
+                });
+            } catch (error) {
+                console.error('Error logging in with Auth0:', error);
+                showError('Error al iniciar sesión: ' + error.message);
+
+                // Re-enable button
+                const btn = document.getElementById('loginBtn');
+                btn.disabled = false;
+                btn.textContent = 'Iniciar Sesión / Registrar';
+            }
+        }
+
+        function showError(message) {
+            // Show error in a user-friendly way
+            const loginContainer = document.querySelector('.login-container');
+
+            // Remove existing error if any
+            const existingError = document.getElementById('auth-error');
+            if (existingError) {
+                existingError.remove();
+            }
+
+            // Create error element
+            const errorDiv = document.createElement('div');
+            errorDiv.id = 'auth-error';
+            errorDiv.style.cssText = 'background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; text-align: center;';
+            errorDiv.textContent = message;
+
+            // Insert before the button
+            const btn = document.getElementById('loginBtn');
+            btn.parentElement.insertBefore(errorDiv, btn);
+        }
+
+        // Anonymous modal functions
+        function openAnonymousModal() {
+            const modal = document.getElementById('anonymousModal');
+            modal.style.display = 'flex';
+        }
+
+        function closeAnonymousModal() {
+            const modal = document.getElementById('anonymousModal');
+            modal.style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('anonymousModal');
+            if (event.target === modal) {
+                closeAnonymousModal();
+            }
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await initAuth0();
+
+                // Set up login button
+                document.getElementById('loginBtn').addEventListener('click', loginWithAuth0);
+
+                // Set up anonymous button
+                document.getElementById('anonymousBtn').addEventListener('click', openAnonymousModal);
+            } catch (error) {
+                // Disable login button if Auth0 failed to initialize
+                const btn = document.getElementById('loginBtn');
+                btn.disabled = true;
+                btn.textContent = 'Autenticación no disponible';
             }
         });
     </script>

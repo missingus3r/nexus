@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <%- include('partials/theme-init') %>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            color-scheme: dark;
+            --bg-primary: #06070f;
+            --bg-secondary: #101228;
+            --accent: #7c5cff;
+            --accent-soft: rgba(124, 92, 255, 0.2);
+            --text-primary: #f5f6ff;
+            --text-muted: rgba(245, 246, 255, 0.68);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: radial-gradient(140% 140% at 12% 16%, rgba(124, 92, 255, 0.26) 0%, transparent 55%),
+                        radial-gradient(120% 150% at 88% -10%, rgba(16, 198, 255, 0.18) 0%, transparent 60%),
+                        linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 40px 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .page {
+            position: relative;
+            width: 100%;
+            max-width: 1180px;
+            padding: 56px clamp(24px, 6vw, 80px);
+            border-radius: 36px;
+            background: rgba(6, 7, 15, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(18px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 96px;
+        }
+
+        .glow {
+            position: absolute;
+            filter: blur(60px);
+            opacity: 0.9;
+            z-index: -1;
+        }
+
+        .glow.one {
+            top: -160px;
+            left: -140px;
+            width: 360px;
+            height: 360px;
+            background: radial-gradient(circle, rgba(124, 92, 255, 0.5) 0%, transparent 70%);
+        }
+
+        .glow.two {
+            bottom: -200px;
+            right: -120px;
+            width: 420px;
+            height: 420px;
+            background: radial-gradient(circle, rgba(16, 198, 255, 0.35) 0%, transparent 70%);
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-weight: 600;
+            letter-spacing: 0.16em;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .brand::before {
+            content: "";
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            background: linear-gradient(135deg, #7c5cff, #54e0ff);
+            box-shadow: 0 0 18px rgba(124, 92, 255, 0.45);
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 0.95rem;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+
+        nav a:hover {
+            color: var(--text-primary);
+            transform: translateY(-1px);
+        }
+
+        .platform-nav {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            gap: 96px;
+        }
+
+        .hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 48px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero-copy {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .hero-title {
+            font-size: clamp(3.2rem, 6vw, 5.2rem);
+            line-height: 1.1;
+            font-weight: 600;
+            max-width: 800px;
+        }
+
+        .hero-title span {
+            color: var(--accent);
+            text-shadow: 0 0 20px rgba(124, 92, 255, 0.35);
+        }
+
+        .hero-text {
+            font-size: clamp(1.1rem, 2.2vw, 1.35rem);
+            color: var(--text-muted);
+            line-height: 1.7;
+            max-width: 700px;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .cta {
+            padding: 14px 26px;
+            border-radius: 999px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border 0.2s ease;
+        }
+
+        .cta.primary {
+            color: #0c0f23;
+            background: linear-gradient(135deg, #7c5cff, #54e0ff);
+            box-shadow: 0 20px 40px rgba(124, 92, 255, 0.35);
+        }
+
+        .cta.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 24px 46px rgba(124, 92, 255, 0.45);
+        }
+
+        .cta.secondary {
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .cta.secondary:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .hero-metrics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+
+        .metric-card {
+            padding: 28px 24px;
+            border-radius: 20px;
+            border: 1px solid rgba(124, 92, 255, 0.2);
+            background: rgba(12, 15, 32, 0.5);
+            backdrop-filter: blur(12px);
+            text-align: center;
+            transition: transform 0.25s ease, border-color 0.25s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(124, 92, 255, 0.4);
+        }
+
+        .metric-card h3 {
+            font-size: 2.2rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+
+        .metric-card span {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .section-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 24px;
+        }
+
+        .section-heading h2 {
+            font-size: clamp(1.8rem, 3vw, 2.6rem);
+            font-weight: 600;
+        }
+
+        .section-heading p {
+            max-width: 420px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 22px;
+        }
+
+        .feature-card {
+            position: relative;
+            border-radius: 24px;
+            padding: 28px;
+            background: rgba(12, 15, 32, 0.48);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+        }
+
+        .feature-card::before {
+            content: "";
+            position: absolute;
+            inset: 1px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, rgba(124, 92, 255, 0.08), rgba(84, 224, 255, 0.06));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(124, 92, 255, 0.32);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: rgba(124, 92, 255, 0.22);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 18px;
+            font-size: 1.2rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .dual-panel {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 28px;
+        }
+
+        .panel {
+            border-radius: 28px;
+            padding: 32px;
+            background: rgba(10, 12, 26, 0.66);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: grid;
+            gap: 18px;
+        }
+
+        .panel h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .panel ul {
+            list-style: none;
+            display: grid;
+            gap: 12px;
+        }
+
+        .panel li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .panel li::before {
+            content: "•";
+            color: var(--accent);
+            font-size: 1.4rem;
+            line-height: 1;
+        }
+
+        .stack {
+            border-radius: 32px;
+            padding: 36px;
+            background: rgba(8, 10, 22, 0.72);
+            border: 1px solid rgba(124, 92, 255, 0.16);
+            display: grid;
+            gap: 24px;
+        }
+
+        .stack-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .stack-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .stack-item {
+            padding: 16px 18px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 0.9rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            gap: 18px;
+        }
+
+        footer a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        footer a:hover {
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 1040px) {
+            .feature-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .stack-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 860px) {
+            body {
+                padding: 32px 18px;
+            }
+
+            .page {
+                padding: 44px clamp(20px, 7vw, 48px);
+                gap: 72px;
+            }
+
+            .hero-metrics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .dual-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 24px 16px;
+            }
+
+            .page {
+                border-radius: 28px;
+                gap: 56px;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 18px;
+            }
+
+            .platform-nav {
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .platform-nav nav {
+                width: 100%;
+                justify-content: space-between;
+                gap: 12px;
+            }
+
+            .hero-metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stack-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .hero-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .cta {
+                width: 100%;
+                justify-content: center;
+            }
+
+            footer {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="glow one"></div>
+        <div class="glow two"></div>
+
+        <header>
+            <div class="brand">NEXUS</div>
+            <div class="platform-nav">
+                <nav>
+                    <a href="/">Inicio</a>
+                    <a href="/centinel">Centinel</a>
+                    <a href="/surlink">Surlink</a>
+                    <a href="/login">Iniciar sesión</a>
+                </nav>
+            </div>
+        </header>
+
+        <main>
+            <section class="hero">
+                <div class="hero-copy">
+                    <h1 class="hero-title">Información <span>ciudadana</span> en tiempo real.</h1>
+                    <p class="hero-text">
+                        Nexus une seguridad ciudadana y servicios esenciales en una plataforma accesible para todos.
+                        Centinel te mantiene informado sobre incidentes en tu zona con reportes comunitarios y noticias verificadas.
+                        Surlink conecta inmobiliarias, concesionarias, academias y servicios financieros en un solo marketplace.
+                    </p>
+                    <div class="hero-actions">
+                        <a class="cta primary" href="/centinel">Explorar Centinel</a>
+                        <a class="cta secondary" href="/surlink">Ver Surlink</a>
+                    </div>
+                </div>
+
+                <div class="hero-metrics">
+                    <div class="metric-card">
+                        <h3>&lt;2min</h3>
+                        <span>tiempo promedio para reportar un incidente</span>
+                    </div>
+                    <div class="metric-card">
+                        <h3>24/7</h3>
+                        <span>mapa actualizado en tiempo real con reportes</span>
+                    </div>
+                    <div class="metric-card">
+                        <h3>4 categorías</h3>
+                        <span>inmuebles, autos, educación y finanzas</span>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Gratis</h3>
+                        <span>plan básico con acceso completo a la mayoría de las funcionalidades</span>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <div class="section-heading">
+                    <h2>Funcionalidades principales</h2>
+                    <p>
+                        Dos plataformas integradas que cubren tus necesidades de información y servicios.
+                        Cada módulo está diseñado para ser intuitivo, rápido y confiable.
+                    </p>
+                </div>
+                <br><br>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🗺️</div>
+                        <h3>Mapa en tiempo real</h3>
+                        <p>Visualiza incidentes de seguridad reportados por la comunidad en tu zona. Filtra por tipo, fecha y ubicación.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📰</div>
+                        <h3>Noticias geolocalizadas</h3>
+                        <p>Accede a noticias de seguridad verificadas y ubicadas en el mapa. Mantente informado sobre lo que pasa cerca tuyo.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💬</div>
+                        <h3>Foro comunitario</h3>
+                        <p>Comparte información, pregunta y colabora con tu comunidad. Espacio seguro para discutir sobre Centinel, Surlink y todos los servicios de Nexus.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🏠</div>
+                        <h3>Inmuebles</h3>
+                        <p>Explora propiedades en venta y alquiler con información de seguridad del barrio. Casas, apartamentos y terrenos.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🚗</div>
+                        <h3>Autos y motos</h3>
+                        <p>Encuentra vehículos nuevos y usados de concesionarias verificadas. Compara precios y características fácilmente.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🎓</div>
+                        <h3>Educación</h3>
+                        <p>Descubre cursos, talleres y programas académicos. Encuentra la formación que necesitas en tu área.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💳</div>
+                        <h3>Servicios financieros</h3>
+                        <p>Accede a información sobre créditos, préstamos y seguros. Compara opciones de instituciones confiables.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">👤</div>
+                        <h3>Perfiles y favoritos</h3>
+                        <p>Crea tu cuenta para guardar favoritos, hacer comentarios y gestionar tus reportes. Tu información, siempre accesible.</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3>Planes flexibles</h3>
+                        <p>Desde gratis hasta planes empresariales. Elige el nivel de acceso que necesitas según tus objetivos.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="dual-panel">
+                <div class="panel">
+                    <h3>Para usuarios</h3>
+                    <ul>
+                        <li>Acceso gratuito al mapa de seguridad y noticias geolocalizadas de tu zona.</li>
+                        <li>Reporta incidentes en segundos con fotos y ubicación automática.</li>
+                        <li>Guarda tus propiedades y vehículos favoritos para consultarlos después.</li>
+                        <li>Participa en el foro comunitario sobre todos los servicios de Nexus y valida reportes.</li>
+                        <li>Recibe alertas personalizadas sobre incidentes en áreas de tu interés.</li>
+                    </ul>
+                </div>
+                <div class="panel">
+                    <h3>Para empresas</h3>
+                    <ul>
+                        <li>Publicaciones destacadas en Surlink para inmobiliarias y concesionarias.</li>
+                        <li>Analytics de visualizaciones y contactos de tus listados.</li>
+                        <li>Acceso a datos históricos de seguridad para análisis de zonas.</li>
+                        <li>Planes White-Label para gobiernos y organizaciones grandes.</li>
+                        <li>Soporte prioritario y configuraciones personalizadas según necesidades.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="stack">
+                <div class="stack-title">Stack tecnológico</div>
+                <p class="hero-text">
+                    Nexus está construida con tecnologías modernas y escalables. Priorizamos la velocidad,
+                    seguridad y experiencia de usuario en cada decisión técnica. El código es mantenible y está
+                    listo para crecer con las necesidades de la comunidad.
+                </p>
+                <div class="stack-grid">
+                    <div class="stack-item">Node.js + Express</div>
+                    <div class="stack-item">MongoDB</div>
+                    <div class="stack-item">Socket.IO</div>
+                    <div class="stack-item">Leaflet Maps</div>
+                    <div class="stack-item">RSS Parser</div>
+                    <div class="stack-item">Sessions</div>
+                    <div class="stack-item">Winston Logger</div>
+                    <div class="stack-item">EJS Templates</div>
+                    <div class="stack-item">REST API</div>
+                    <div class="stack-item">Cron Jobs</div>
+                    <div class="stack-item">WSL2 Compatible</div>
+                    <div class="stack-item">Responsive Design</div>
+                </div>
+            </section>
+
+            <section class="dual-panel">
+                <div class="panel" style="background: rgba(124, 92, 255, 0.08); border: 1px solid rgba(124, 92, 255, 0.2);">
+                    <h3>🌐 Navegación anónima disponible</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 1rem; line-height: 1.6;">
+                        Puedes explorar Nexus sin crear una cuenta. Accede al mapa de seguridad, navega por Surlink y consulta el foro de forma anónima.
+                    </p>
+                    <p style="color: var(--text-primary); font-weight: 600; margin-bottom: 0.75rem;">
+                        Al registrarte desbloqueas:
+                    </p>
+                    <ul style="margin-top: 0;">
+                        <li>Reportar incidentes de seguridad con validación comunitaria</li>
+                        <li>Guardar favoritos en Surlink (inmuebles, autos, servicios)</li>
+                        <li>Participar activamente en el foro: crear hilos y comentar</li>
+                        <li>Dar likes y validar reportes para construir reputación</li>
+                        <li>Acceder a tu perfil con estadísticas y actividad reciente</li>
+                    </ul>
+                </div>
+                <div class="panel" style="background: rgba(16, 198, 255, 0.08); border: 1px solid rgba(16, 198, 255, 0.2);">
+                    <h3>💎 Planes premium para más funcionalidades</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 1rem; line-height: 1.6;">
+                        El plan gratuito es suficiente para la mayoría de usuarios. Si necesitas funcionalidades avanzadas, tenemos planes desde $2 USD/mes.
+                    </p>
+                    <p style="color: var(--text-primary); font-weight: 600; margin-bottom: 0.75rem;">
+                        Beneficios de los planes de pago:
+                    </p>
+                    <ul style="margin-top: 0; margin-bottom: 1.5rem;">
+                        <li>Reportes ilimitados de incidentes (vs. 5 por mes en plan gratuito)</li>
+                        <li>Alertas personalizadas para zonas específicas de tu interés</li>
+                        <li>Acceso a datos históricos y análisis de tendencias</li>
+                        <li>Publicaciones destacadas en Surlink para negocios</li>
+                        <li>API para integraciones empresariales y white-label</li>
+                    </ul>
+                    <a class="cta primary" href="/pricing" style="margin: 0 auto; display: inline-flex;">
+                        Ver Planes y Precios
+                    </a>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <span>© <%= new Date().getFullYear() %> Nexus. Diseñado en Uruguay con 💙.</span>
+            <span>
+                <a href="/privacy">Privacidad</a> ·
+                <a href="/terms">Términos</a>
+            </span>
+        </footer>
+    </div>
+</body>
+</html>

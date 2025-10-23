@@ -54,6 +54,41 @@ const userSchema = new mongoose.Schema({
   lastActivity: {
     type: Date,
     default: Date.now
+  },
+  subscription: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subscription',
+    default: null,
+    description: 'Reference to user subscription'
+  },
+  email: {
+    type: String,
+    required: false,
+    index: true,
+    description: 'User email for subscription and notifications'
+  },
+  name: {
+    type: String,
+    required: false,
+    description: 'User full name'
+  },
+  auth0Sub: {
+    type: String,
+    required: false,
+    unique: true,
+    sparse: true,
+    index: true,
+    description: 'Auth0 subject ID (sub claim)'
+  },
+  picture: {
+    type: String,
+    required: false,
+    description: 'User profile picture URL from Auth0'
+  },
+  lastLogin: {
+    type: Date,
+    default: null,
+    description: 'Last login timestamp'
   }
 }, {
   timestamps: true

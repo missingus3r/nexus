@@ -4,31 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
+    <%- include('partials/theme-init') %>
     <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/theme-toggle.js" defer></script>
 </head>
 <body>
-    <%- include('partials/header', { page: page, isAuthenticated: isAuthenticated }) %>
+    <%- include('partials/header-forum-nexus', { page: page, isAuthenticated: isAuthenticated }) %>
 
     <div class="main-content">
         <div class="container">
             <div class="forum-container">
                 <h2>Foro de la Comunidad</h2>
-                <p>Participa en la discusión sobre seguridad ciudadana en nuestra comunidad de Reddit.</p>
+                <p>Participa en la discusión sobre seguridad ciudadana. Elige tu plataforma preferida:</p>
 
-                <div id="reddit-embed">
-                    <iframe src="https://www.reddit.com/r/uruguay/new/"
-                            width="100%"
-                            height="700"
-                            frameborder="0"
-                            scrolling="yes">
-                    </iframe>
+                <!-- Forum Options -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 2rem 0;">
+
+                    <!-- Nexus Forum -->
+                    <div style="text-align: center; padding: 3rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; border: 2px solid var(--primary-color); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); position: relative; overflow: hidden;">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="margin-bottom: 1rem;">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                            <path d="M2 17l10 5 10-5"></path>
+                            <path d="M2 12l10 5 10-5"></path>
+                        </svg>
+                        <h3 style="margin-bottom: 0.75rem; color: white;">Foro Nexus</h3>
+                        <p style="margin-bottom: 1.5rem; color: rgba(255, 255, 255, 0.9); font-size: 0.95rem;">
+                            Nuestro foro interno con sistema de threads, comentarios anidados, likes e imágenes.
+                        </p>
+                        <a href="/forum-nexus" class="btn" style="background: white; color: #667eea; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.5rem; font-size: 1.05rem; font-weight: 600; text-decoration: none;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                            Ir al Foro Nexus
+                        </a>
+                    </div>
+
+                    <!-- Reddit Forum -->
+                    <div style="text-align: center; padding: 3rem 2rem; background: var(--surface); border-radius: 12px; border: 1px solid var(--border-color); position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: 10px; right: 10px; background: #ff9800; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">PRÓXIMAMENTE</div>
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 1rem; opacity: 0.5;">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <h3 style="margin-bottom: 0.75rem; color: var(--text-primary);">Foro Reddit</h3>
+                        <p style="margin-bottom: 1.5rem; color: var(--text-secondary); font-size: 0.95rem;">
+                            Únete a la comunidad de r/nexus_forums en Reddit para discusiones más amplias.
+                        </p>
+                        <button class="btn btn-secondary" disabled style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.5rem; font-size: 1.05rem; opacity: 0.6; cursor: not-allowed;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M2 12h20" stroke="white" stroke-width="2"></path>
+                            </svg>
+                            Próximamente
+                        </button>
+                    </div>
+
                 </div>
-
-                <p class="text-center mt-3">
-                    <a href="https://www.reddit.com/r/uruguay/" target="_blank" class="btn btn-primary">
-                        Ir a Reddit para comentar
-                    </a>
-                </p>
 
                 <div class="mt-4">
                     <h3>Normas del Foro</h3>
@@ -44,5 +80,13 @@
     </div>
 
     <%- include('partials/footer') %>
+
+    <style>
+        @media (max-width: 768px) {
+            .forum-container > div[style*="grid"] {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
 </body>
 </html>

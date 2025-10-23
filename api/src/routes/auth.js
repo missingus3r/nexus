@@ -1,8 +1,14 @@
 import express from 'express';
 import { generateGuestToken, generateUserToken } from '../middleware/auth.js';
-import { User, Incident, Validation } from '../models/index.js';
+import { User, Incident, Validation, Subscription } from '../models/index.js';
+import logger from '../utils/logger.js';
 
 const router = express.Router();
+
+// Auth0 configuration
+const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN;
+const AUTH0_CLIENT_ID = process.env.AUTH0_CLIENT_ID;
+const AUTH0_CLIENT_SECRET = process.env.AUTH0_CLIENT_SECRET;
 
 /**
  * POST /auth/guest-token
@@ -23,56 +29,131 @@ router.post('/guest-token', (req, res) => {
 });
 
 /**
- * POST /auth/dev-login
- * Auto-login con credenciales por defecto (solo desarrollo)
+ * POST /auth/auth0/callback
+ * Handle Auth0 authentication callback
+ * Verifica el usuario y lo crea si no existe
  */
-router.post('/dev-login', async (req, res) => {
+router.post('/auth0/callback', async (req, res) => {
   try {
-    const defaultUser = process.env.DEFAULT_USER || 'admin';
-    const defaultPass = process.env.DEFAULT_PASS || 'admin';
+    const { code, redirect_uri } = req.body;
 
-    const userId = `${defaultUser}-uid`;
-
-    // Find or create user in database
-    let user = await User.findOne({ uid: userId });
-    if (!user) {
-      user = await User.create({
-        uid: userId,
-        reputacion: defaultUser === 'admin' ? 100 : 50,
-        role: defaultUser === 'admin' ? 'admin' : 'user'
-      });
+    if (!code) {
+      return res.status(400).json({ error: 'Código de autorización requerido' });
     }
 
-    // Crear sesión de usuario (para admin panel)
+    if (!AUTH0_DOMAIN || !AUTH0_CLIENT_ID || !AUTH0_CLIENT_SECRET) {
+      logger.error('Auth0 configuration missing');
+      return res.status(500).json({ error: 'Configuración de Auth0 incompleta' });
+    }
+
+    // Exchange code for tokens
+    const tokenResponse = await fetch(`https://${AUTH0_DOMAIN}/oauth/token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        grant_type: 'authorization_code',
+        client_id: AUTH0_CLIENT_ID,
+        client_secret: AUTH0_CLIENT_SECRET,
+        code,
+        redirect_uri
+      })
+    });
+
+    if (!tokenResponse.ok) {
+      const error = await tokenResponse.text();
+      logger.error('Auth0 token exchange failed:', error);
+      return res.status(400).json({ error: 'Error al intercambiar código por token' });
+    }
+
+    const tokens = await tokenResponse.json();
+    const { access_token, id_token } = tokens;
+
+    // Get user info from Auth0
+    const userInfoResponse = await fetch(`https://${AUTH0_DOMAIN}/userinfo`, {
+      headers: {
+        Authorization: `Bearer ${access_token}`
+      }
+    });
+
+    if (!userInfoResponse.ok) {
+      logger.error('Failed to get user info from Auth0');
+      return res.status(400).json({ error: 'Error al obtener información del usuario' });
+    }
+
+    const auth0User = await userInfoResponse.json();
+    logger.info('Auth0 user info:', auth0User);
+
+    const { sub, email, name, picture } = auth0User;
+
+    // Find or create user in database
+    let user = await User.findOne({
+      $or: [
+        { auth0Sub: sub },
+        { email: email }
+      ]
+    });
+
+    if (!user) {
+      // Create new user
+      user = await User.create({
+        uid: sub, // Use Auth0 sub as uid
+        auth0Sub: sub,
+        email,
+        name: name || email.split('@')[0],
+        picture,
+        reputacion: 50,
+        role: 'user',
+        lastLogin: new Date()
+      });
+      logger.info('New user created:', { email, sub });
+    } else {
+      // Update existing user
+      user.auth0Sub = sub;
+      user.email = email;
+      user.name = name || user.name;
+      user.picture = picture || user.picture;
+      user.lastLogin = new Date();
+      await user.save();
+      logger.info('Existing user updated:', { email, sub });
+    }
+
+    // Create session
     req.session.user = {
       id: user._id,
-      uid: userId,
-      username: defaultUser,
-      email: `${defaultUser}@nexus.dev`,
+      uid: user.uid,
+      username: user.name || user.email,
+      email: user.email,
       role: user.role,
+      picture: user.picture,
       createdAt: user.createdAt
     };
 
-    // Generate JWT token
-    const token = generateUserToken(userId, []);
+    // Generate JWT token for API calls
+    const jwtToken = generateUserToken(user.uid, []);
 
     res.json({
       success: true,
       user: {
         id: user._id,
-        uid: userId,
-        username: defaultUser,
-        email: `${defaultUser}@nexus.dev`,
+        uid: user.uid,
+        username: user.name || user.email,
+        email: user.email,
+        name: user.name,
+        picture: user.picture,
         role: user.role,
         reputacion: user.reputacion
       },
-      token,
-      expiresIn: 604800, // 7 days in seconds
-      message: 'Login exitoso (modo desarrollo)'
+      token: jwtToken,
+      expiresIn: 604800, // 7 days
+      message: user.createdAt.getTime() === user.lastLogin.getTime()
+        ? 'Registro exitoso'
+        : 'Login exitoso'
     });
   } catch (error) {
-    console.error('Error in dev-login:', error);
-    res.status(500).json({ error: 'Error al iniciar sesión' });
+    logger.error('Error in Auth0 callback:', error);
+    res.status(500).json({ error: 'Error al procesar autenticación' });
   }
 });
 
@@ -123,6 +204,12 @@ router.get('/profile', async (req, res) => {
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 10);
 
+    // Get user's subscription
+    const subscription = await Subscription.findOne({
+      userId: user._id,
+      status: 'active'
+    }).sort({ createdAt: -1 });
+
     const profileData = {
       user: {
         id: user._id,
@@ -136,6 +223,13 @@ router.get('/profile', async (req, res) => {
         totalValidations: user.validationCount || 0,
         reputation: user.reputacion || 50
       },
+      subscription: {
+        plan: subscription?.plan || 'free',
+        status: subscription?.status || 'active',
+        endDate: subscription?.endDate,
+        billingCycle: subscription?.billingCycle,
+        isActive: subscription?.isActive() || false
+      },
       recentActivity: activities,
       settings: {
         emailNotifications: true,
@@ -146,7 +240,7 @@ router.get('/profile', async (req, res) => {
 
     res.json(profileData);
   } catch (error) {
-    console.error('Error getting profile:', error);
+    logger.error('Error getting profile:', error);
     res.status(500).json({ error: 'Error al obtener perfil' });
   }
 });
@@ -165,14 +259,14 @@ router.put('/settings', (req, res) => {
 
     // En producción, aquí guardarías en la base de datos
     // Por ahora solo retornamos éxito
-    console.log('Settings updated for user:', req.session.user.id, req.body);
+    logger.info('Settings updated for user:', { userId: req.session.user.id, settings: req.body });
 
     res.json({
       success: true,
       message: 'Configuración actualizada exitosamente'
     });
   } catch (error) {
-    console.error('Error updating settings:', error);
+    logger.error('Error updating settings:', error);
     res.status(500).json({ error: 'Error al actualizar configuración' });
   }
 });
@@ -197,7 +291,7 @@ router.delete('/delete-account', (req, res) => {
     // 4. El registro del usuario
     // 5. Cualquier archivo asociado (imágenes, etc.)
 
-    console.log('Account deletion requested for user:', userId, username);
+    logger.info('Account deletion requested for user:', { userId, username });
 
     // IMPORTANTE: En producción deberías hacer algo como:
     // await User.findByIdAndDelete(userId);
@@ -208,7 +302,7 @@ router.delete('/delete-account', (req, res) => {
     // Destruir la sesión
     req.session.destroy((err) => {
       if (err) {
-        console.error('Error destroying session:', err);
+        logger.error('Error destroying session:', err);
         return res.status(500).json({ error: 'Error al cerrar sesión' });
       }
 
@@ -218,7 +312,7 @@ router.delete('/delete-account', (req, res) => {
       });
     });
   } catch (error) {
-    console.error('Error deleting account:', error);
+    logger.error('Error deleting account:', error);
     res.status(500).json({ error: 'Error al eliminar cuenta' });
   }
 });

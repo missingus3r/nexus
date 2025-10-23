@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <%- include('partials/theme-init') %>
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/mobile-map.css">
+    <script src="/js/theme-toggle.js" defer></script>
+    <style>
+        /* Incidents List Button - Desktop */
+        .incidents-list-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 10;
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            color: white;
+            border: none;
+            border-radius: 28px;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(25, 118, 210, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .incidents-list-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .incidents-list-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(25, 118, 210, 0.5), 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .incidents-list-btn:hover::before {
+            left: 100%;
+        }
+
+        .incidents-list-btn:active {
+            transform: translateY(0px);
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .incidents-list-btn svg {
+            flex-shrink: 0;
+        }
+
+        /* Incidents List Modal Improvements */
+        #incidentsListModal .modal-content {
+            animation: slideInUp 0.3s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #incidentsListContent {
+            padding: 1.5rem;
+        }
+
+        #incidentsListContent::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #incidentsListContent::-webkit-scrollbar-track {
+            background: var(--scrollbar-track);
+            border-radius: 4px;
+        }
+
+        #incidentsListContent::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 4px;
+        }
+
+        #incidentsListContent::-webkit-scrollbar-thumb:hover {
+            background: var(--scrollbar-thumb-hover);
+        }
+
+        /* Improved incident cards in modal */
+        .incident-card {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            background: var(--surface);
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .incident-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--primary-color);
+            transform: scaleY(0);
+            transition: transform 0.2s ease;
+        }
+
+        .incident-card:hover {
+            box-shadow: 0 4px 12px var(--shadow-elevation);
+            transform: translateY(-2px);
+            border-color: var(--primary-color);
+        }
+
+        .incident-card:hover::before {
+            transform: scaleY(1);
+        }
+
+        .incident-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .incident-card-title {
+            margin: 0 0 0.25rem 0;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .incident-card-date {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .incident-card-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .incident-card-reporter {
+            margin: 0.75rem 0;
+            padding: 0.5rem;
+            background: var(--surface-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .incident-card-reporter strong {
+            color: var(--text-primary);
+        }
+
+        .incident-card-reporter span {
+            color: var(--text-secondary);
+        }
+
+        .incident-card-description {
+            margin: 0.75rem 0;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .incident-card-btn {
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 0.75rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .incident-card-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+        }
+
+        .incident-card-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Empty state */
+        .incidents-empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .incidents-empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            .incidents-list-btn span {
+                display: none;
+            }
+
+            .incidents-list-btn {
+                width: 56px;
+                height: 56px;
+                padding: 0;
+                border-radius: 50%;
+                justify-content: center;
+            }
+
+            .incident-card {
+                padding: 1rem;
+            }
+
+            .incident-card-title {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="map-page">
+    <%- include('partials/header-centinel', { page: page, isAuthenticated: isAuthenticated }) %>
+
+    <div class="main-content map-main">
+        <div class="map-container fullscreen-map">
+            <div id="map"></div>
+
+            <!-- Controles flotantes para mobile -->
+            <div class="floating-controls mobile-only">
+                <button id="filtersBtn" class="floating-btn" title="Filtros">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <line x1="4" y1="6" x2="20" y2="6"></line>
+                        <line x1="4" y1="12" x2="20" y2="12"></line>
+                        <line x1="4" y1="18" x2="20" y2="18"></line>
+                        <circle cx="8" cy="6" r="2"></circle>
+                        <circle cx="16" cy="12" r="2"></circle>
+                        <circle cx="12" cy="18" r="2"></circle>
+                    </svg>
+                </button>
+
+                <% if (isAuthenticated) { %>
+                    <button id="reportBtnMobile" class="floating-btn primary">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                <% } %>
+
+                <button id="layersBtn" class="floating-btn" title="Capas">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                        <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                </button>
+
+                <button id="incidentsListBtn" class="floating-btn" title="Lista de Incidentes">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Desktop floating button for incidents list -->
+            <button id="incidentsListBtnDesktop" class="incidents-list-btn desktop-only" title="Últimos Incidentes">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+                <span>Últimos Incidentes</span>
+            </button>
+
+            <!-- Desktop controls -->
+            <div class="map-controls desktop-only">
+                <h3>Filtros</h3>
+                <div class="form-group">
+                    <label for="typeFilter">Tipo de Incidente:</label>
+                    <select id="typeFilter">
+                        <option value="todos">Todos</option>
+                        <option value="homicidio">Homicidio</option>
+                        <option value="rapiña">Rapiña</option>
+                        <option value="hurto">Hurto</option>
+                        <option value="copamiento">Copamiento</option>
+                        <option value="violencia_domestica">Violencia Doméstica</option>
+                        <option value="narcotrafico">Narcotráfico</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+
+                <% if (isAuthenticated) { %>
+                    <button id="reportBtn" class="btn btn-danger" style="width: 100%; margin-top: 0.5rem;">
+                        Reportar Incidente
+                    </button>
+                <% } %>
+
+                <div class="layer-controls">
+                    <label>
+                        <input type="checkbox" id="showIncidents" checked>
+                        Incidentes
+                    </label>
+                    <label>
+                        <input type="checkbox" id="showHeatmap" checked>
+                        Heatmap
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Filtros Mobile -->
+        <div id="filtersModal" class="bottom-sheet mobile-only">
+            <div class="bottom-sheet-content">
+                <div class="bottom-sheet-header">
+                    <h3>Filtros</h3>
+                    <button class="close-sheet">&times;</button>
+                </div>
+                <div class="bottom-sheet-body">
+                    <div class="form-group">
+                        <label for="typeFilterMobile">Tipo de Incidente:</label>
+                        <select id="typeFilterMobile">
+                            <option value="todos">Todos</option>
+                            <option value="homicidio">Homicidio</option>
+                            <option value="rapiña">Rapiña</option>
+                            <option value="hurto">Hurto</option>
+                            <option value="copamiento">Copamiento</option>
+                            <option value="violencia_domestica">Violencia Doméstica</option>
+                            <option value="narcotrafico">Narcotráfico</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Capas Mobile -->
+        <div id="layersModal" class="bottom-sheet mobile-only">
+            <div class="bottom-sheet-content">
+                <div class="bottom-sheet-header">
+                    <h3>Capas del Mapa</h3>
+                    <button class="close-sheet">&times;</button>
+                </div>
+                <div class="bottom-sheet-body">
+                    <div class="layer-controls">
+                        <label>
+                            <input type="checkbox" id="showIncidentsMobile" checked>
+                            Mostrar Incidentes
+                        </label>
+                        <label>
+                            <input type="checkbox" id="showHeatmapMobile" checked>
+                            Mostrar Heatmap
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Acerca de Mobile -->
+        <div id="aboutModal" class="bottom-sheet mobile-only">
+            <div class="bottom-sheet-content">
+                <div class="bottom-sheet-header">
+                    <h3>Acerca de Nexus</h3>
+                    <button class="close-sheet">&times;</button>
+                </div>
+                <div class="bottom-sheet-body">
+                    <p>&copy; 2025 Nexus - Plataforma de Seguridad Ciudadana</p>
+                    <p style="margin-top: 1rem;">
+                        <a href="/privacy" style="color: var(--primary-color); text-decoration: none;">Privacidad</a> |
+                        <a href="/terms" style="color: var(--primary-color); text-decoration: none;">Términos</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Lista de Incidentes -->
+        <div id="incidentsListModal" class="modal">
+            <div class="modal-content" style="max-width: 650px;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%); color: white; padding: 1.5rem; border-radius: 8px 8px 0 0;">
+                    <h2 style="margin: 0; display: flex; align-items: center; gap: 12px; font-size: 1.5rem;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                        Últimos Incidentes
+                    </h2>
+                    <button id="incidentsListModalClose" class="modal-close" style="color: white; opacity: 0.9;">&times;</button>
+                </div>
+                <div id="incidentsListContent" style="max-height: 500px; overflow-y: auto;">
+                    <p class="text-center" style="padding: 3rem 1rem; color: #757575;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: block; margin: 0 auto 1rem;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        Cargando incidentes...
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div id="reportModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Reportar Incidente</h2>
+                    <button id="modalClose" class="modal-close">&times;</button>
+                </div>
+                <form id="reportForm">
+                    <div class="form-group">
+                        <label for="locationType">Tipo de Ubicación:</label>
+                        <select id="locationType" name="locationType" required>
+                            <option value="exact">Ubicación Exacta</option>
+                            <option value="approximate">Zona Aproximada</option>
+                        </select>
+                        <small style="color: var(--text-secondary);">
+                            <span id="locationTypeHelp">Haz click en el mapa para marcar la ubicación exacta</span>
+                        </small>
+                    </div>
+
+                    <div class="form-group" id="radiusGroup" style="display: none;">
+                        <label for="approximateRadius">Radio de la zona (metros):</label>
+                        <input type="range" id="approximateRadius" name="approximateRadius" min="50" max="500" value="100" step="50">
+                        <span id="radiusValue">100m</span>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="button" id="selectLocationBtn" class="btn btn-primary" style="width: 100%;">
+                            📍 Seleccionar en el Mapa
+                        </button>
+                        <div id="locationInfo" style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary); display: none;">
+                            <strong>Ubicación seleccionada:</strong><br>
+                            Lat: <span id="selectedLat">-</span>, Lon: <span id="selectedLon">-</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="type">Tipo:</label>
+                        <select id="type" name="type" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="homicidio">Homicidio</option>
+                            <option value="rapiña">Rapiña</option>
+                            <option value="hurto">Hurto</option>
+                            <option value="copamiento">Copamiento</option>
+                            <option value="violencia_domestica">Violencia Doméstica</option>
+                            <option value="narcotrafico">Narcotráfico</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="severity">Severidad (1-5):</label>
+                        <input type="range" id="severity" name="severity" min="1" max="5" value="3">
+                        <span id="severityValue">3</span>
+                        <div id="severityExplanation" style="margin-top: 0.5rem; padding: 0.5rem; background: var(--bg-secondary); border-radius: 4px; font-size: 0.875rem; color: var(--text-secondary); display: none;">
+                            <strong>Severidad sugerida:</strong> <span id="severityReason"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Descripción:</label>
+                        <textarea id="description" name="description" maxlength="1000" placeholder="Describe el incidente..."></textarea>
+                        <small><span id="charCount">0</span>/1000</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="photos">Fotos (opcional - máximo 3):</label>
+                        <input type="file" id="photos" name="photos" accept="image/jpeg,image/jpg,image/png,image/webp" multiple>
+                        <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                            Formatos: JPG, PNG, WEBP. Máximo 5MB por foto.
+                        </small>
+                        <div id="photoPreview" style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Reportar</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeReportModal();">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal de Bienvenida -->
+        <div id="welcomeModal" class="modal">
+            <div class="modal-content" style="max-width: 700px;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 8px 8px 0 0;">
+                    <h2 style="margin: 0; display: flex; align-items: center; gap: 12px; font-size: 1.8rem;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                            <path d="M2 17l10 5 10-5"></path>
+                            <path d="M2 12l10 5 10-5"></path>
+                        </svg>
+                        Bienvenido a NEXUS Centinel
+                    </h2>
+                    <button id="welcomeModalClose" class="modal-close" style="color: white; opacity: 0.9;">&times;</button>
+                </div>
+                <div style="padding: 2rem;">
+                    <div style="margin-bottom: 1.5rem;">
+                        <h3 style="color: #333; margin-bottom: 0.75rem; font-size: 1.3rem;">¿Qué es Centinel?</h3>
+                        <p style="color: #555; line-height: 1.7; font-size: 1rem;">
+                            Centinel es tu plataforma de <strong>seguridad ciudadana en tiempo real</strong>.
+                            Una herramienta colaborativa que permite a la comunidad reportar, visualizar y mantenerse
+                            informada sobre incidentes de seguridad en Uruguay.
+                        </p>
+                    </div>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <h3 style="color: #333; margin-bottom: 0.75rem; font-size: 1.3rem;">Funcionalidades Principales</h3>
+                        <div style="display: grid; gap: 1rem;">
+                            <div style="display: flex; gap: 1rem; align-items: start;">
+                                <div style="background: #e3f2fd; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1976d2" stroke-width="2">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                        <circle cx="12" cy="10" r="3"></circle>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <strong style="color: #333; display: block; margin-bottom: 0.25rem;">Mapa Interactivo en Tiempo Real</strong>
+                                    <p style="color: #666; margin: 0; font-size: 0.95rem;">Visualiza incidentes geolocalizados y heatmaps de zonas de riesgo actualizados constantemente.</p>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 1rem; align-items: start;">
+                                <div style="background: #f3e5f5; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7b1fa2" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <strong style="color: #333; display: block; margin-bottom: 0.25rem;">Reportar Incidentes</strong>
+                                    <p style="color: #666; margin: 0; font-size: 0.95rem;">Contribuye a la comunidad reportando incidentes con ubicación exacta o aproximada, fotos y detalles.</p>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 1rem; align-items: start;">
+                                <div style="background: #fff3e0; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f57c00" stroke-width="2">
+                                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <strong style="color: #333; display: block; margin-bottom: 0.25rem;">Noticias de Seguridad Geolocalizadas</strong>
+                                    <p style="color: #666; margin: 0; font-size: 0.95rem;">Accede a noticias de seguridad cercanas a tu ubicación y mantente informado.</p>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 1rem; align-items: start;">
+                                <div style="background: #e8f5e9; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#388e3c" stroke-width="2">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="9" cy="7" r="4"></circle>
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <strong style="color: #333; display: block; margin-bottom: 0.25rem;">Foro Comunitario</strong>
+                                    <p style="color: #666; margin: 0; font-size: 0.95rem;">Participa en discusiones sobre seguridad ciudadana y comparte experiencias.</p>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 1rem; align-items: start;">
+                                <div style="background: #fce4ec; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c2185b" stroke-width="2">
+                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <strong style="color: #333; display: block; margin-bottom: 0.25rem;">Enlaces Oficiales</strong>
+                                    <p style="color: #666; margin: 0; font-size: 0.95rem;">Acceso directo a recursos del Ministerio del Interior y organismos oficiales.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: #f5f5f5; border-left: 4px solid #667eea; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
+                        <p style="margin: 0; color: #555; font-size: 0.95rem;">
+                            <strong>💡 Consejo:</strong> Mantén activada tu ubicación para obtener información más precisa de tu zona.
+                        </p>
+                    </div>
+
+                    <button onclick="closeWelcomeModal();" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                        ¡Comenzar a Explorar!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer desktop-only">
+        <%- include('partials/footer') %>
+    </div>
+
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/map.js"></script>
+    <script>
+        // Severity defaults and explanations for each incident type
+        const incidentSeverity = {
+            'homicidio': {
+                value: 5,
+                reason: 'Máxima severidad - pérdida de vida humana. Delito más grave contra la persona.'
+            },
+            'rapiña': {
+                value: 4,
+                reason: 'Alta severidad - uso de violencia o intimidación directa. Riesgo inmediato para las víctimas.'
+            },
+            'copamiento': {
+                value: 5,
+                reason: 'Máxima severidad - violencia extrema organizada. Múltiples víctimas y alto riesgo.'
+            },
+            'violencia_domestica': {
+                value: 4,
+                reason: 'Alta severidad - riesgo de vida en entorno familiar. Requiere intervención urgente.'
+            },
+            'narcotrafico': {
+                value: 3,
+                reason: 'Severidad media-alta - problema social y de salud pública. Impacto comunitario.'
+            },
+            'hurto': {
+                value: 2,
+                reason: 'Severidad media-baja - delito contra la propiedad sin violencia directa.'
+            },
+            'otro': {
+                value: 3,
+                reason: 'Severidad media - evalúa según el contexto específico del incidente.'
+            }
+        };
+
+        // Severity colors
+        const severityColors = {
+            1: '#4caf50', // green
+            2: '#8bc34a', // light green
+            3: '#ffc107', // yellow
+            4: '#ff9800', // orange
+            5: '#f44336'  // red
+        };
+
+        // Update severity when incident type changes
+        document.getElementById('type')?.addEventListener('change', (e) => {
+            const type = e.target.value;
+            const severityInput = document.getElementById('severity');
+            const severityValue = document.getElementById('severityValue');
+            const severityExplanation = document.getElementById('severityExplanation');
+            const severityReason = document.getElementById('severityReason');
+
+            if (type && incidentSeverity[type]) {
+                const config = incidentSeverity[type];
+                severityInput.value = config.value;
+                severityValue.textContent = config.value;
+                severityReason.textContent = config.reason;
+                severityExplanation.style.display = 'block';
+
+                // Update color
+                const color = severityColors[config.value];
+                severityExplanation.style.borderLeft = `4px solid ${color}`;
+            } else {
+                severityExplanation.style.display = 'none';
+            }
+        });
+
+        // Update severity value display and color on manual change
+        document.getElementById('severity')?.addEventListener('input', (e) => {
+            const value = e.target.value;
+            const severityValueDisplay = document.getElementById('severityValue');
+            severityValueDisplay.textContent = value;
+
+            // Add color indicator
+            const color = severityColors[value];
+            if (color) {
+                severityValueDisplay.style.color = color;
+                severityValueDisplay.style.fontWeight = 'bold';
+            }
+        });
+
+        document.getElementById('description')?.addEventListener('input', (e) => {
+            document.getElementById('charCount').textContent = e.target.value.length;
+        });
+
+        // Function to close report modal and clean up
+        function closeReportModal() {
+            document.getElementById('reportModal').classList.remove('active');
+            document.getElementById('reportForm').reset();
+            document.getElementById('photoPreview').innerHTML = '';
+            document.getElementById('photos').value = '';
+
+            // Reset severity to default
+            const severityInput = document.getElementById('severity');
+            const severityValue = document.getElementById('severityValue');
+            const severityExplanation = document.getElementById('severityExplanation');
+            severityInput.value = 3;
+            severityValue.textContent = '3';
+            severityValue.style.color = '';
+            severityValue.style.fontWeight = '';
+            severityExplanation.style.display = 'none';
+
+            if (window.cancelLocationSelection) {
+                window.cancelLocationSelection();
+            }
+        }
+        window.closeReportModal = closeReportModal;
+
+        // Also close when clicking the X button
+        document.getElementById('modalClose')?.addEventListener('click', closeReportModal);
+
+        // Photo preview functionality
+        document.getElementById('photos')?.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            const preview = document.getElementById('photoPreview');
+
+            // Validate max 3 photos
+            if (files.length > 3) {
+                alert('Máximo 3 fotos permitidas');
+                e.target.value = '';
+                preview.innerHTML = '';
+                return;
+            }
+
+            // Validate file size (5MB max)
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            const invalidFiles = files.filter(f => f.size > maxSize);
+            if (invalidFiles.length > 0) {
+                alert('Cada foto debe ser menor a 5MB');
+                e.target.value = '';
+                preview.innerHTML = '';
+                return;
+            }
+
+            // Show preview
+            preview.innerHTML = '';
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.width = '80px';
+                    img.style.height = '80px';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '4px';
+                    img.style.border = '1px solid var(--border-color)';
+                    img.title = file.name;
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        // Mobile bottom sheets functionality
+        function openBottomSheet(sheetId) {
+            const sheet = document.getElementById(sheetId);
+            if (sheet) {
+                sheet.classList.add('active');
+            }
+        }
+
+        function closeBottomSheet(sheet) {
+            sheet.classList.remove('active');
+        }
+
+        // Filtros button
+        document.getElementById('filtersBtn')?.addEventListener('click', () => {
+            openBottomSheet('filtersModal');
+        });
+
+        // Layers button
+        document.getElementById('layersBtn')?.addEventListener('click', () => {
+            openBottomSheet('layersModal');
+        });
+
+        // Report button mobile
+        document.getElementById('reportBtnMobile')?.addEventListener('click', () => {
+            document.getElementById('reportModal').classList.add('active');
+        });
+
+        // Close buttons for bottom sheets
+        document.querySelectorAll('.close-sheet').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const sheet = e.target.closest('.bottom-sheet');
+                closeBottomSheet(sheet);
+            });
+        });
+
+        // Click outside to close
+        document.querySelectorAll('.bottom-sheet').forEach(sheet => {
+            sheet.addEventListener('click', (e) => {
+                if (e.target === sheet) {
+                    closeBottomSheet(sheet);
+                }
+            });
+        });
+
+        // Sync filters between mobile and desktop
+        const typeFilter = document.getElementById('typeFilter');
+        const typeFilterMobile = document.getElementById('typeFilterMobile');
+
+        typeFilter?.addEventListener('change', (e) => {
+            if (typeFilterMobile) typeFilterMobile.value = e.target.value;
+        });
+
+        typeFilterMobile?.addEventListener('change', (e) => {
+            if (typeFilter) typeFilter.value = e.target.value;
+            closeBottomSheet(document.getElementById('filtersModal'));
+        });
+
+        // Sync layers checkboxes
+        const showIncidents = document.getElementById('showIncidents');
+        const showIncidentsMobile = document.getElementById('showIncidentsMobile');
+        const showHeatmap = document.getElementById('showHeatmap');
+        const showHeatmapMobile = document.getElementById('showHeatmapMobile');
+
+        showIncidents?.addEventListener('change', (e) => {
+            if (showIncidentsMobile) showIncidentsMobile.checked = e.target.checked;
+        });
+
+        showIncidentsMobile?.addEventListener('change', (e) => {
+            if (showIncidents) showIncidents.checked = e.target.checked;
+        });
+
+        showHeatmap?.addEventListener('change', (e) => {
+            if (showHeatmapMobile) showHeatmapMobile.checked = e.target.checked;
+        });
+
+        showHeatmapMobile?.addEventListener('change', (e) => {
+            if (showHeatmap) showHeatmap.checked = e.target.checked;
+        });
+
+        // Incidents List Modal
+        function openIncidentsListModal() {
+            const modal = document.getElementById('incidentsListModal');
+            modal.classList.add('active');
+            loadIncidentsList();
+        }
+
+        function closeIncidentsListModal() {
+            const modal = document.getElementById('incidentsListModal');
+            modal.classList.remove('active');
+        }
+
+        async function loadIncidentsList() {
+            const content = document.getElementById('incidentsListContent');
+            content.innerHTML = '<p class="text-center">Cargando incidentes...</p>';
+
+            try {
+                const token = localStorage.getItem('jwt') || await getGuestToken();
+                const response = await fetch('/api/map/incidents?limit=20', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+                displayIncidentsList(data.features);
+            } catch (error) {
+                console.error('Error loading incidents list:', error);
+                content.innerHTML = '<p class="text-center" style="color: var(--danger-color);">Error al cargar incidentes</p>';
+            }
+        }
+
+        function displayIncidentsList(incidents) {
+            const content = document.getElementById('incidentsListContent');
+
+            if (!incidents || incidents.length === 0) {
+                content.innerHTML = `
+                    <div class="incidents-empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No hay incidentes disponibles</p>
+                        <p style="font-size: 0.9rem;">Aún no se han reportado incidentes en esta área</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const statusColors = {
+                'pending': '#ffa726',
+                'verified': '#66bb6a',
+                'rejected': '#ef5350'
+            };
+            const statusLabels = {
+                'pending': 'Pendiente',
+                'verified': 'Verificado',
+                'rejected': 'Rechazado'
+            };
+
+            content.innerHTML = incidents.map(incident => {
+                const props = incident.properties;
+                const coords = incident.geometry.coordinates;
+                const statusColor = statusColors[props.status] || '#999';
+                const statusLabel = statusLabels[props.status] || props.status;
+                const date = new Date(props.createdAt).toLocaleDateString('es-UY', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                return `
+                    <div class="incident-card">
+                        <div class="incident-card-header">
+                            <div>
+                                <h4 class="incident-card-title">${props.type}</h4>
+                                <div class="incident-card-date">${date}</div>
+                            </div>
+                            <span class="incident-card-status" style="background: ${statusColor}; color: white;">
+                                ${statusLabel}
+                            </span>
+                        </div>
+                        <div class="incident-card-reporter">
+                            <strong>Reportado por:</strong>
+                            <span>${props.reporterUid || 'Anónimo'}</span>
+                        </div>
+                        ${props.description ? `<div class="incident-card-description">${props.description}</div>` : ''}
+                        <button
+                            onclick="centerMapOnIncident(${coords[0]}, ${coords[1]}, '${incident.properties.id}')"
+                            class="incident-card-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Ver en el Mapa
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Center map on incident
+        window.centerMapOnIncident = function(lon, lat, incidentId) {
+            closeIncidentsListModal();
+
+            if (window.map) {
+                window.map.flyTo({
+                    center: [lon, lat],
+                    zoom: 16,
+                    essential: true,
+                    duration: 2000
+                });
+
+                // Wait for animation to complete, then show popup
+                setTimeout(() => {
+                    if (window.showIncidentPopup) {
+                        window.showIncidentPopup(lon, lat, incidentId);
+                    }
+                }, 2100);
+            }
+        };
+
+        async function getGuestToken() {
+            try {
+                const response = await fetch('/api/auth/guest-token', { method: 'POST' });
+                const data = await response.json();
+                localStorage.setItem('jwt', data.token);
+                return data.token;
+            } catch (error) {
+                console.error('Error getting guest token:', error);
+                return null;
+            }
+        }
+
+        // Event listeners for incidents list buttons
+        document.getElementById('incidentsListBtn')?.addEventListener('click', openIncidentsListModal);
+        document.getElementById('incidentsListBtnDesktop')?.addEventListener('click', openIncidentsListModal);
+        document.getElementById('incidentsListModalClose')?.addEventListener('click', closeIncidentsListModal);
+
+        // Close modal when clicking outside
+        document.getElementById('incidentsListModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'incidentsListModal') {
+                closeIncidentsListModal();
+            }
+        });
+
+        // Welcome Modal Logic
+        function closeWelcomeModal() {
+            const modal = document.getElementById('welcomeModal');
+            modal.classList.remove('active');
+            // Save to localStorage so it doesn't show again
+            localStorage.setItem('centinelWelcomeShown', 'true');
+        }
+
+        function checkAndShowWelcomeModal() {
+            const hasSeenWelcome = localStorage.getItem('centinelWelcomeShown');
+            if (!hasSeenWelcome) {
+                const modal = document.getElementById('welcomeModal');
+                // Show modal after a short delay to ensure page is loaded
+                setTimeout(() => {
+                    modal.classList.add('active');
+                }, 500);
+            }
+        }
+
+        // Event listeners for welcome modal
+        document.getElementById('welcomeModalClose')?.addEventListener('click', closeWelcomeModal);
+
+        // Close welcome modal when clicking outside
+        document.getElementById('welcomeModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'welcomeModal') {
+                closeWelcomeModal();
+            }
+        });
+
+        // Show welcome modal on page load if not shown before
+        document.addEventListener('DOMContentLoaded', checkAndShowWelcomeModal);
+    </script>
+</body>
+</html>

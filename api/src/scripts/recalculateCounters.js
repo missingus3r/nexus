@@ -46,7 +46,7 @@ async function recalculateCounters() {
         user.validationCount = validationCount;
         await user.save();
 
-        console.log(`  ✓ Updated counters:`);
+        console.log('  ✓ Updated counters:');
         console.log(`    Reports: ${oldReports} → ${reportCount}`);
         console.log(`    Validations: ${oldValidations} → ${validationCount}`);
         updatedCount++;
@@ -55,7 +55,7 @@ async function recalculateCounters() {
       }
     }
 
-    console.log(`\n✅ Recalculation complete!`);
+    console.log('\n✅ Recalculation complete!');
     console.log(`   Users updated: ${updatedCount}`);
     console.log(`   Users unchanged: ${users.length - updatedCount}`);
 

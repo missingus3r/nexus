@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { runNewsIngestion } from './newsIngestion.js';
 import { updatePercentiles } from '../services/heatmapService.js';
+import { startSubscriptionNotifications } from './subscriptionNotifications.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -42,6 +43,9 @@ export function startCronJobs(io) {
       logger.error('Cleanup cron failed:', error);
     }
   });
+
+  // Start subscription expiration notifications (daily at 9 AM)
+  startSubscriptionNotifications();
 
   logger.info('All cron jobs started successfully');
 }

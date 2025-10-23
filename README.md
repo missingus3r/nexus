@@ -13,6 +13,7 @@
 - **Ingesta automática** de noticias geolocalizadas (RSS/HTML)
 - **Foro comunitario** integrado con Reddit
 - **Enlaces oficiales** a datos del Ministerio del Interior
+- **NEXUS Surlink** como hub minimalista para propiedades, centros de estudio y autos
 - **Autenticación Auth0** con roles (anónimo, usuario, moderador, admin)
 
 ## 🏗️ Arquitectura
@@ -33,10 +34,13 @@
 │   │   ├── map.ejs              # Página principal
 │   │   ├── news.ejs             # Noticias
 │   │   ├── forum.ejs            # Foro
+│   │   ├── surlink.ejs          # Agregador Surlink (casas, academy, autos)
 │   │   └── partials/            # Header/Footer
 │   ├── public/                   # Estáticos (CSS/JS)
 │   │   ├── css/style.css        # Estilos mobile-first
-│   │   └── js/map.js            # Lógica del mapa
+│   │   ├── css/surlink.css      # UI específica de Surlink
+│   │   ├── js/map.js            # Lógica del mapa
+│   │   └── js/surlink.js        # Lógica del agregador Surlink
 │   ├── src/
 │   │   ├── routes/              # API + Views
 │   │   ├── models/              # Mongoose
@@ -81,6 +85,48 @@ npm start
 # La aplicación estará en http://localhost:3000
 # - Frontend: http://localhost:3000
 # - API: http://localhost:3000/api/*
+```
+
+## 🧭 Nexus Surlink
+
+- Disponible en `/surlink` desde el header principal (branding actualizado a **NEXUS Surlink**).
+- Tres verticales unificadas con un motor de búsqueda mobile-first:
+  - **Surlink Casas**: viviendas, terrenos, proyectos en pozo, containers y steel framing.
+  - **Surlink Academy**: universidades y centros de estudio cargados por admin, con planes/costos.
+  - **Surlink Autos**: autos, camionetas, SUVs y movilidad ligera.
+- Navegación anónima habilitada. El registro se requiere únicamente para:
+  - Marcar favoritos (`likes`) y construir una lista personal.
+  - Comentar en publicaciones de **Casas** y **Autos** (Academy solo admite favoritos).
+- Resultados ordenados por destacados, vistas y fecha; filtros dinámicos generados desde la API.
+
+### Cargar publicaciones
+
+- Los administradores pueden crear listados utilizando `POST /api/surlink/listings` (ver endpoints abajo).
+- Se incluye un bloque en el panel de administración (`/admin`) para:
+  1. Programar el scrapping futuro de **Casas** y **Autos** (`/api/admin/surlink/schedule`).
+  2. Depurar listados caducados (`/api/admin/surlink/cleanup`), que archiva publicaciones con `expiresAt` vencido.
+
+Ejemplo rápido para crear un listado de Surlink Casas:
+
+```bash
+curl -X POST http://localhost:3000/api/surlink/listings \
+  -H "Content-Type: application/json" \
+  -b "connect.sid=<cookie_admin>" \
+  -d '{
+    "category": "casas",
+    "title": "Casa moderna en Pocitos",
+    "description": "Proyecto en pozo con amenities, financiación en 36 cuotas.",
+    "summary": "Monoambientes y 1 dormitorio a pasos de la rambla.",
+    "price": { "amount": 165000, "currency": "USD" },
+    "location": { "city": "Montevideo", "neighborhood": "Pocitos" },
+    "attributes": {
+      "tipo": "Apartamento",
+      "operacion": "Venta",
+      "dormitorios": 1,
+      "m2": 42
+    },
+    "tags": ["amenities", "estreno"]
+  }'
 ```
 
 ## 🚀 Despliegue
@@ -158,6 +204,19 @@ donde:
 
 ### Enlaces
 - `GET /api/links/mi` - URLs oficiales del Ministerio del Interior
+
+### Surlink
+- `GET /api/surlink/listings?category=casas|autos|academy&search=...` - Búsqueda y paginado de publicaciones.
+- `GET /api/surlink/listings/:id` - Detalle completo (comentarios, métricas, contacto).
+- `POST /api/surlink/listings` - Crear publicación (solo admin).
+- `PATCH /api/surlink/listings/:id` - Editar publicación (solo admin).
+- `DELETE /api/surlink/listings/:id` - Archivar publicación (solo admin).
+- `POST /api/surlink/listings/:id/like` - Guardar/Quitar de favoritos (usuario autenticado).
+- `GET /api/surlink/favorites` - Favoritos del usuario autenticado.
+- `POST /api/surlink/listings/:id/comments` - Crear comentario (casas/autos, usuario autenticado).
+- `DELETE /api/surlink/listings/:id/comments/:commentId` - Borrar comentario (autor o admin).
+- `POST /api/admin/surlink/schedule` - Programar scrapping para Casas/Autos (admin).
+- `POST /api/admin/surlink/cleanup` - Archivar listados expirados (admin).
 
 ## 🔄 WebSocket Events
 

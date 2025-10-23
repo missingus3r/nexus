@@ -24,6 +24,11 @@ router.get('/mi', (req, res) => {
         name: 'Mapa de Comisarías',
         url: 'https://www.google.com/maps/d/viewer?mid=1-MjOJFdUGEdLJRdccCuXwkbVhOM&ll=-34.91642232655005%2C-56.216393753704736&z=11',
         description: 'Mapa interactivo de comisarías en Uruguay'
+      },
+      {
+        name: 'Emergencia 9-1-1',
+        url: 'https://www.gub.uy/ministerio-interior/tramites-y-servicios/servicios/emergencia-9-1-1',
+        description: 'Información oficial sobre el servicio de emergencias 9-1-1'
       }
     ],
     disclaimer: 'Estos enlaces son proporcionados para acceso a información oficial. Nexus no almacena ni procesa datos de personas procesadas.'

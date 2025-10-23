@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
+    <%- include('partials/theme-init') %>
     <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/theme-toggle.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .dashboard-grid {
             display: grid;
@@ -14,10 +17,11 @@
         }
 
         .stat-card {
-            background: white;
+            background: var(--surface);
             padding: 1.5rem;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px var(--shadow-elevation);
+            border: 1px solid var(--border-color);
             text-align: center;
         }
 
@@ -78,10 +82,11 @@
         }
 
         .recent-activity {
-            background: white;
+            background: var(--surface);
             padding: 1.5rem;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px var(--shadow-elevation);
+            border: 1px solid var(--border-color);
             margin-top: 2rem;
         }
 
@@ -94,8 +99,9 @@
             padding: 1rem;
             border-left: 3px solid var(--primary-color);
             margin-bottom: 1rem;
-            background: var(--background);
+            background: var(--surface-elevated);
             border-radius: 4px;
+            border: 1px solid var(--border-color);
         }
 
         .activity-item .time {
@@ -104,16 +110,36 @@
         }
 
         .news-controls {
-            background: white;
+            background: var(--surface);
             padding: 1.5rem;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px var(--shadow-elevation);
+            border: 1px solid var(--border-color);
             margin-top: 2rem;
         }
 
         .news-controls h2 {
             margin-top: 0;
             color: var(--primary-color);
+        }
+
+        .surlink-controls {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px var(--shadow-elevation);
+            border: 1px solid var(--border-color);
+            margin-top: 2rem;
+        }
+
+        .surlink-controls h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        .surlink-controls p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
         }
 
         .control-group {
@@ -132,6 +158,9 @@
             border: 1px solid var(--border-color);
             border-radius: 4px;
             font-size: 0.875rem;
+            background: var(--surface);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
 
         .control-group small {
@@ -213,6 +242,219 @@
             color: #1565c0;
             border-left: 4px solid var(--primary-color);
         }
+
+        /* Filters */
+        .filters-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .filter-group select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        /* Export buttons */
+        .export-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .btn-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Action buttons in table */
+        .action-btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 0 0.25rem;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .action-btn.renew {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .action-btn.cancel {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .action-btn.view {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: var(--primary-color);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--background);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Charts container */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .chart-card h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        /* Payment history table */
+        .payment-item {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .payment-item:last-child {
+            border-bottom: none;
+        }
+
+        .payment-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .payment-status.completed {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .payment-status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .payment-status.failed {
+            background: #ffebee;
+            color: #c62828;
+        }
     </style>
 </head>
 <body>
@@ -227,6 +469,37 @@
 
             <div id="statsContainer" class="loading">
                 <p>Cargando estadísticas...</p>
+            </div>
+
+            <!-- Users Management -->
+            <div class="surlink-controls">
+                <h2>👥 Usuarios Registrados</h2>
+                <p>
+                    Estadísticas y lista de usuarios registrados en la plataforma.
+                </p>
+
+                <div id="userStatsContainer" class="loading" style="margin-top: 1rem;">
+                    <p>Cargando estadísticas de usuarios...</p>
+                </div>
+
+                <div id="recentUsersContainer" style="margin-top: 2rem; display: none;">
+                    <h3 style="margin-bottom: 1rem;">Usuarios Recientes</h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 8px;">
+                            <thead>
+                                <tr style="background: var(--background); border-bottom: 2px solid var(--border-color);">
+                                    <th style="padding: 1rem; text-align: left;">Email</th>
+                                    <th style="padding: 1rem; text-align: left;">Nombre</th>
+                                    <th style="padding: 1rem; text-align: left;">Rol</th>
+                                    <th style="padding: 1rem; text-align: left;">Registro</th>
+                                    <th style="padding: 1rem; text-align: left;">Último Login</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <!-- News Controls -->
@@ -251,13 +524,355 @@
 
                 <div id="newsStatus" class="status-message"></div>
             </div>
+
+            <!-- Surlink Controls -->
+            <div class="surlink-controls">
+                <h2>🌐 Nexus Surlink</h2>
+                <p>
+                    Gestioná el agregador de inmuebles y autos. Estos controles preparan las automatizaciones futuras
+                    para el scrapping y la depuración de listados caducados.
+                </p>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" id="surlinkCasasBtn" onclick="scheduleSurlinkIngest('casas')">
+                        🚀 Scraping Surlink Casas
+                    </button>
+                    <button class="btn btn-primary" id="surlinkAutosBtn" onclick="scheduleSurlinkIngest('autos')">
+                        🚗 Scraping Surlink Autos
+                    </button>
+                    <button class="btn btn-secondary" id="surlinkCleanupBtn" onclick="cleanupSurlinkListings()">
+                        🧹 Depurar Listados Caducados
+                    </button>
+                </div>
+
+                <div id="surlinkStatus" class="status-message info" style="display: none;"></div>
+            </div>
+
+            <!-- Subscriptions Dashboard -->
+            <div class="surlink-controls">
+                <h2>💳 Gestión de Suscripciones</h2>
+                <p>
+                    Dashboard de suscripciones con métricas de ingresos, planes activos y gestión de usuarios.
+                </p>
+
+                <!-- Export Buttons -->
+                <div class="export-buttons">
+                    <button class="btn btn-success btn-icon" onclick="exportSubscriptions('csv')">
+                        📄 Exportar CSV
+                    </button>
+                    <button class="btn btn-success btn-icon" onclick="exportSubscriptions('excel')">
+                        📊 Exportar Excel
+                    </button>
+                </div>
+
+                <div id="subscriptionStatsContainer" class="loading" style="margin-top: 1rem;">
+                    <p>Cargando estadísticas de suscripciones...</p>
+                </div>
+
+                <!-- Trend Charts -->
+                <div class="charts-grid" id="chartsContainer" style="display: none;">
+                    <div class="chart-card">
+                        <h3>Suscripciones por Mes</h3>
+                        <canvas id="subscriptionsTrendChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Ingresos por Plan</h3>
+                        <canvas id="revenuePlanChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-container" style="margin-top: 2rem;">
+                    <h3 style="margin-top: 0;">Filtros</h3>
+                    <div class="filters-grid">
+                        <div class="filter-group">
+                            <label>Estado</label>
+                            <select id="filterStatus" onchange="applyFilters()">
+                                <option value="">Todos</option>
+                                <option value="active">Activas</option>
+                                <option value="expired">Expiradas</option>
+                                <option value="cancelled">Canceladas</option>
+                                <option value="trial">Prueba</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Plan</label>
+                            <select id="filterPlan" onchange="applyFilters()">
+                                <option value="">Todos</option>
+                                <option value="free">Free</option>
+                                <option value="premium">Premium</option>
+                                <option value="pro">Pro</option>
+                                <option value="business">Business</option>
+                                <option value="enterprise">Enterprise</option>
+                                <option value="white-label">White-Label</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Tipo</label>
+                            <select id="filterPlanType" onchange="applyFilters()">
+                                <option value="">Todos</option>
+                                <option value="personal">Personal</option>
+                                <option value="business">Empresarial</option>
+                            </select>
+                        </div>
+                        <div class="filter-group" style="display: flex; align-items: flex-end;">
+                            <button class="btn btn-secondary" onclick="clearFilters()" style="width: 100%;">
+                                Limpiar Filtros
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">Suscripciones</h3>
+                    <div id="recentSubscriptionsContainer"></div>
+                </div>
+            </div>
+
+            <!-- Forum Management -->
+            <div class="surlink-controls">
+                <h2>💬 Gestión del Foro Nexus</h2>
+                <p>
+                    Configura los límites de publicación y visualiza estadísticas de actividad del foro.
+                </p>
+
+                <!-- Forum Stats -->
+                <div id="forumStatsContainer" class="loading" style="margin-top: 1rem;">
+                    <p>Cargando estadísticas del foro...</p>
+                </div>
+
+                <!-- Forum Settings -->
+                <div id="forumSettingsContainer" style="margin-top: 2rem; display: none;">
+                    <h3 style="margin-bottom: 1rem;">⚙️ Configuración del Foro</h3>
+
+                    <div class="control-group">
+                        <label for="postCooldownMinutes">
+                            Tiempo entre threads (minutos)
+                            <small>Tiempo mínimo que debe esperar un usuario entre crear threads</small>
+                        </label>
+                        <input type="number" id="postCooldownMinutes" min="0" max="1440" />
+                    </div>
+
+                    <div class="control-group">
+                        <label for="maxCommentsPerDay">
+                            Límite de comentarios por día
+                            <small>Número máximo de comentarios que un usuario puede publicar en 24 horas</small>
+                        </label>
+                        <input type="number" id="maxCommentsPerDay" min="1" max="1000" />
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            <input type="checkbox" id="allowImages" />
+                            Permitir subida de imágenes
+                        </label>
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            <input type="checkbox" id="allowLinks" />
+                            Permitir enlaces en posts
+                        </label>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="maxImagesPerPost">
+                            Máximo de imágenes por post
+                            <small>Número máximo de imágenes que se pueden subir en un thread</small>
+                        </label>
+                        <input type="number" id="maxImagesPerPost" min="0" max="10" />
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="saveForumSettings()">
+                            💾 Guardar Configuración
+                        </button>
+                        <button class="btn btn-secondary" onclick="loadForumSettings()">
+                            🔄 Recargar
+                        </button>
+                    </div>
+
+                    <div id="forumSettingsStatus" class="status-message"></div>
+                </div>
+
+                <!-- Top Content -->
+                <div id="forumTopContent" style="margin-top: 2rem; display: none;">
+                    <h3>⭐ Threads Más Populares</h3>
+                    <div id="popularThreadsContainer" style="margin-top: 1rem;"></div>
+
+                    <h3 style="margin-top: 2rem;">👥 Usuarios Más Activos</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                        <div>
+                            <h4 style="margin-bottom: 0.5rem;">Por Threads</h4>
+                            <div id="topThreadAuthorsContainer"></div>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 0.5rem;">Por Comentarios</h4>
+                            <div id="topCommentAuthorsContainer"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Management -->
+            <div class="surlink-controls">
+                <h2>💰 Gestión de Precios</h2>
+                <p>
+                    Configura los precios de cada plan y el valor del dólar para conversión a pesos UYU.
+                </p>
+
+                <div id="pricingSettingsContainer" style="margin-top: 1.5rem;">
+                    <h3 style="margin-bottom: 1rem;">⚙️ Configuración de Precios</h3>
+
+                    <!-- Exchange Rate -->
+                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                        <h4 style="margin-bottom: 1rem;">💱 Tipo de Cambio</h4>
+                        <div class="control-group">
+                            <label for="usdToUyu">
+                                Dólar a Peso Uruguayo (USD → UYU)
+                                <small>Valor actual del dólar en pesos uruguayos</small>
+                            </label>
+                            <input type="number" id="usdToUyu" min="1" step="0.01" placeholder="44" />
+                        </div>
+                    </div>
+
+                    <!-- Premium Plan -->
+                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <h4 style="margin-bottom: 1rem;">✨ Plan Premium</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                            <div class="control-group">
+                                <label for="premiumMonthly">
+                                    Precio Mensual (USD)
+                                </label>
+                                <input type="number" id="premiumMonthly" min="0" step="0.01" placeholder="2" />
+                            </div>
+                            <div class="control-group">
+                                <label for="premiumYearly">
+                                    Precio Anual (USD)
+                                    <small>Sugerido: mensual × 12 × 0.9</small>
+                                </label>
+                                <input type="number" id="premiumYearly" min="0" step="0.01" placeholder="22" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pro Plan -->
+                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <h4 style="margin-bottom: 1rem;">🚀 Plan Pro</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                            <div class="control-group">
+                                <label for="proMonthly">
+                                    Precio Mensual (USD)
+                                </label>
+                                <input type="number" id="proMonthly" min="0" step="0.01" placeholder="5" />
+                            </div>
+                            <div class="control-group">
+                                <label for="proYearly">
+                                    Precio Anual (USD)
+                                </label>
+                                <input type="number" id="proYearly" min="0" step="0.01" placeholder="54" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Business Plan -->
+                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <h4 style="margin-bottom: 1rem;">🏢 Plan Business</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                            <div class="control-group">
+                                <label for="businessMonthly">
+                                    Precio Mensual (USD)
+                                </label>
+                                <input type="number" id="businessMonthly" min="0" step="0.01" placeholder="15" />
+                            </div>
+                            <div class="control-group">
+                                <label for="businessYearly">
+                                    Precio Anual (USD)
+                                </label>
+                                <input type="number" id="businessYearly" min="0" step="0.01" placeholder="162" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enterprise Plan -->
+                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <h4 style="margin-bottom: 1rem;">🏆 Plan Enterprise</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                            <div class="control-group">
+                                <label for="enterpriseMonthly">
+                                    Precio Mensual (USD)
+                                </label>
+                                <input type="number" id="enterpriseMonthly" min="0" step="0.01" placeholder="50" />
+                            </div>
+                            <div class="control-group">
+                                <label for="enterpriseYearly">
+                                    Precio Anual (USD)
+                                </label>
+                                <input type="number" id="enterpriseYearly" min="0" step="0.01" placeholder="540" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- White Label Plan -->
+                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                        <h4 style="margin-bottom: 1rem;">⚪ Plan White-Label</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                            <div class="control-group">
+                                <label for="whiteLabelMonthly">
+                                    Precio Mensual (USD)
+                                </label>
+                                <input type="number" id="whiteLabelMonthly" min="0" step="0.01" placeholder="100" />
+                            </div>
+                            <div class="control-group">
+                                <label for="whiteLabelYearly">
+                                    Precio Anual (USD)
+                                </label>
+                                <input type="number" id="whiteLabelYearly" min="0" step="0.01" placeholder="1080" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="savePricingSettings()">
+                            💾 Guardar Precios
+                        </button>
+                        <button class="btn btn-secondary" onclick="loadPricingSettings()">
+                            🔄 Recargar
+                        </button>
+                    </div>
+
+                    <div id="pricingSettingsStatus" class="status-message"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment History Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Historial de Pagos</h2>
+                <button class="modal-close" onclick="closePaymentModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="paymentHistoryContainer">
+                    <p style="text-align: center; color: var(--text-secondary);">Cargando...</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <%- include('partials/footer') %>
 
     <script>
-        document.addEventListener('DOMContentLoaded', loadStats);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadUserStats();
+            loadSubscriptionStats();
+            loadForumStats();
+            loadForumSettings();
+            loadPricingSettings();
+        });
 
         async function loadStats() {
             try {
@@ -299,25 +914,19 @@
                     <div class="stat-card">
                         <h3>Usuarios Registrados</h3>
                         <div class="value">${stats.totalUsers || 0}</div>
-                        <div class="subtitle">Cuentas activas</div>
+                        <div class="subtitle">Cuentas totales</div>
                     </div>
 
-                    <div class="stat-card warning">
-                        <h3>Usuarios Anónimos</h3>
-                        <div class="value">${stats.guestUsers || 0}</div>
-                        <div class="subtitle">Sessions activas</div>
+                    <div class="stat-card success">
+                        <h3>Usuarios Hoy</h3>
+                        <div class="value">${stats.usersToday || 0}</div>
+                        <div class="subtitle">Últimas 24 horas</div>
                     </div>
 
                     <div class="stat-card">
                         <h3>Total Noticias</h3>
                         <div class="value">${stats.totalNews || 0}</div>
                         <div class="subtitle">Noticias indexadas</div>
-                    </div>
-
-                    <div class="stat-card success">
-                        <h3>Páginas Visitadas</h3>
-                        <div class="value">${stats.totalPageViews || 0}</div>
-                        <div class="subtitle">Total de vistas</div>
                     </div>
                 </div>
 
@@ -438,6 +1047,965 @@
                 showStatus('Error al eliminar noticias: ' + error.message, 'error');
             } finally {
                 disableButtons(false);
+            }
+        }
+
+        function toggleSurlinkButtons(disabled) {
+            ['surlinkCasasBtn', 'surlinkAutosBtn', 'surlinkCleanupBtn'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.disabled = disabled;
+                }
+            });
+        }
+
+        function showSurlinkStatus(message, type = 'info') {
+            const statusEl = document.getElementById('surlinkStatus');
+            if (!statusEl) return;
+
+            statusEl.textContent = message;
+            statusEl.className = `status-message ${type}`;
+            statusEl.style.display = 'block';
+
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 8000);
+            }
+        }
+
+        async function scheduleSurlinkIngest(category) {
+            const labels = {
+                casas: 'Surlink Casas',
+                autos: 'Surlink Autos'
+            };
+
+            const label = labels[category] || 'Surlink';
+            const confirmMsg = `¿Programar el scrapping automático para ${label}? Esta acción solicitará al backend preparar el proceso.`;
+
+            if (!confirm(confirmMsg)) return;
+
+            toggleSurlinkButtons(true);
+            showSurlinkStatus(`Programando scrapping para ${label}...`, 'info');
+
+            try {
+                const response = await fetch('/api/admin/surlink/schedule', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ category })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al programar el scrapping');
+                }
+
+                showSurlinkStatus(data.message || `Scrapping programado para ${label}.`, 'success');
+            } catch (error) {
+                console.error('Error scheduling Surlink ingest:', error);
+                showSurlinkStatus(error.message, 'error');
+            } finally {
+                toggleSurlinkButtons(false);
+            }
+        }
+
+        async function cleanupSurlinkListings() {
+            const confirmMsg = '¿Depurar listados caducados o inactivos de Surlink?\n\nEsta acción archivará publicaciones vencidas.';
+
+            if (!confirm(confirmMsg)) return;
+
+            toggleSurlinkButtons(true);
+            showSurlinkStatus('Iniciando limpieza de listados caducados...', 'info');
+
+            try {
+                const response = await fetch('/api/admin/surlink/cleanup', {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al depurar listados');
+                }
+
+                const archived = typeof data.archived === 'number'
+                    ? ` Listados archivados: ${data.archived}.`
+                    : '';
+
+                showSurlinkStatus((data.message || 'Limpieza completada.') + archived, 'success');
+            } catch (error) {
+                console.error('Error cleaning up Surlink listings:', error);
+                showSurlinkStatus(error.message, 'error');
+            } finally {
+                toggleSurlinkButtons(false);
+            }
+        }
+
+        // User Management Functions
+        async function loadUserStats() {
+            try {
+                const response = await fetch('/api/admin/users');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al cargar estadísticas de usuarios');
+                }
+
+                displayUserStats(data);
+            } catch (error) {
+                console.error('Error loading user stats:', error);
+                document.getElementById('userStatsContainer').innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--danger-color);">
+                        Error al cargar estadísticas de usuarios: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function displayUserStats(data) {
+            const statsContainer = document.getElementById('userStatsContainer');
+            const stats = data.stats;
+
+            statsContainer.innerHTML = `
+                <div class="dashboard-grid" style="margin-bottom: 2rem;">
+                    <div class="stat-card">
+                        <h3>Total Usuarios</h3>
+                        <div class="value">${stats.total}</div>
+                        <div class="subtitle">Registrados</div>
+                    </div>
+                    <div class="stat-card success">
+                        <h3>Hoy</h3>
+                        <div class="value">${stats.today}</div>
+                        <div class="subtitle">Nuevos usuarios</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Esta Semana</h3>
+                        <div class="value">${stats.thisWeek}</div>
+                        <div class="subtitle">Últimos 7 días</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Este Mes</h3>
+                        <div class="value">${stats.thisMonth}</div>
+                        <div class="subtitle">Últimos 30 días</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <h3>Administradores</h3>
+                        <div class="value">${stats.byRole.admin}</div>
+                        <div class="subtitle">Rol admin</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Usuarios Regulares</h3>
+                        <div class="value">${stats.byRole.regular}</div>
+                        <div class="subtitle">Sin privilegios</div>
+                    </div>
+                </div>
+            `;
+
+            // Display recent users table
+            const tbody = document.getElementById('usersTableBody');
+            let tableHTML = '';
+
+            if (data.recentUsers && data.recentUsers.length > 0) {
+                data.recentUsers.forEach(user => {
+                    const roleBadge = user.role === 'admin'
+                        ? '<span style="background: var(--warning-color); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">ADMIN</span>'
+                        : '<span style="background: var(--primary-color); color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">USER</span>';
+
+                    const createdDate = new Date(user.createdAt).toLocaleString('es-UY');
+                    const lastLogin = user.lastLogin
+                        ? new Date(user.lastLogin).toLocaleString('es-UY')
+                        : 'Nunca';
+
+                    tableHTML += `
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 1rem;">${user.email}</td>
+                            <td style="padding: 1rem;">${user.name || '-'}</td>
+                            <td style="padding: 1rem;">${roleBadge}</td>
+                            <td style="padding: 1rem;">${createdDate}</td>
+                            <td style="padding: 1rem;">${lastLogin}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tableHTML = '<tr><td colspan="5" style="padding: 2rem; text-align: center; color: var(--text-secondary);">No hay usuarios registrados</td></tr>';
+            }
+
+            tbody.innerHTML = tableHTML;
+            document.getElementById('recentUsersContainer').style.display = 'block';
+        }
+
+        // Subscription Management Functions
+        async function loadSubscriptionStats() {
+            try {
+                const response = await fetch('/api/admin/subscriptions/stats');
+                const stats = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(stats.error || 'Error al cargar estadísticas de suscripciones');
+                }
+
+                displaySubscriptionStats(stats);
+            } catch (error) {
+                console.error('Error loading subscription stats:', error);
+                document.getElementById('subscriptionStatsContainer').innerHTML = `
+                    <div style="padding: 1rem; color: var(--danger-color);">
+                        <p>Error al cargar estadísticas: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displaySubscriptionStats(stats) {
+            const container = document.getElementById('subscriptionStatsContainer');
+
+            const planLabels = {
+                'free': 'Free',
+                'premium': 'Premium',
+                'pro': 'Pro',
+                'business': 'Business',
+                'enterprise': 'Enterprise',
+                'white-label': 'White-Label'
+            };
+
+            container.innerHTML = `
+                <div class="dashboard-grid">
+                    <div class="stat-card success">
+                        <h3>Suscripciones Activas</h3>
+                        <div class="value">${stats.summary.totalActive || 0}</div>
+                        <div class="subtitle">Usuarios con plan activo</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <h3>MRR (Monthly Recurring Revenue)</h3>
+                        <div class="value">$${(stats.revenue.mrr || 0).toFixed(0)}</div>
+                        <div class="subtitle">Ingresos mensuales recurrentes (USD)</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <h3>ARR (Annual Recurring Revenue)</h3>
+                        <div class="value">$${(stats.revenue.arr || 0).toFixed(0)}</div>
+                        <div class="subtitle">Ingresos anuales proyectados (USD)</div>
+                    </div>
+
+                    <div class="stat-card success">
+                        <h3>Nuevas (30 días)</h3>
+                        <div class="value">${stats.summary.newLast30Days || 0}</div>
+                        <div class="subtitle">Suscripciones nuevas</div>
+                    </div>
+
+                    <div class="stat-card warning">
+                        <h3>Por Vencer (7 días)</h3>
+                        <div class="value">${stats.summary.expiringSoon || 0}</div>
+                        <div class="subtitle">Requieren renovación</div>
+                    </div>
+
+                    <div class="stat-card danger">
+                        <h3>Canceladas (30 días)</h3>
+                        <div class="value">${stats.summary.cancelledLast30Days || 0}</div>
+                        <div class="subtitle">Churn Rate: ${stats.summary.churnRate || 0}%</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">Distribución por Plan</h3>
+                    <div class="dashboard-grid">
+                        ${stats.byPlan.map(plan => `
+                            <div class="stat-card">
+                                <h3>${planLabels[plan.plan] || plan.plan}</h3>
+                                <div class="value" style="font-size: 2rem;">${plan.count}</div>
+                                <div class="subtitle">$${(plan.revenue || 0).toFixed(0)} USD/mes</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">Por Tipo</h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                        <div class="stat-card">
+                            <h3>Personales</h3>
+                            <div class="value" style="font-size: 2rem;">${stats.byType.personal || 0}</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Empresariales</h3>
+                            <div class="value" style="font-size: 2rem;">${stats.byType.business || 0}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Display recent subscriptions
+            displayRecentSubscriptions(stats.recentSubscriptions || []);
+
+            // Initialize charts
+            initializeCharts(stats);
+        }
+
+        function displayRecentSubscriptions(subscriptions) {
+            const container = document.getElementById('recentSubscriptionsContainer');
+
+            if (!subscriptions || subscriptions.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-secondary);">No hay suscripciones recientes</p>';
+                return;
+            }
+
+            const planLabels = {
+                'free': 'Free',
+                'premium': 'Premium',
+                'pro': 'Pro',
+                'business': 'Business',
+                'enterprise': 'Enterprise',
+                'white-label': 'White-Label'
+            };
+
+            const statusLabels = {
+                'active': { text: 'Activa', color: 'var(--success-color)' },
+                'expired': { text: 'Expirada', color: 'var(--danger-color)' },
+                'cancelled': { text: 'Cancelada', color: 'var(--text-secondary)' },
+                'trial': { text: 'Prueba', color: 'var(--warning-color)' }
+            };
+
+            container.innerHTML = `
+                <div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead style="background: var(--background);">
+                            <tr>
+                                <th style="padding: 1rem; text-align: left;">Usuario</th>
+                                <th style="padding: 1rem; text-align: left;">Plan</th>
+                                <th style="padding: 1rem; text-align: left;">Estado</th>
+                                <th style="padding: 1rem; text-align: right;">Precio</th>
+                                <th style="padding: 1rem; text-align: left;">Vencimiento</th>
+                                <th style="padding: 1rem; text-align: center;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${subscriptions.map(sub => {
+                                const status = statusLabels[sub.status] || { text: sub.status, color: 'var(--text-secondary)' };
+                                const endDate = new Date(sub.endDate);
+                                const isExpiringSoon = endDate <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+                                return `
+                                    <tr style="border-bottom: 1px solid var(--background);">
+                                        <td style="padding: 1rem;">
+                                            <div style="font-weight: 500;">${sub.user.name || 'N/A'}</div>
+                                            <div style="font-size: 0.75rem; color: var(--text-secondary);">${sub.user.email}</div>
+                                        </td>
+                                        <td style="padding: 1rem;">
+                                            <span style="background: var(--primary-color); color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem;">
+                                                ${planLabels[sub.plan] || sub.plan}
+                                            </span>
+                                        </td>
+                                        <td style="padding: 1rem;">
+                                            <span style="color: ${status.color}; font-weight: 500;">
+                                                ${status.text}
+                                            </span>
+                                        </td>
+                                        <td style="padding: 1rem; text-align: right; font-weight: 500;">
+                                            ${sub.price.amount} ${sub.price.currency}
+                                        </td>
+                                        <td style="padding: 1rem;">
+                                            <div style="color: ${isExpiringSoon && sub.status === 'active' ? 'var(--warning-color)' : 'var(--text-secondary)'};">
+                                                ${endDate.toLocaleDateString('es-UY')}
+                                            </div>
+                                            ${isExpiringSoon && sub.status === 'active' ?
+                                                '<div style="font-size: 0.75rem; color: var(--warning-color);">⚠️ Por vencer</div>'
+                                                : ''}
+                                        </td>
+                                        <td style="padding: 1rem; text-align: center;">
+                                            <button class="action-btn view" onclick="viewPaymentHistory('${sub.user.id}')" title="Ver historial de pagos">
+                                                📜
+                                            </button>
+                                            ${sub.status === 'active' ? `
+                                                <button class="action-btn renew" onclick="renewSubscription('${sub.id}')" title="Renovar">
+                                                    🔄
+                                                </button>
+                                                <button class="action-btn cancel" onclick="cancelSubscription('${sub.id}')" title="Cancelar">
+                                                    ✖
+                                                </button>
+                                            ` : ''}
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // Initialize Chart.js charts
+        let revenueChart = null;
+        let planDistributionChart = null;
+
+        function initializeCharts(stats) {
+            // Destroy existing charts if they exist
+            if (revenueChart) revenueChart.destroy();
+            if (planDistributionChart) planDistributionChart.destroy();
+
+            // Revenue Trend Chart
+            const revenueCtx = document.getElementById('revenueChart');
+            if (revenueCtx) {
+                const last12Months = [];
+                const now = new Date();
+                for (let i = 11; i >= 0; i--) {
+                    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                    last12Months.push(date.toLocaleDateString('es-UY', { month: 'short', year: '2-digit' }));
+                }
+
+                revenueChart = new Chart(revenueCtx, {
+                    type: 'line',
+                    data: {
+                        labels: last12Months,
+                        datasets: [{
+                            label: 'MRR (USD)',
+                            data: stats.revenue.trend || Array(12).fill(0),
+                            borderColor: 'rgb(99, 102, 241)',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Plan Distribution Chart
+            const planCtx = document.getElementById('planDistributionChart');
+            if (planCtx && stats.byPlan && stats.byPlan.length > 0) {
+                const planLabels = {
+                    'free': 'Free',
+                    'premium': 'Premium',
+                    'pro': 'Pro',
+                    'business': 'Business',
+                    'enterprise': 'Enterprise',
+                    'white-label': 'White-Label'
+                };
+
+                planDistributionChart = new Chart(planCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: stats.byPlan.map(p => planLabels[p.plan] || p.plan),
+                        datasets: [{
+                            data: stats.byPlan.map(p => p.count),
+                            backgroundColor: [
+                                'rgb(99, 102, 241)',
+                                'rgb(139, 92, 246)',
+                                'rgb(59, 130, 246)',
+                                'rgb(16, 185, 129)',
+                                'rgb(245, 158, 11)',
+                                'rgb(239, 68, 68)'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Filter functionality
+        async function applyFilters() {
+            const status = document.getElementById('filterStatus').value;
+            const plan = document.getElementById('filterPlan').value;
+            const planType = document.getElementById('filterPlanType').value;
+
+            try {
+                const params = new URLSearchParams();
+                if (status) params.append('status', status);
+                if (plan) params.append('plan', plan);
+                if (planType) params.append('planType', planType);
+
+                const response = await fetch(`/admin/subscriptions?${params.toString()}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Error al cargar suscripciones filtradas');
+
+                const subscriptions = await response.json();
+                displayRecentSubscriptions(subscriptions);
+            } catch (error) {
+                console.error('Error applying filters:', error);
+                alert('Error al aplicar filtros: ' + error.message);
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterPlan').value = '';
+            document.getElementById('filterPlanType').value = '';
+            loadSubscriptionStats();
+        }
+
+        // Export functionality
+        async function exportSubscriptions(format) {
+            try {
+                const status = document.getElementById('filterStatus').value;
+                const plan = document.getElementById('filterPlan').value;
+                const planType = document.getElementById('filterPlanType').value;
+
+                const params = new URLSearchParams();
+                if (status) params.append('status', status);
+                if (plan) params.append('plan', plan);
+                if (planType) params.append('planType', planType);
+
+                const url = `/admin/subscriptions/export/${format}?${params.toString()}`;
+
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Error al exportar datos');
+
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `suscripciones_${new Date().toISOString().split('T')[0]}.${format}`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(downloadUrl);
+                document.body.removeChild(a);
+
+                alert(`Datos exportados exitosamente en formato ${format.toUpperCase()}`);
+            } catch (error) {
+                console.error('Error exporting subscriptions:', error);
+                alert('Error al exportar datos: ' + error.message);
+            }
+        }
+
+        // Quick actions
+        async function renewSubscription(subscriptionId) {
+            if (!confirm('¿Está seguro que desea renovar esta suscripción por 30 días más?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/subscriptions/${subscriptionId}/renew`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Error al renovar suscripción');
+                }
+
+                alert('Suscripción renovada exitosamente hasta ' + new Date(result.subscription.endDate).toLocaleDateString('es-UY'));
+                loadSubscriptionStats();
+            } catch (error) {
+                console.error('Error renewing subscription:', error);
+                alert('Error al renovar suscripción: ' + error.message);
+            }
+        }
+
+        async function cancelSubscription(subscriptionId) {
+            if (!confirm('¿Está seguro que desea cancelar esta suscripción? Esta acción no se puede deshacer.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/subscriptions/${subscriptionId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Error al cancelar suscripción');
+                }
+
+                alert('Suscripción cancelada exitosamente');
+                loadSubscriptionStats();
+            } catch (error) {
+                console.error('Error cancelling subscription:', error);
+                alert('Error al cancelar suscripción: ' + error.message);
+            }
+        }
+
+        // Payment history functionality
+        async function viewPaymentHistory(userId) {
+            try {
+                const response = await fetch(`/admin/payments/user/${userId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Error al cargar historial de pagos');
+
+                const payments = await response.json();
+                displayPaymentHistory(payments);
+
+                const modal = document.getElementById('paymentHistoryModal');
+                modal.style.display = 'flex';
+            } catch (error) {
+                console.error('Error loading payment history:', error);
+                alert('Error al cargar historial de pagos: ' + error.message);
+            }
+        }
+
+        function closePaymentModal() {
+            const modal = document.getElementById('paymentHistoryModal');
+            modal.style.display = 'none';
+        }
+
+        function displayPaymentHistory(payments) {
+            const container = document.getElementById('paymentHistoryContent');
+
+            if (!payments || payments.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">No hay historial de pagos</p>';
+                return;
+            }
+
+            const statusLabels = {
+                'pending': { text: 'Pendiente', color: 'var(--warning-color)' },
+                'completed': { text: 'Completado', color: 'var(--success-color)' },
+                'failed': { text: 'Fallido', color: 'var(--danger-color)' },
+                'refunded': { text: 'Reembolsado', color: 'var(--text-secondary)' }
+            };
+
+            container.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="background: var(--background);">
+                        <tr>
+                            <th style="padding: 0.75rem; text-align: left;">Fecha</th>
+                            <th style="padding: 0.75rem; text-align: left;">Monto</th>
+                            <th style="padding: 0.75rem; text-align: left;">Método</th>
+                            <th style="padding: 0.75rem; text-align: left;">Estado</th>
+                            <th style="padding: 0.75rem; text-align: left;">ID Transacción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${payments.map(payment => {
+                            const status = statusLabels[payment.status] || { text: payment.status, color: 'var(--text-secondary)' };
+                            const date = new Date(payment.createdAt).toLocaleDateString('es-UY');
+
+                            return `
+                                <tr style="border-bottom: 1px solid var(--background);">
+                                    <td style="padding: 0.75rem;">${date}</td>
+                                    <td style="padding: 0.75rem; font-weight: 500;">
+                                        ${payment.amount} ${payment.currency}
+                                    </td>
+                                    <td style="padding: 0.75rem;">${payment.paymentMethod || 'N/A'}</td>
+                                    <td style="padding: 0.75rem;">
+                                        <span style="color: ${status.color}; font-weight: 500;">
+                                            ${status.text}
+                                        </span>
+                                    </td>
+                                    <td style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-secondary);">
+                                        ${payment.transactionId || 'N/A'}
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('paymentHistoryModal');
+            if (event.target === modal) {
+                closePaymentModal();
+            }
+        }
+
+        // Forum Management Functions
+        async function loadForumStats() {
+            try {
+                const response = await fetch('/api/admin/forum/stats');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al cargar estadísticas del foro');
+                }
+
+                displayForumStats(data.stats);
+            } catch (error) {
+                console.error('Error loading forum stats:', error);
+                document.getElementById('forumStatsContainer').innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--danger-color);">
+                        Error al cargar estadísticas del foro: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function displayForumStats(stats) {
+            const container = document.getElementById('forumStatsContainer');
+
+            container.innerHTML = `
+                <div class="dashboard-grid" style="margin-bottom: 2rem;">
+                    <div class="stat-card">
+                        <h3>Total Threads</h3>
+                        <div class="value">${stats.overview.totalThreads}</div>
+                        <div class="subtitle">${stats.overview.activeThreads} activos</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Comentarios</h3>
+                        <div class="value">${stats.overview.totalComments}</div>
+                        <div class="subtitle">En todos los threads</div>
+                    </div>
+                    <div class="stat-card success">
+                        <h3>Hoy</h3>
+                        <div class="value">${stats.today.total}</div>
+                        <div class="subtitle">${stats.today.threads} threads, ${stats.today.comments} comentarios</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Esta Semana</h3>
+                        <div class="value">${stats.thisWeek.total}</div>
+                        <div class="subtitle">${stats.thisWeek.threads} threads, ${stats.thisWeek.comments} comentarios</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Este Mes</h3>
+                        <div class="value">${stats.thisMonth.total}</div>
+                        <div class="subtitle">${stats.thisMonth.threads} threads, ${stats.thisMonth.comments} comentarios</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Total Likes</h3>
+                        <div class="value">${stats.overview.totalLikes}</div>
+                        <div class="subtitle">En todos los threads</div>
+                    </div>
+                </div>
+            `;
+
+            // Display popular threads
+            let popularHTML = '<div style="background: var(--surface); border-radius: 8px; padding: 1rem; border: 1px solid var(--border-color);">';
+            if (stats.popularThreads.length > 0) {
+                stats.popularThreads.forEach(thread => {
+                    const authorName = thread.author?.name || thread.author?.email || 'Usuario';
+                    popularHTML += `
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color);">
+                            <strong>${thread.title}</strong><br>
+                            <small style="color: var(--text-secondary);">
+                                Por ${authorName} |
+                                👍 ${thread.likesCount} |
+                                💬 ${thread.commentsCount} |
+                                ${new Date(thread.createdAt).toLocaleDateString()}
+                            </small>
+                        </div>
+                    `;
+                });
+            } else {
+                popularHTML += '<p style="text-align: center; color: var(--text-secondary); padding: 1rem;">No hay threads aún</p>';
+            }
+            popularHTML += '</div>';
+            document.getElementById('popularThreadsContainer').innerHTML = popularHTML;
+
+            // Display top thread authors
+            let threadAuthorsHTML = '<div style="background: var(--surface); border-radius: 8px; padding: 1rem; border: 1px solid var(--border-color);">';
+            if (stats.topThreadAuthors.length > 0) {
+                stats.topThreadAuthors.forEach((author, idx) => {
+                    threadAuthorsHTML += `
+                        <div style="padding: 0.75rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+                            <span>${idx + 1}. ${author.name || author.email}</span>
+                            <strong>${author.threadCount} threads</strong>
+                        </div>
+                    `;
+                });
+            } else {
+                threadAuthorsHTML += '<p style="text-align: center; color: var(--text-secondary); padding: 1rem;">Sin datos</p>';
+            }
+            threadAuthorsHTML += '</div>';
+            document.getElementById('topThreadAuthorsContainer').innerHTML = threadAuthorsHTML;
+
+            // Display top comment authors
+            let commentAuthorsHTML = '<div style="background: var(--surface); border-radius: 8px; padding: 1rem; border: 1px solid var(--border-color);">';
+            if (stats.topCommentAuthors.length > 0) {
+                stats.topCommentAuthors.forEach((author, idx) => {
+                    commentAuthorsHTML += `
+                        <div style="padding: 0.75rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between;">
+                            <span>${idx + 1}. ${author.name || author.email}</span>
+                            <strong>${author.commentCount} comentarios</strong>
+                        </div>
+                    `;
+                });
+            } else {
+                commentAuthorsHTML += '<p style="text-align: center; color: var(--text-secondary); padding: 1rem;">Sin datos</p>';
+            }
+            commentAuthorsHTML += '</div>';
+            document.getElementById('topCommentAuthorsContainer').innerHTML = commentAuthorsHTML;
+
+            // Show containers
+            document.getElementById('forumSettingsContainer').style.display = 'block';
+            document.getElementById('forumTopContent').style.display = 'block';
+        }
+
+        async function loadForumSettings() {
+            try {
+                const response = await fetch('/api/admin/forum/settings');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al cargar configuración');
+                }
+
+                const settings = data.settings;
+                document.getElementById('postCooldownMinutes').value = settings.postCooldownMinutes;
+                document.getElementById('maxCommentsPerDay').value = settings.maxCommentsPerDay;
+                document.getElementById('allowImages').checked = settings.allowImages;
+                document.getElementById('allowLinks').checked = settings.allowLinks;
+                document.getElementById('maxImagesPerPost').value = settings.maxImagesPerPost;
+            } catch (error) {
+                console.error('Error loading forum settings:', error);
+                const statusDiv = document.getElementById('forumSettingsStatus');
+                statusDiv.className = 'status-message error';
+                statusDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function saveForumSettings() {
+            try {
+                const settings = {
+                    postCooldownMinutes: parseInt(document.getElementById('postCooldownMinutes').value),
+                    maxCommentsPerDay: parseInt(document.getElementById('maxCommentsPerDay').value),
+                    allowImages: document.getElementById('allowImages').checked,
+                    allowLinks: document.getElementById('allowLinks').checked,
+                    maxImagesPerPost: parseInt(document.getElementById('maxImagesPerPost').value)
+                };
+
+                const response = await fetch('/api/admin/forum/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al guardar configuración');
+                }
+
+                const statusDiv = document.getElementById('forumSettingsStatus');
+                statusDiv.className = 'status-message success';
+                statusDiv.textContent = '✅ Configuración guardada correctamente';
+
+                setTimeout(() => {
+                    statusDiv.textContent = '';
+                }, 3000);
+            } catch (error) {
+                console.error('Error saving forum settings:', error);
+                const statusDiv = document.getElementById('forumSettingsStatus');
+                statusDiv.className = 'status-message error';
+                statusDiv.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+
+        // Pricing Settings Functions
+        async function loadPricingSettings() {
+            try {
+                const response = await fetch('/api/admin/pricing/settings');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al cargar configuración');
+                }
+
+                const settings = data.settings;
+                document.getElementById('usdToUyu').value = settings.usdToUyu;
+                document.getElementById('premiumMonthly').value = settings.premiumMonthly;
+                document.getElementById('premiumYearly').value = settings.premiumYearly;
+                document.getElementById('proMonthly').value = settings.proMonthly;
+                document.getElementById('proYearly').value = settings.proYearly;
+                document.getElementById('businessMonthly').value = settings.businessMonthly;
+                document.getElementById('businessYearly').value = settings.businessYearly;
+                document.getElementById('enterpriseMonthly').value = settings.enterpriseMonthly;
+                document.getElementById('enterpriseYearly').value = settings.enterpriseYearly;
+                document.getElementById('whiteLabelMonthly').value = settings.whiteLabelMonthly;
+                document.getElementById('whiteLabelYearly').value = settings.whiteLabelYearly;
+            } catch (error) {
+                console.error('Error loading pricing settings:', error);
+                const statusDiv = document.getElementById('pricingSettingsStatus');
+                statusDiv.className = 'status-message error';
+                statusDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function savePricingSettings() {
+            try {
+                const settings = {
+                    usdToUyu: parseFloat(document.getElementById('usdToUyu').value),
+                    premiumMonthly: parseFloat(document.getElementById('premiumMonthly').value),
+                    premiumYearly: parseFloat(document.getElementById('premiumYearly').value),
+                    proMonthly: parseFloat(document.getElementById('proMonthly').value),
+                    proYearly: parseFloat(document.getElementById('proYearly').value),
+                    businessMonthly: parseFloat(document.getElementById('businessMonthly').value),
+                    businessYearly: parseFloat(document.getElementById('businessYearly').value),
+                    enterpriseMonthly: parseFloat(document.getElementById('enterpriseMonthly').value),
+                    enterpriseYearly: parseFloat(document.getElementById('enterpriseYearly').value),
+                    whiteLabelMonthly: parseFloat(document.getElementById('whiteLabelMonthly').value),
+                    whiteLabelYearly: parseFloat(document.getElementById('whiteLabelYearly').value)
+                };
+
+                const response = await fetch('/api/admin/pricing/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al guardar configuración');
+                }
+
+                const statusDiv = document.getElementById('pricingSettingsStatus');
+                statusDiv.className = 'status-message success';
+                statusDiv.textContent = '✅ Precios guardados correctamente';
+
+                setTimeout(() => {
+                    statusDiv.textContent = '';
+                }, 3000);
+            } catch (error) {
+                console.error('Error saving pricing settings:', error);
+                const statusDiv = document.getElementById('pricingSettingsStatus');
+                statusDiv.className = 'status-message error';
+                statusDiv.textContent = `❌ Error: ${error.message}`;
             }
         }
     </script>

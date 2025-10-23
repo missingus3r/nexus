@@ -14,5 +14,17 @@
     "quotes": ["error", "single"],
     "semi": ["error", "always"],
     "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["public/js/**/*.js"],
+      "env": {
+        "browser": true
+      },
+      "rules": {
+        "no-undef": "off",
+        "indent": "off"
+      }
+    }
+  ]
 }

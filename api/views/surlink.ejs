@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <%- include('partials/theme-init') %>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/surlink.css">
+    <script src="/js/theme-toggle.js" defer></script>
+</head>
+<body>
+    <%- include('partials/header-surlink', { page: page, isAuthenticated: isAuthenticated }) %>
+
+    <main class="main-content surlink-main">
+        <div class="container">
+            <section class="surlink-hero">
+                <div class="surlink-hero-content">
+                    <p>
+                        Un único lugar para encontrar oportunidades inmobiliarias, educativas, automotrices y financieras.
+                        <br>
+                        Explorá el ecosistema Nexus con un motor de búsqueda inteligente y minimalista.
+                    </p>
+                </div>
+
+                <div class="surlink-quick-links">
+                    <button type="button" class="surlink-quick-link" data-surlink-quick="casas">
+                        <span>Surlink Casas</span>
+                        <small>Propiedades, terrenos y proyectos</small>
+                    </button>
+                    <button type="button" class="surlink-quick-link" data-surlink-quick="academy">
+                        <span>Surlink Academy</span>
+                        <small>Universidades, carreras y cursos</small>
+                    </button>
+                    <button type="button" class="surlink-quick-link" data-surlink-quick="autos">
+                        <span>Surlink Autos</span>
+                        <small>Autos, utilitarios y movilidad</small>
+                    </button>
+                    <button type="button" class="surlink-quick-link" data-surlink-quick="financial">
+                        <span>Surlink Financial</span>
+                        <small>Créditos, préstamos y servicios financieros</small>
+                    </button>
+                </div>
+            </section>
+
+            <section class="surlink-sections">
+                <div class="surlink-tab-panels">
+                    <section class="surlink-section active" data-surlink-section="casas" role="tabpanel">
+                        <header class="surlink-section-header">
+                            <h2>Casas y proyectos</h2>
+                            <p>Encontrá viviendas, terrenos, proyectos en pozo y soluciones modulares.</p>
+                        </header>
+
+                        <form id="surlinkCasasForm" class="surlink-filters" autocomplete="off">
+                            <div class="surlink-filter-grid">
+                                <div class="surlink-input-group is-search">
+                                    <label for="surlinkCasasSearch">Buscar</label>
+                                    <input type="search" id="surlinkCasasSearch" name="search" placeholder="Ej: casa 3 dormitorios" maxlength="60">
+                                </div>
+                                <div class="surlink-input-group">
+                                    <label for="surlinkCasasTipo">Tipo</label>
+                                    <select id="surlinkCasasTipo" name="propertyType">
+                                        <option value="">Todos</option>
+                                    </select>
+                                </div>
+                                <div class="surlink-input-group">
+                                    <label for="surlinkCasasOperacion">Operación</label>
+                                    <select id="surlinkCasasOperacion" name="operation">
+                                        <option value="">Todas</option>
+                                    </select>
+                                </div>
+                                <div class="surlink-input-group">
+                                    <label for="surlinkCasasCiudad">Ciudad</label>
+                                    <input type="text" id="surlinkCasasCiudad" name="city" placeholder="Montevideo, Punta del Este...">
+                                </div>
+                                <div class="surlink-input-group is-compact">
+                                    <label for="surlinkCasasMin">Precio mín.</label>
+                                    <input type="number" id="surlinkCasasMin" name="minPrice" min="0" step="1000" placeholder="USD">
+                                </div>
+                                <div class="surlink-input-group is-compact">
+                                    <label for="surlinkCasasMax">Precio máx.</label>
+                                    <input type="number" id="surlinkCasasMax" name="maxPrice" min="0" step="1000" placeholder="USD">
+                                </div>
+                            </div>
+
+                            <div class="surlink-filter-actions">
+                                <button type="submit" class="btn btn-primary">Aplicar filtros</button>
+                                <button type="button" class="btn btn-secondary" data-surlink-reset="casas">Limpiar</button>
+                            </div>
+                        </form>
+
+                        <div class="surlink-feedback" data-feedback="casas" hidden></div>
+                        <div class="surlink-results" id="surlinkCasasResults"></div>
+                        <div class="surlink-pagination" data-pagination="casas"></div>
+                    </section>
+
+                    <section class="surlink-section" data-surlink-section="academy" role="tabpanel" aria-hidden="true">
+                        <header class="surlink-section-header">
+                            <h2>Academy</h2>
+                            <p>Centros de estudio curados por el equipo Nexus. Programas, carreras y costos siempre actualizados.</p>
+                        </header>
+
+                        <form id="surlinkAcademyForm" class="surlink-filters" autocomplete="off">
+                            <div class="surlink-filter-grid">
+                                <div class="surlink-input-group is-search">
+                                    <label for="surlinkAcademySearch">Buscar</label>
+                                    <input type="search" id="surlinkAcademySearch" name="search" placeholder="Ej: ingeniería, UX, MBA" maxlength="60">
+                                </div>
+                                <div class="surlink-input-group">
+                                    <label for="surlinkAcademyModalidad">Modalidad</label>
+                                    <select id="surlinkAcademyModalidad" name="modality">
+                                        <option value="">Todas</option>
+                                    </select>
+                                </div>
+                                <div class="surlink-input-group">
+                                    <label for="surlinkAcademyCiudad">Ciudad</label>
+                                    <input type="text" id="surlinkAcademyCiudad" name="city" placeholder="Montevideo, online...">
+                                </div>
+                            </div>
+
+                            <div class="surlink-filter-actions">
+                                <button type="submit" class="btn btn-primary">Buscar</button>
+                                <button type="button" class="btn btn-secondary" data-surlink-reset="academy">Limpiar</button>
+                            </div>
+                        </form>
+
+                        <div class="surlink-feedback" data-feedback="academy" hidden></div>
+                        <div class="surlink-results" id="surlinkAcademyResults"></div>
+                        <div class="surlink-pagination" data-pagination="academy"></div>
+                    </section>
+
+                    <section class="surlink-section" data-surlink-section="autos" role="tabpanel" aria-hidden="true">
+                        <header class="surlink-section-header">
+                            <h2>Autos y movilidad</h2>
+                            <p>Ofertas verificadas para autos. Compará precios y características.</p>
+                        </header>
+
+                        <form id="surlinkAutosForm" class="surlink-filters" autocomplete="off">
+                            <div class="surlink-filter-grid">
+                                <div class="surlink-input-group is-search">
+                                    <label for="surlinkAutosSearch">Buscar</label>
+                                    <input type="search" id="surlinkAutosSearch" name="search" placeholder="Ej: SUV híbrido" maxlength="60">
+                                </div>
+                                <div class="surlink-input-group">
+                                    <label for="surlinkAutosMarca">Marca</label>
+                                    <select id="surlinkAutosMarca" name="brand">
+                                        <option value="">Todas</option>
+                                    </select>
+                                </div>
+                                <div class="surlink-input-group">
+                                    <label for="surlinkAutosModelo">Modelo</label>
+                                    <input type="text" id="surlinkAutosModelo" name="model" placeholder="Onix, Ranger, etc.">
+                                </div>
+                                <div class="surlink-input-group is-compact">
+                                    <label for="surlinkAutosMin">Precio mín.</label>
+                                    <input type="number" id="surlinkAutosMin" name="minPrice" min="0" step="500" placeholder="USD">
+                                </div>
+                                <div class="surlink-input-group is-compact">
+                                    <label for="surlinkAutosMax">Precio máx.</label>
+                                    <input type="number" id="surlinkAutosMax" name="maxPrice" min="0" step="500" placeholder="USD">
+                                </div>
+                            </div>
+
+                            <div class="surlink-filter-actions">
+                                <button type="submit" class="btn btn-primary">Buscar</button>
+                                <button type="button" class="btn btn-secondary" data-surlink-reset="autos">Limpiar</button>
+                            </div>
+                        </form>
+
+                        <div class="surlink-feedback" data-feedback="autos" hidden></div>
+                        <div class="surlink-results" id="surlinkAutosResults"></div>
+                        <div class="surlink-pagination" data-pagination="autos"></div>
+                    </section>
+
+                    <section class="surlink-section" data-surlink-section="financial" role="tabpanel" aria-hidden="true">
+                        <header class="surlink-section-header">
+                            <h2>Surlink Financial</h2>
+                            <p>Servicios financieros, créditos, préstamos y soluciones de inversión comparadas en un solo lugar.</p>
+                        </header>
+
+                        <form id="surlinkFinancialForm" class="surlink-filters" autocomplete="off">
+                            <div class="surlink-filter-grid">
+                                <div class="surlink-input-group is-search">
+                                    <label for="surlinkFinancialSearch">Buscar</label>
+                                    <input type="search" id="surlinkFinancialSearch" name="search" placeholder="Ej: crédito hipotecario" maxlength="60">
+                                </div>
+                                <div class="surlink-input-group">
+                                    <label for="surlinkFinancialTipo">Tipo de servicio</label>
+                                    <select id="surlinkFinancialTipo" name="serviceType">
+                                        <option value="">Todos</option>
+                                    </select>
+                                </div>
+                                <div class="surlink-input-group">
+                                    <label for="surlinkFinancialInstitucion">Institución</label>
+                                    <input type="text" id="surlinkFinancialInstitucion" name="institution" placeholder="Banco, financiera...">
+                                </div>
+                            </div>
+
+                            <div class="surlink-filter-actions">
+                                <button type="submit" class="btn btn-primary">Buscar</button>
+                                <button type="button" class="btn btn-secondary" data-surlink-reset="financial">Limpiar</button>
+                            </div>
+                        </form>
+
+                        <div class="surlink-feedback" data-feedback="financial" hidden></div>
+                        <div class="surlink-results" id="surlinkFinancialResults"></div>
+                        <div class="surlink-pagination" data-pagination="financial"></div>
+                    </section>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <div class="surlink-modal" id="surlinkDetailModal" aria-hidden="true">
+        <div class="surlink-modal-backdrop" data-surlink-close></div>
+        <div class="surlink-modal-content" role="dialog" aria-modal="true">
+            <button class="surlink-modal-close" data-surlink-close aria-label="Cerrar detalle">&times;</button>
+            <div id="surlinkModalBody" class="surlink-modal-body">
+                <div class="surlink-modal-loading">Cargando información...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Bienvenida -->
+    <div id="welcomeModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 8px 8px 0 0;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 12px; font-size: 1.8rem;">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <path d="M4 12l12-9 12 9v14a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3z"></path>
+                        <polyline points="12 29 12 16 20 16 20 29"></polyline>
+                    </svg>
+                    Bienvenido a NEXUS Surlink
+                </h2>
+                <button id="welcomeModalClose" class="modal-close" style="color: white; opacity: 0.9;">&times;</button>
+            </div>
+            <div style="padding: 2rem;">
+                <div style="margin-bottom: 1.5rem;">
+                    <h3 style="color: #333; margin-bottom: 0.75rem; font-size: 1.3rem;">¿Qué es Surlink?</h3>
+                    <p style="color: #555; line-height: 1.7; font-size: 1rem;">
+                        Surlink es tu <strong>marketplace integral</strong> para encontrar inmuebles, vehículos, educación y servicios financieros.
+                        Todo en un solo lugar con información verificada y actualizada constantemente.
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <h3 style="color: #333; margin-bottom: 0.75rem; font-size: 1.3rem;">Categorías Principales</h3>
+                    <div style="display: grid; gap: 1rem;">
+                        <div style="display: flex; gap: 1rem; align-items: start;">
+                            <div style="background: #e3f2fd; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1976d2" stroke-width="2">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                            </div>
+                            <div>
+                                <strong style="color: #333; display: block; margin-bottom: 0.25rem;">Surlink Casas</strong>
+                                <p style="color: #666; margin: 0; font-size: 0.95rem;">Propiedades, terrenos y proyectos inmobiliarios. Filtra por tipo, precio, ubicación y características.</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; align-items: start;">
+                            <div style="background: #f3e5f5; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7b1fa2" stroke-width="2">
+                                    <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"></path>
+                                    <path d="M5 12h10"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <strong style="color: #333; display: block; margin-bottom: 0.25rem;">Surlink Autos</strong>
+                                <p style="color: #666; margin: 0; font-size: 0.95rem;">Vehículos nuevos y usados. Encuentra autos, motos, camiones y utilitarios de concesionarias verificadas.</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; align-items: start;">
+                            <div style="background: #fff3e0; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f57c00" stroke-width="2">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <strong style="color: #333; display: block; margin-bottom: 0.25rem;">Surlink Academy</strong>
+                                <p style="color: #666; margin: 0; font-size: 0.95rem;">Universidades, carreras técnicas, cursos y programas educativos. Información sobre costos, requisitos y modalidades.</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; align-items: start;">
+                            <div style="background: #e8f5e9; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#388e3c" stroke-width="2">
+                                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <strong style="color: #333; display: block; margin-bottom: 0.25rem;">Surlink Financial</strong>
+                                <p style="color: #666; margin: 0; font-size: 0.95rem;">Servicios financieros, créditos, préstamos y seguros. Compara opciones de instituciones confiables.</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; align-items: start;">
+                            <div style="background: #fce4ec; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c2185b" stroke-width="2">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <strong style="color: #333; display: block; margin-bottom: 0.25rem;">Favoritos y Guardados</strong>
+                                <p style="color: #666; margin: 0; font-size: 0.95rem;">Guarda tus listados favoritos y accede a ellos desde tu perfil en cualquier momento.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: #f5f5f5; border-left: 4px solid #667eea; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
+                    <p style="margin: 0; color: #555; font-size: 0.95rem;">
+                        <strong>💡 Consejo:</strong> Crea una cuenta para guardar favoritos, contactar vendedores y recibir notificaciones de nuevos listados.
+                    </p>
+                </div>
+
+                <button onclick="closeWelcomeModal();" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                    ¡Comenzar a Explorar!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+
+    <script>
+        window.surlinkConfig = {
+            isAuthenticated: <%= isAuthenticated ? 'true' : 'false' %>,
+            uid: "<%= user ? user.uid : '' %>",
+            username: "<%= user ? user.username : '' %>",
+            role: "<%= user ? user.role : 'guest' %>"
+        };
+    </script>
+    <script src="/js/surlink.js" defer></script>
+    <script>
+        // Welcome Modal Logic
+        function closeWelcomeModal() {
+            const modal = document.getElementById('welcomeModal');
+            modal.classList.remove('active');
+            modal.style.display = 'none';
+            localStorage.setItem('surlinkWelcomeShown', 'true');
+        }
+
+        function checkAndShowWelcomeModal() {
+            const hasSeenWelcome = localStorage.getItem('surlinkWelcomeShown');
+            if (!hasSeenWelcome) {
+                const modal = document.getElementById('welcomeModal');
+                modal.style.display = 'flex';
+                setTimeout(() => {
+                    modal.classList.add('active');
+                }, 100);
+            }
+        }
+
+        // Event listeners for welcome modal
+        document.getElementById('welcomeModalClose')?.addEventListener('click', closeWelcomeModal);
+
+        // Close welcome modal when clicking outside
+        document.getElementById('welcomeModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'welcomeModal') {
+                closeWelcomeModal();
+            }
+        });
+
+        // Show welcome modal on page load if not shown before
+        document.addEventListener('DOMContentLoaded', checkAndShowWelcomeModal);
+    </script>
+</body>
+</html>

@@ -192,8 +192,10 @@ function extractPlaces(text, prioritize = false) {
   const allPlaces = [...new Set([...places, ...foundPlaces])];
 
   // Filter out common noise words that NLP might incorrectly identify as places
-  const noiseWords = ['las', 'los', 'la', 'el', 'de', 'del', 'para', 'por', 'con', 'sin',
-                      'que', 'como', 'donde', 'cuando', 'sobre', 'entre', 'hasta', 'desde'];
+  const noiseWords = [
+    'las', 'los', 'la', 'el', 'de', 'del', 'para', 'por', 'con', 'sin',
+    'que', 'como', 'donde', 'cuando', 'sobre', 'entre', 'hasta', 'desde'
+  ];
 
   return allPlaces
     .map(place => {

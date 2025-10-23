@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(npm uninstall redis)",
-      "Bash(npm run clean-fake-data)"
+      "Bash(npm run clean-fake-data)",
+      "Bash(cat:*)",
+      "Bash(curl:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

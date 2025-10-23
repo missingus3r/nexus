@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
+    <%- include('partials/theme-init') %>
     <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css">
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/mobile-map.css">
+    <script src="/js/theme-toggle.js" defer></script>
     <style>
         /* Incidents List Button - Desktop */
         .incidents-list-btn {
@@ -84,26 +86,26 @@
         }
 
         #incidentsListContent::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: var(--scrollbar-track);
             border-radius: 4px;
         }
 
         #incidentsListContent::-webkit-scrollbar-thumb {
-            background: #888;
+            background: var(--scrollbar-thumb);
             border-radius: 4px;
         }
 
         #incidentsListContent::-webkit-scrollbar-thumb:hover {
-            background: #555;
+            background: var(--scrollbar-thumb-hover);
         }
 
         /* Improved incident cards in modal */
         .incident-card {
-            border: 1px solid #e0e0e0;
+            border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 1.25rem;
             margin-bottom: 1rem;
-            background: white;
+            background: var(--surface);
             transition: all 0.2s ease;
             position: relative;
             overflow: hidden;
@@ -122,7 +124,7 @@
         }
 
         .incident-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px var(--shadow-elevation);
             transform: translateY(-2px);
             border-color: var(--primary-color);
         }
@@ -140,13 +142,13 @@
 
         .incident-card-title {
             margin: 0 0 0.25rem 0;
-            color: #333;
+            color: var(--text-primary);
             font-size: 1.1rem;
             font-weight: 600;
         }
 
         .incident-card-date {
-            color: #757575;
+            color: var(--text-secondary);
             font-size: 0.875rem;
         }
 
@@ -162,23 +164,24 @@
         .incident-card-reporter {
             margin: 0.75rem 0;
             padding: 0.5rem;
-            background: #f5f5f5;
+            background: var(--surface-elevated);
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             font-size: 0.9rem;
         }
 
         .incident-card-reporter strong {
-            color: #555;
+            color: var(--text-primary);
         }
 
         .incident-card-reporter span {
-            color: #757575;
+            color: var(--text-secondary);
         }
 
         .incident-card-description {
             margin: 0.75rem 0;
             font-size: 0.9rem;
-            color: #555;
+            color: var(--text-primary);
             line-height: 1.5;
         }
 
@@ -213,7 +216,7 @@
         .incidents-empty-state {
             text-align: center;
             padding: 3rem 1rem;
-            color: #757575;
+            color: var(--text-secondary);
         }
 
         .incidents-empty-state svg {

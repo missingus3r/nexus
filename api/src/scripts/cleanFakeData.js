@@ -4,7 +4,6 @@ import User from '../models/User.js';
 import Incident from '../models/Incident.js';
 import Validation from '../models/Validation.js';
 import Notification from '../models/Notification.js';
-import AdminPost from '../models/AdminPost.js';
 import NewsEvent from '../models/NewsEvent.js';
 
 // Load environment variables

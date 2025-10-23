@@ -24,6 +24,9 @@ import newsRoutes from './src/routes/news.js';
 import linksRoutes from './src/routes/links.js';
 import adminRoutes from './src/routes/admin.js';
 import notificationRoutes from './src/routes/notifications.js';
+import surlinkRoutes from './src/routes/surlink.js';
+import pricingRoutes from './src/routes/pricing.js';
+import forumRoutes from './src/routes/forum.js';
 
 // View Routes
 import viewRoutes from './src/routes/views.js';
@@ -83,15 +86,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(rateLimiter);
 
 // MongoDB connection
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => logger.info('MongoDB connected successfully'))
-.catch(err => {
-  logger.error('MongoDB connection error:', err);
-  process.exit(1);
-});
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => logger.info('MongoDB connected successfully'))
+  .catch(err => {
+    logger.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
 
 // Make io accessible to routes
 app.set('io', io);
@@ -111,6 +111,9 @@ app.use('/api/news', newsRoutes);
 app.use('/api/links', linksRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/surlink', surlinkRoutes);
+app.use('/api/pricing', pricingRoutes);
+app.use('/api/forum', forumRoutes);
 
 // View Routes (serve HTML pages)
 app.use('/', viewRoutes);

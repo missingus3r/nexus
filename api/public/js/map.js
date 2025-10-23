@@ -35,10 +35,17 @@ function initializeMap() {
     map.on('load', () => {
         addIncidentsLayer();
         addHeatmapLayer();
+
+        // Load map data immediately
         loadMapData();
 
         // Try to center on user's location
         centerOnUserLocation();
+
+        // Reload data after user location is set (in case the bbox changed)
+        setTimeout(() => {
+            loadMapData();
+        }, 3000);
     });
 
     // Add navigation controls
@@ -113,9 +120,9 @@ function addIncidentsLayer() {
         paint: {
             'circle-radius': [
                 'interpolate', ['linear'], ['zoom'],
-                10, ['*', ['/', ['get', 'approximateRadius'], 20], 1],
-                16, ['*', ['/', ['get', 'approximateRadius'], 3], 1],
-                20, ['*', ['get', 'approximateRadius'], 0.8]
+                10, ['*', ['/', ['coalesce', ['get', 'approximateRadius'], 100], 20], 1],
+                16, ['*', ['/', ['coalesce', ['get', 'approximateRadius'], 100], 3], 1],
+                20, ['*', ['coalesce', ['get', 'approximateRadius'], 100], 0.8]
             ],
             'circle-color': [
                 'match', ['get', 'type'],
@@ -144,9 +151,9 @@ function addIncidentsLayer() {
         paint: {
             'circle-radius': [
                 'interpolate', ['linear'], ['zoom'],
-                10, ['*', ['/', ['get', 'approximateRadius'], 30], 1],
-                16, ['*', ['/', ['get', 'approximateRadius'], 5], 1],
-                20, ['*', ['get', 'approximateRadius'], 0.5]
+                10, ['*', ['/', ['coalesce', ['get', 'approximateRadius'], 100], 30], 1],
+                16, ['*', ['/', ['coalesce', ['get', 'approximateRadius'], 100], 5], 1],
+                20, ['*', ['coalesce', ['get', 'approximateRadius'], 100], 0.5]
             ],
             'circle-color': [
                 'match', ['get', 'type'],
@@ -174,7 +181,7 @@ function addIncidentsLayer() {
         filter: ['==', ['get', 'locationType'], 'approximate'],
         paint: {
             'circle-radius': [
-                'interpolate', ['linear'], ['get', 'severity'],
+                'interpolate', ['linear'], ['coalesce', ['get', 'severity'], 3],
                 1, 8,
                 5, 18
             ],
@@ -201,7 +208,7 @@ function addIncidentsLayer() {
         filter: ['!=', ['get', 'locationType'], 'approximate'],
         paint: {
             'circle-radius': [
-                'interpolate', ['linear'], ['get', 'severity'],
+                'interpolate', ['linear'], ['coalesce', ['get', 'severity'], 3],
                 1, 6,
                 5, 15
             ],
@@ -358,6 +365,9 @@ async function loadMapData() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const incidentsData = await incidentsResponse.json();
+
+        console.log('Loaded incidents:', incidentsData.features?.length || 0);
+
         if (incidentsSource) {
             incidentsSource.setData(incidentsData);
         }

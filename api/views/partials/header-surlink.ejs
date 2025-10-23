@@ -1,0 +1,70 @@
+<div class="header">
+    <div class="container">
+        <a href="/surlink" class="logo">
+            <span class="logo-text">NEXUS Surlink</span>
+        </a>
+
+        <div class="header-controls">
+            <button class="hamburger" id="hamburger" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+
+        <nav class="nav" id="nav">
+            <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
+                <!-- Admin Menu: All pages -->
+                <a href="/" class="nav-link <%= page === 'landing' ? 'active' : '' %>">Inicio</a>
+                <a href="/centinel" class="platform-btn <%= page === 'centinel' ? 'active' : '' %>">Centinel</a>
+                <a href="/news" class="nav-link <%= page === 'news' ? 'active' : '' %>">Noticias</a>
+                <a href="/forum" class="platform-btn <%= page === 'forum' ? 'active' : '' %>">Foro</a>
+                <a href="/links" class="nav-link <%= page === 'links' ? 'active' : '' %>">Enlaces MI</a>
+                <a href="/surlink" class="platform-btn <%= page === 'surlink' ? 'active' : '' %>">Surlink</a>
+                <a href="/pricing" class="nav-link <%= page === 'pricing' ? 'active' : '' %>">Planes</a>
+                <a href="/privacy" class="nav-link <%= page === 'privacy' ? 'active' : '' %>">Privacidad</a>
+                <a href="/terms" class="nav-link <%= page === 'terms' ? 'active' : '' %>">Términos</a>
+                <a href="/perfil" class="nav-link <%= page === 'perfil' ? 'active' : '' %>">Perfil</a>
+                <a href="/admin" class="nav-link <%= page === 'admin' ? 'active' : '' %>" style="color: var(--warning-color); font-weight: 600;">Admin</a>
+                <a href="/logout" class="btn btn-secondary">Salir</a>
+            <% } else { %>
+                <!-- Normal User Menu: Original Surlink menu -->
+                <a href="/" class="nav-link">Inicio</a>
+                <a href="/centinel" class="platform-btn">Centinel</a>
+                <a href="/forum" class="platform-btn">Foro</a>
+                
+
+                <% if (isAuthenticated) { %>
+                    <a href="/perfil" class="nav-link <%= page === 'perfil' ? 'active' : '' %>">Perfil</a>
+                    <a href="/logout" class="btn btn-secondary">Salir</a>
+                <% } else { %>
+                    <a href="/login" class="btn btn-primary">Iniciar Sesión</a>
+                <% } %>
+            <% } %>
+        </nav>
+    </div>
+</div>
+
+<script>
+    // Hamburger menu toggle
+    document.addEventListener('DOMContentLoaded', function() {
+        const hamburger = document.getElementById('hamburger');
+        const nav = document.getElementById('nav');
+
+        if (hamburger) {
+            hamburger.addEventListener('click', function() {
+                hamburger.classList.toggle('active');
+                nav.classList.toggle('active');
+            });
+
+            // Close menu when clicking on a link
+            const navLinks = nav.querySelectorAll('a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    hamburger.classList.remove('active');
+                    nav.classList.remove('active');
+                });
+            });
+        }
+    });
+</script>

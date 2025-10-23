@@ -4,19 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
+    <%- include('partials/theme-init') %>
     <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/theme-toggle.js" defer></script>
     <style>
         .profile-container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 2rem 0;
         }
 
         .profile-header {
-            background: linear-gradient(135deg, var(--primary-color), #1565c0);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 2rem;
-            border-radius: 8px;
+            border-radius: 12px;
             margin-bottom: 2rem;
             display: flex;
             align-items: center;
@@ -27,13 +29,26 @@
             width: 100px;
             height: 100px;
             border-radius: 50%;
-            background: white;
+            background: var(--surface);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 3rem;
             color: var(--primary-color);
             flex-shrink: 0;
+            box-shadow: 0 4px 12px var(--shadow-elevation);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-avatar-placeholder {
+            font-size: 3rem;
         }
 
         .profile-info h1 {
@@ -53,21 +68,144 @@
             border-radius: 20px;
             font-size: 0.875rem;
             margin-top: 0.5rem;
+            margin-right: 0.5rem;
         }
 
+        .subscription-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            font-weight: 600;
+        }
+
+        .subscription-badge.free {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .subscription-badge.premium {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 2px 8px rgba(240, 147, 251, 0.3);
+        }
+
+        .subscription-badge.pro {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3);
+        }
+
+        .subscription-badge.business {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            box-shadow: 0 2px 8px rgba(67, 233, 123, 0.3);
+        }
+
+        .subscription-badge.enterprise {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            box-shadow: 0 2px 8px rgba(250, 112, 154, 0.3);
+        }
+
+        .subscription-badge.white-label {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+            box-shadow: 0 2px 8px rgba(48, 207, 208, 0.3);
+        }
+
+        .upgrade-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .upgrade-section h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1.5rem;
+        }
+
+        .upgrade-section p {
+            margin: 0 0 1.5rem 0;
+            opacity: 0.95;
+            font-size: 1.05rem;
+        }
+
+        .upgrade-section .btn {
+            background: white;
+            color: #667eea;
+            font-weight: 600;
+            padding: 0.875rem 2rem;
+            font-size: 1.1rem;
+        }
+
+        .upgrade-section .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Platform sections */
+        .platform-section {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 12px var(--shadow-elevation);
+            border: 1px solid var(--border-color);
+        }
+
+        .platform-section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .platform-section-header h2 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: var(--text-primary);
+        }
+
+        .platform-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .centinel-icon {
+            background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+        }
+
+        .surlink-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* Stats Grid */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
 
         .stat-card {
-            background: white;
+            background: var(--surface-elevated);
             padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 12px;
             text-align: center;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-elevation);
         }
 
         .stat-card .number {
@@ -81,29 +219,26 @@
             color: var(--text-secondary);
             font-size: 0.875rem;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .section {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-        }
-
-        .section h2 {
-            margin-top: 0;
-            color: var(--primary-color);
-            border-bottom: 2px solid var(--background);
-            padding-bottom: 0.5rem;
+        /* Activity items */
+        .activity-list {
+            max-height: 400px;
+            overflow-y: auto;
         }
 
         .activity-item {
             padding: 1rem;
             border-left: 3px solid var(--primary-color);
             margin-bottom: 1rem;
-            background: var(--background);
+            background: var(--surface-elevated);
             border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .activity-item:hover {
+            background: var(--surface);
         }
 
         .activity-item .date {
@@ -114,11 +249,73 @@
         .activity-item .type {
             font-weight: bold;
             margin-bottom: 0.25rem;
+            color: var(--primary-color);
         }
 
+        /* Surlink items */
+        .surlink-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .surlink-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .surlink-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px var(--shadow-elevation);
+            border-color: var(--primary-color);
+        }
+
+        .surlink-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .surlink-card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .surlink-card-count {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .surlink-card-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        /* Settings */
         .settings-item {
             padding: 1rem;
-            border-bottom: 1px solid var(--background);
+            border-bottom: 1px solid var(--border-color);
         }
 
         .settings-item:last-child {
@@ -130,22 +327,30 @@
             align-items: center;
             gap: 1rem;
             cursor: pointer;
+            font-size: 1rem;
+            color: var(--text-primary);
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: var(--text-secondary);
+        .settings-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
         }
 
+        /* Danger Zone */
         .danger-zone {
-            border: 2px solid var(--danger-color);
-            background: #fff5f5;
+            border: 2px solid #dc3545 !important;
+            background: #fff5f5 !important;
         }
 
-        .danger-zone h2 {
-            color: var(--danger-color);
-            border-bottom-color: var(--danger-color);
+        /* Loading animation */
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         @media (max-width: 768px) {
@@ -161,11 +366,15 @@
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+
+            .surlink-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <%- include('partials/header', { page: page, isAuthenticated: isAuthenticated }) %>
+    <%- include('partials/header-perfil', { page: page, isAuthenticated: isAuthenticated }) %>
 
     <div class="main-content">
         <div class="container">
@@ -179,39 +388,86 @@
                         <h1 id="userName">Cargando...</h1>
                         <p id="userEmail">email@example.com</p>
                         <p>Miembro desde: <span id="memberSince">-</span></p>
-                        <span class="profile-badge" id="userRole">Usuario</span>
+                        <div>
+                            <span class="profile-badge" id="userRole">Usuario</span>
+                            <span class="subscription-badge" id="userSubscription">Free</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Stats Grid -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="number" id="totalReports">0</div>
-                        <div class="label">Reportes</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="number" id="totalValidations">0</div>
-                        <div class="label">Validaciones</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="number" id="reputationScore">0</div>
-                        <div class="label">Reputación</div>
-                    </div>
+                <!-- Upgrade Section (only shown for free users) -->
+                <div id="upgradeSection" class="upgrade-section" style="display: none;">
+                    <h3>✨ Desbloquea todo el potencial de NEXUS</h3>
+                    <p>Accede a reportes ilimitados, alertas personalizadas, datos históricos y mucho más con nuestros planes premium.</p>
+                    <a href="/pricing" class="btn">Ver Planes y Precios</a>
                 </div>
 
-                <!-- Recent Activity -->
-                <div class="section">
-                    <h2>Actividad Reciente</h2>
-                    <div id="recentActivity">
+                <!-- CENTINEL SECTION -->
+                <div class="platform-section">
+                    <div class="platform-section-header">
+                        <div class="platform-icon centinel-icon">🛡️</div>
+                        <h2>NEXUS Centinel</h2>
+                    </div>
+
+                    <!-- Centinel Stats -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="number" id="totalReports">0</div>
+                            <div class="label">Reportes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="number" id="totalValidations">0</div>
+                            <div class="label">Validaciones</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="number" id="reputationScore">0</div>
+                            <div class="label">Reputación</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <h3 style="margin-bottom: 1rem; color: #333;">Actividad Reciente</h3>
+                    <div class="activity-list" id="recentActivity">
                         <div class="empty-state">
                             <p>Cargando actividad...</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Settings -->
-                <div class="section">
-                    <h2>Configuración</h2>
+                <!-- SURLINK SECTION -->
+                <div class="platform-section">
+                    <div class="platform-section-header">
+                        <div class="platform-icon surlink-icon">🔗</div>
+                        <h2>NEXUS Surlink</h2>
+                    </div>
+
+                    <div class="surlink-grid">
+                        <div class="surlink-card" onclick="openFavoritesModal()">
+                            <div class="surlink-card-icon">⭐</div>
+                            <div class="surlink-card-title">Favoritos</div>
+                            <div class="surlink-card-count" id="favoritesCount">0</div>
+                            <div class="surlink-card-label">Listados guardados</div>
+                        </div>
+
+                        <div class="surlink-card" onclick="openCommentsModal()">
+                            <div class="surlink-card-icon">💬</div>
+                            <div class="surlink-card-title">Comentarios</div>
+                            <div class="surlink-card-count" id="commentsCount">0</div>
+                            <div class="surlink-card-label">Comentarios realizados</div>
+                        </div>
+
+                        <div class="surlink-card" onclick="openResponsesModal()">
+                            <div class="surlink-card-icon">↩️</div>
+                            <div class="surlink-card-title">Respuestas</div>
+                            <div class="surlink-card-count" id="responsesCount">0</div>
+                            <div class="surlink-card-label">Respuestas recibidas</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONFIGURACIÓN -->
+                <div class="platform-section">
+                    <h2 style="margin-bottom: 1.5rem; color: #333;">⚙️ Configuración</h2>
                     <div class="settings-item">
                         <label>
                             <input type="checkbox" id="emailNotifications">
@@ -232,9 +488,24 @@
                     </div>
                 </div>
 
-                <!-- Account Actions -->
-                <div class="section">
-                    <h2>Acciones de Cuenta</h2>
+                <!-- ACCIONES DE CUENTA -->
+                <div class="platform-section">
+                    <h2 style="margin-bottom: 1.5rem; color: #333;">🔧 Acciones de Cuenta</h2>
+
+                    <!-- Profile Picture Actions -->
+                    <div style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e0e0e0;">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: #555;">Foto de Perfil</h3>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <button id="uploadPhotoBtn" class="btn btn-primary">
+                                📷 Cambiar Foto
+                            </button>
+                            <button id="removePhotoBtn" class="btn btn-secondary" style="display: none;">
+                                🗑️ Eliminar Foto
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Account Actions -->
                     <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                         <a href="/logout" class="btn btn-secondary">Cerrar Sesión</a>
                         <% if (user && user.role === 'admin') { %>
@@ -243,16 +514,16 @@
                     </div>
                 </div>
 
-                <!-- Danger Zone -->
-                <div class="section danger-zone">
-                    <h2>⚠️ Zona de Peligro</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                <!-- DANGER ZONE -->
+                <div class="platform-section danger-zone">
+                    <h2 style="margin-bottom: 1rem; color: #dc3545; border-bottom-color: #dc3545;">⚠️ Zona de Peligro</h2>
+                    <p style="color: #666; margin-bottom: 1.5rem;">
                         Las acciones en esta sección son irreversibles. Procede con precaución.
                     </p>
                     <button id="deleteAccountBtn" class="btn btn-danger">
                         🗑️ Eliminar Cuenta Permanentemente
                     </button>
-                    <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                    <p style="font-size: 0.875rem; color: #666; margin-top: 0.75rem;">
                         Esta acción eliminará todos tus datos, reportes y actividad. No se puede deshacer.
                     </p>
                 </div>
@@ -271,7 +542,7 @@
                 <p style="margin-bottom: 1rem;">
                     ¿Estás seguro que deseas eliminar tu cuenta <strong id="deleteUsername">username</strong>?
                 </p>
-                <div style="background: #fff3cd; border-left: 4px solid var(--warning-color); padding: 1rem; margin-bottom: 1rem; border-radius: 4px;">
+                <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; margin-bottom: 1rem; border-radius: 4px;">
                     <strong>⚠️ Esta acción es permanente e irreversible.</strong>
                     <ul style="margin: 0.5rem 0 0 1.5rem;">
                         <li>Se eliminarán todos tus reportes</li>
@@ -284,13 +555,122 @@
                     <label for="confirmDelete">
                         Escribe <strong>"ELIMINAR"</strong> para confirmar:
                     </label>
-                    <input type="text" id="confirmDelete" placeholder="Escribe ELIMINAR" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                    <input type="text" id="confirmDelete" placeholder="Escribe ELIMINAR" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; margin-top: 0.5rem;">
                 </div>
                 <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
                     <button id="confirmDeleteBtn" class="btn btn-danger" disabled style="flex: 1;">
                         Sí, Eliminar Mi Cuenta
                     </button>
                     <button id="cancelDeleteBtn" class="btn btn-secondary" style="flex: 1;">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Favorites Modal -->
+    <div id="favoritesModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 12px;">
+                    <span>⭐</span>
+                    Mis Favoritos
+                </h2>
+                <button id="closeFavoritesModal" class="modal-close" style="color: white; opacity: 0.9;">&times;</button>
+            </div>
+            <div id="favoritesContent" style="padding: 1.5rem; max-height: 500px; overflow-y: auto;">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No tienes favoritos guardados</p>
+                    <p style="font-size: 0.9rem;">Explora Surlink y guarda tus listados favoritos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comments Modal -->
+    <div id="commentsModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 12px;">
+                    <span>💬</span>
+                    Mis Comentarios
+                </h2>
+                <button id="closeCommentsModal" class="modal-close" style="color: white; opacity: 0.9;">&times;</button>
+            </div>
+            <div id="commentsContent" style="padding: 1.5rem; max-height: 500px; overflow-y: auto;">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No has realizado comentarios</p>
+                    <p style="font-size: 0.9rem;">Comenta en listados de Surlink para compartir tu opinión</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Responses Modal -->
+    <div id="responsesModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 12px;">
+                    <span>↩️</span>
+                    Respuestas Recibidas
+                </h2>
+                <button id="closeResponsesModal" class="modal-close" style="color: white; opacity: 0.9;">&times;</button>
+            </div>
+            <div id="responsesContent" style="padding: 1.5rem; max-height: 500px; overflow-y: auto;">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 11 12 14 22 4"></polyline>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                    <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No tienes respuestas</p>
+                    <p style="font-size: 0.9rem;">Las respuestas a tus comentarios aparecerán aquí</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Photo Modal -->
+    <div id="uploadPhotoModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>📷 Cambiar Foto de Perfil</h2>
+                <button id="closeUploadPhotoModal" class="modal-close">&times;</button>
+            </div>
+            <div style="padding: 1.5rem;">
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="photoInput" style="display: block; margin-bottom: 0.5rem; color: #333; font-weight: 500;">
+                        Seleccionar foto:
+                    </label>
+                    <input type="file" id="photoInput" accept="image/jpeg,image/jpg,image/png,image/webp" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                    <small style="color: #666; display: block; margin-top: 0.5rem;">
+                        Formatos permitidos: JPG, PNG, WEBP. Máximo 5MB.
+                    </small>
+                </div>
+
+                <!-- Preview -->
+                <div id="photoPreviewContainer" style="display: none; margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: #333; font-weight: 500;">
+                        Vista previa:
+                    </label>
+                    <div style="display: flex; justify-content: center;">
+                        <div style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 3px solid #667eea; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            <img id="photoPreview" src="" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem;">
+                    <button id="confirmUploadBtn" class="btn btn-primary" style="flex: 1;" disabled>
+                        Guardar Foto
+                    </button>
+                    <button id="cancelUploadBtn" class="btn btn-secondary" style="flex: 1;">
                         Cancelar
                     </button>
                 </div>
@@ -332,13 +712,40 @@
             const avatarEmoji = data.user.role === 'admin' ? '👨‍💼' : '👤';
             document.getElementById('userAvatar').textContent = avatarEmoji;
 
-            // Stats
-            document.getElementById('totalReports').textContent = data.stats.totalReports || 0;
-            document.getElementById('totalValidations').textContent = data.stats.totalValidations || 0;
-            document.getElementById('reputationScore').textContent = data.stats.reputation || 0;
+            // Subscription info
+            const subscription = data.subscription || { plan: 'free' };
+            const planNames = {
+                'free': 'Free',
+                'premium': 'Premium',
+                'pro': 'Pro',
+                'business': 'Business',
+                'enterprise': 'Enterprise',
+                'white-label': 'White Label'
+            };
 
-            // Recent Activity
+            const subscriptionBadge = document.getElementById('userSubscription');
+            subscriptionBadge.textContent = planNames[subscription.plan] || 'Free';
+            subscriptionBadge.className = 'subscription-badge ' + subscription.plan;
+
+            // Show upgrade section only for free users
+            if (subscription.plan === 'free') {
+                document.getElementById('upgradeSection').style.display = 'block';
+            } else {
+                document.getElementById('upgradeSection').style.display = 'none';
+            }
+
+            // Centinel Stats
+            document.getElementById('totalReports').textContent = data.stats?.totalReports || 0;
+            document.getElementById('totalValidations').textContent = data.stats?.totalValidations || 0;
+            document.getElementById('reputationScore').textContent = data.stats?.reputation || 0;
+
+            // Centinel Activity
             displayActivity(data.recentActivity || []);
+
+            // Surlink Stats (placeholder - will be populated when Surlink backend is ready)
+            document.getElementById('favoritesCount').textContent = data.surlink?.favorites?.length || 0;
+            document.getElementById('commentsCount').textContent = data.surlink?.comments?.length || 0;
+            document.getElementById('responsesCount').textContent = data.surlink?.responses?.length || 0;
 
             // Settings (if provided)
             if (data.settings) {
@@ -346,6 +753,9 @@
                 document.getElementById('publicProfile').checked = data.settings.publicProfile || false;
                 document.getElementById('showLocation').checked = data.settings.showLocation || false;
             }
+
+            // Check and display profile photo
+            checkProfilePhoto(data);
         }
 
         function displayActivity(activities) {
@@ -354,9 +764,14 @@
             if (activities.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 48px; height: 48px; margin: 0 auto 1rem;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
                         <p>No hay actividad reciente</p>
                         <p style="margin-top: 1rem;">
-                            <a href="/map" class="btn btn-primary">Reportar un Incidente</a>
+                            <a href="/centinel" class="btn btn-primary">Reportar un Incidente</a>
                         </p>
                     </div>
                 `;
@@ -379,6 +794,297 @@
                 `;
             }).join('');
         }
+
+        // Modal functions
+        async function openFavoritesModal() {
+            document.getElementById('favoritesModal').classList.add('active');
+            const content = document.getElementById('favoritesContent');
+
+            // Show loading state
+            content.innerHTML = `
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+                        <circle cx="12" cy="12" r="10" opacity="0.25"></circle>
+                        <path d="M12 2 A10 10 0 0 1 22 12" opacity="1"></path>
+                    </svg>
+                    <p>Cargando favoritos...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/api/surlink/favorites');
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar favoritos');
+                }
+
+                const data = await response.json();
+                displayFavorites(data.favorites || []);
+            } catch (error) {
+                console.error('Error loading favorites:', error);
+                content.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#dc3545" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                        <p style="color: #dc3545;">Error al cargar favoritos</p>
+                        <p style="font-size: 0.9rem;">Intenta nuevamente más tarde</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function openCommentsModal() {
+            document.getElementById('commentsModal').classList.add('active');
+            const content = document.getElementById('commentsContent');
+
+            // Show loading state
+            content.innerHTML = `
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+                        <circle cx="12" cy="12" r="10" opacity="0.25"></circle>
+                        <path d="M12 2 A10 10 0 0 1 22 12" opacity="1"></path>
+                    </svg>
+                    <p>Cargando comentarios...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/api/surlink/comments');
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar comentarios');
+                }
+
+                const data = await response.json();
+                displayComments(data.comments || []);
+            } catch (error) {
+                console.error('Error loading comments:', error);
+                content.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#dc3545" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                        <p style="color: #dc3545;">Error al cargar comentarios</p>
+                        <p style="font-size: 0.9rem;">Intenta nuevamente más tarde</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function openResponsesModal() {
+            document.getElementById('responsesModal').classList.add('active');
+            const content = document.getElementById('responsesContent');
+
+            // Show loading state
+            content.innerHTML = `
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+                        <circle cx="12" cy="12" r="10" opacity="0.25"></circle>
+                        <path d="M12 2 A10 10 0 0 1 22 12" opacity="1"></path>
+                    </svg>
+                    <p>Cargando respuestas...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch('/api/surlink/responses');
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar respuestas');
+                }
+
+                const data = await response.json();
+                displayResponses(data.responses || []);
+            } catch (error) {
+                console.error('Error loading responses:', error);
+                content.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#dc3545" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>
+                        <p style="color: #dc3545;">Error al cargar respuestas</p>
+                        <p style="font-size: 0.9rem;">Intenta nuevamente más tarde</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Display functions for Surlink data
+        function displayFavorites(favorites) {
+            const content = document.getElementById('favoritesContent');
+
+            if (favorites.length === 0) {
+                content.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No tienes favoritos guardados</p>
+                        <p style="font-size: 0.9rem;">Explora Surlink y guarda tus listados favoritos</p>
+                    </div>
+                `;
+                return;
+            }
+
+            content.innerHTML = favorites.map(fav => `
+                <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; background: #fafafa; transition: all 0.2s;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #333; font-size: 1.1rem;">${fav.title || 'Sin título'}</h4>
+                            <p style="margin: 0; color: #666; font-size: 0.9rem;">${fav.category || 'General'}</p>
+                        </div>
+                        <span style="background: #667eea; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; white-space: nowrap;">
+                            ${fav.type || 'Listado'}
+                        </span>
+                    </div>
+                    ${fav.description ? `<p style="color: #555; margin-bottom: 1rem; font-size: 0.95rem;">${fav.description}</p>` : ''}
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                        ${fav.price ? `<span style="background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">💰 ${fav.price}</span>` : ''}
+                        ${fav.location ? `<span style="background: #e3f2fd; color: #1565c0; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">📍 ${fav.location}</span>` : ''}
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; justify-content: space-between; align-items: center; border-top: 1px solid #e0e0e0; padding-top: 1rem;">
+                        <span style="color: #999; font-size: 0.85rem;">Guardado: ${new Date(fav.savedAt || Date.now()).toLocaleDateString('es-UY')}</span>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="${fav.url || '#'}" target="_blank" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.9rem; text-decoration: none;">Ver Listado</a>
+                            <button onclick="removeFavorite('${fav.id || fav._id}')" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Eliminar</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayComments(comments) {
+            const content = document.getElementById('commentsContent');
+
+            if (comments.length === 0) {
+                content.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No has realizado comentarios</p>
+                        <p style="font-size: 0.9rem;">Comenta en listados de Surlink para compartir tu opinión</p>
+                    </div>
+                `;
+                return;
+            }
+
+            content.innerHTML = comments.map(comment => `
+                <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; background: #fafafa;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #333; font-size: 1rem;">${comment.listingTitle || 'Listado sin título'}</h4>
+                            <span style="color: #999; font-size: 0.85rem;">${new Date(comment.createdAt || Date.now()).toLocaleDateString('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                    </div>
+                    <p style="color: #555; margin-bottom: 1rem; line-height: 1.6; padding: 1rem; background: white; border-left: 3px solid #667eea; border-radius: 4px;">${comment.text || comment.content || ''}</p>
+                    <div style="display: flex; gap: 1rem; align-items: center; border-top: 1px solid #e0e0e0; padding-top: 1rem;">
+                        ${comment.likes ? `<span style="color: #666; font-size: 0.9rem;">👍 ${comment.likes} me gusta</span>` : ''}
+                        ${comment.responses ? `<span style="color: #666; font-size: 0.9rem;">💬 ${comment.responses} respuestas</span>` : ''}
+                        <a href="${comment.listingUrl || '#'}" target="_blank" style="color: #667eea; text-decoration: none; font-size: 0.9rem; margin-left: auto;">Ver listado →</a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayResponses(responses) {
+            const content = document.getElementById('responsesContent');
+
+            if (responses.length === 0) {
+                content.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 11 12 14 22 4"></polyline>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                        </svg>
+                        <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No tienes respuestas</p>
+                        <p style="font-size: 0.9rem;">Las respuestas a tus comentarios aparecerán aquí</p>
+                    </div>
+                `;
+                return;
+            }
+
+            content.innerHTML = responses.map(response => `
+                <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; background: #fafafa;">
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; flex-shrink: 0;">
+                            ${response.author ? response.author.charAt(0).toUpperCase() : '?'}
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                <div>
+                                    <strong style="color: #333; font-size: 0.95rem;">${response.author || 'Usuario'}</strong>
+                                    <span style="color: #999; font-size: 0.85rem; margin-left: 0.5rem;">respondió a tu comentario</span>
+                                </div>
+                                <span style="color: #999; font-size: 0.85rem; white-space: nowrap;">${new Date(response.createdAt || Date.now()).toLocaleDateString('es-UY')}</span>
+                            </div>
+                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 0.75rem; font-style: italic; padding: 0.5rem; background: #f5f5f5; border-radius: 4px;">"${response.yourComment || 'Tu comentario'}"</p>
+                            <p style="color: #333; margin-bottom: 1rem; padding: 1rem; background: white; border-left: 3px solid #667eea; border-radius: 4px;">${response.text || response.content || ''}</p>
+                            <a href="${response.listingUrl || '#'}" target="_blank" style="color: #667eea; text-decoration: none; font-size: 0.9rem;">Ver conversación →</a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Remove favorite function
+        async function removeFavorite(favoriteId) {
+            if (!confirm('¿Eliminar este favorito?')) return;
+
+            try {
+                const response = await fetch(`/api/surlink/favorites/${favoriteId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al eliminar favorito');
+                }
+
+                // Reload favorites
+                openFavoritesModal();
+
+                // Update counter
+                const currentCount = parseInt(document.getElementById('favoritesCount').textContent);
+                document.getElementById('favoritesCount').textContent = Math.max(0, currentCount - 1);
+            } catch (error) {
+                console.error('Error removing favorite:', error);
+                alert('Error al eliminar el favorito');
+            }
+        }
+
+        window.removeFavorite = removeFavorite;
+
+        // Close modal handlers
+        document.getElementById('closeFavoritesModal')?.addEventListener('click', () => {
+            document.getElementById('favoritesModal').classList.remove('active');
+        });
+
+        document.getElementById('closeCommentsModal')?.addEventListener('click', () => {
+            document.getElementById('commentsModal').classList.remove('active');
+        });
+
+        document.getElementById('closeResponsesModal')?.addEventListener('click', () => {
+            document.getElementById('responsesModal').classList.remove('active');
+        });
+
+        // Close modals when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
 
         // Settings change handlers
         document.getElementById('emailNotifications')?.addEventListener('change', saveSettings);
@@ -468,7 +1174,7 @@
             }
         });
 
-        // Close modal when clicking outside
+        // Close delete modal when clicking outside
         deleteAccountModal?.addEventListener('click', (e) => {
             if (e.target === deleteAccountModal) {
                 deleteAccountModal.classList.remove('active');
@@ -476,6 +1182,186 @@
                 confirmDeleteBtn.disabled = true;
             }
         });
+
+        // Profile Photo Management
+        let selectedPhotoFile = null;
+
+        const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
+        const removePhotoBtn = document.getElementById('removePhotoBtn');
+        const uploadPhotoModal = document.getElementById('uploadPhotoModal');
+        const closeUploadPhotoModal = document.getElementById('closeUploadPhotoModal');
+        const cancelUploadBtn = document.getElementById('cancelUploadBtn');
+        const photoInput = document.getElementById('photoInput');
+        const photoPreviewContainer = document.getElementById('photoPreviewContainer');
+        const photoPreview = document.getElementById('photoPreview');
+        const confirmUploadBtn = document.getElementById('confirmUploadBtn');
+
+        // Open upload modal
+        uploadPhotoBtn?.addEventListener('click', () => {
+            uploadPhotoModal.classList.add('active');
+        });
+
+        // Close upload modal
+        function closePhotoModal() {
+            uploadPhotoModal.classList.remove('active');
+            photoInput.value = '';
+            photoPreviewContainer.style.display = 'none';
+            confirmUploadBtn.disabled = true;
+            selectedPhotoFile = null;
+        }
+
+        closeUploadPhotoModal?.addEventListener('click', closePhotoModal);
+        cancelUploadBtn?.addEventListener('click', closePhotoModal);
+
+        // Handle photo selection and preview
+        photoInput?.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+
+            if (!file) {
+                photoPreviewContainer.style.display = 'none';
+                confirmUploadBtn.disabled = true;
+                selectedPhotoFile = null;
+                return;
+            }
+
+            // Validate file size (5MB max)
+            const maxSize = 5 * 1024 * 1024;
+            if (file.size > maxSize) {
+                alert('La foto debe ser menor a 5MB');
+                e.target.value = '';
+                photoPreviewContainer.style.display = 'none';
+                confirmUploadBtn.disabled = true;
+                selectedPhotoFile = null;
+                return;
+            }
+
+            // Validate file type
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                alert('Formato no válido. Usa JPG, PNG o WEBP');
+                e.target.value = '';
+                photoPreviewContainer.style.display = 'none';
+                confirmUploadBtn.disabled = true;
+                selectedPhotoFile = null;
+                return;
+            }
+
+            // Show preview
+            selectedPhotoFile = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                photoPreview.src = e.target.result;
+                photoPreviewContainer.style.display = 'block';
+                confirmUploadBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Upload photo
+        confirmUploadBtn?.addEventListener('click', async () => {
+            if (!selectedPhotoFile) return;
+
+            const formData = new FormData();
+            formData.append('photo', selectedPhotoFile);
+
+            try {
+                confirmUploadBtn.disabled = true;
+                confirmUploadBtn.textContent = 'Subiendo...';
+
+                const response = await fetch('/api/auth/upload-photo', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al subir foto');
+                }
+
+                const data = await response.json();
+
+                // Update avatar in the page
+                updateAvatar(data.photoUrl);
+
+                // Show remove button
+                removePhotoBtn.style.display = 'inline-block';
+
+                // Close modal
+                closePhotoModal();
+
+                alert('Foto de perfil actualizada exitosamente');
+            } catch (error) {
+                console.error('Error uploading photo:', error);
+                alert('Error al subir la foto: ' + error.message);
+            } finally {
+                confirmUploadBtn.disabled = false;
+                confirmUploadBtn.textContent = 'Guardar Foto';
+            }
+        });
+
+        // Remove photo
+        removePhotoBtn?.addEventListener('click', async () => {
+            if (!confirm('¿Estás seguro de que deseas eliminar tu foto de perfil?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/remove-photo', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Error al eliminar foto');
+                }
+
+                // Reset avatar to default emoji
+                const userRole = document.getElementById('userRole').textContent;
+                const defaultEmoji = userRole === 'Administrador' ? '👨‍💼' : '👤';
+                updateAvatar(null, defaultEmoji);
+
+                // Hide remove button
+                removePhotoBtn.style.display = 'none';
+
+                alert('Foto de perfil eliminada exitosamente');
+            } catch (error) {
+                console.error('Error removing photo:', error);
+                alert('Error al eliminar la foto: ' + error.message);
+            }
+        });
+
+        // Function to update avatar display
+        function updateAvatar(photoUrl, emoji = null) {
+            const avatarContainer = document.getElementById('userAvatar');
+
+            if (photoUrl) {
+                // Show photo
+                avatarContainer.innerHTML = `<img src="${photoUrl}" alt="Profile Photo">`;
+            } else if (emoji) {
+                // Show emoji
+                avatarContainer.innerHTML = `<span class="profile-avatar-placeholder">${emoji}</span>`;
+            }
+        }
+
+        // Close photo modal when clicking outside
+        uploadPhotoModal?.addEventListener('click', (e) => {
+            if (e.target === uploadPhotoModal) {
+                closePhotoModal();
+            }
+        });
+
+        // Initialize remove button visibility based on profile data
+        function checkProfilePhoto(profileData) {
+            if (profileData.user?.photoUrl) {
+                removePhotoBtn.style.display = 'inline-block';
+                updateAvatar(profileData.user.photoUrl);
+            } else {
+                removePhotoBtn.style.display = 'none';
+            }
+        }
     </script>
 </body>
 </html>

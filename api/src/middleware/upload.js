@@ -58,6 +58,9 @@ const upload = multer({
 // Middleware for incident photos (up to 3 photos)
 export const uploadIncidentPhotos = upload.array('photos', 3);
 
+// Middleware for forum images (up to 5 images)
+export const uploadForumImages = upload.array('images', 5);
+
 // Error handler for multer errors
 export const handleUploadErrors = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
