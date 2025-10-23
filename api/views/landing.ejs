@@ -1,3 +1,20 @@
+<!--
+    Created by: Bruno Silveira with 💙
+    Nexus - Plataforma de Seguridad Ciudadana y Marketplace Integral
+    a DOKTA company
+
+8888888b.   .d88888b.  888    d8P 88888888888     d8888 
+888  "Y88b d88P" "Y88b 888   d8P      888        d88888 
+888    888 888     888 888  d8P       888       d88P888 
+888    888 888     888 888d88K        888      d88P 888 
+888    888 888     888 8888888b       888     d88P  888 
+888    888 888     888 888  Y88b      888    d88P   888 
+888  .d88P Y88b. .d88P 888   Y88b     888   d8888888888 
+8888888P"   "Y88888P"  888    Y88b    888  d88P     888 .cc                                      
+
+    https://dokta.cc
+
+-->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -159,7 +176,7 @@
             display: grid;
             grid-template-columns: minmax(280px, 1.2fr) minmax(240px, 1fr);
             gap: clamp(32px, 6vw, 80px);
-            align-items: end;
+            align-items: center;
         }
 
         .hero {
@@ -184,6 +201,16 @@
         .hero-title span {
             color: var(--accent);
             text-shadow: 0 0 25px rgba(124, 92, 255, 0.35);
+        }
+
+        .rotating-word {
+            display: inline-block;
+            opacity: 1;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .rotating-word.fade-out {
+            opacity: 0;
         }
 
         .hero-text {
@@ -393,16 +420,14 @@
                 </nav>
             </div>
         </header>
-
+        <span class="hero-eyebrow">Seguridad • Inmuebles • Autos • Educación • Finanzas</span>
         <main>
             <section class="hero">
-                <span class="hero-eyebrow">Seguridad • Inmuebles • Autos</span>
-                <h1 class="hero-title">Tu ecosistema de <span>información</span> ciudadana.</h1>
+                <h1 class="hero-title">Tu ecosistema integral de<br><span class="rotating-word" id="rotatingWord">información</span></h1>
                 <p class="hero-text">
-                    Nexus integra seguridad ciudadana y servicios esenciales en una única plataforma.
-                    Centinel te mantiene informado sobre tu entorno con reportes en tiempo real,
-                    mientras Surlink conecta inmobiliarias, concesionarias, academias y servicios financieros.
+                    Todo lo que necesitás, en un mismo lugar: seguí la seguridad de tu ciudad, encontrá casas, autos, educación, finanzas y más.
                 </p>
+                <p class="hero-text">Todo conectado con Nexus.</p>
                 <div class="hero-actions">
                     <a class="cta primary" href="/plataforma">Conocé más</a>
                     <a class="cta secondary" href="/login">Explora NEXUS</a>
@@ -430,12 +455,47 @@
         </main>
 
         <footer>
-            <span>© <%= new Date().getFullYear() %> Nexus. Diseñado en Uruguay con 💙.</span>
+            <span>© <%= new Date().getFullYear() %> Nexus, una empresa de <a href="https://dokta.cc/" target="_blank" rel="noopener noreferrer">DOKTA</a>. Diseñado en Uruguay con 💙.</span>
             <span>
                 <a href="/privacy">Privacidad</a> ·
                 <a href="/terms">Términos</a>
             </span>
         </footer>
     </div>
+
+    <script>
+        (function() {
+            const words = [
+                'información',
+                'seguridad',
+                'productos',
+                'opciones',
+                'oportunidades',
+                'servicios',
+                'soluciones',
+                'herramientas'
+            ];
+
+            let currentIndex = 0;
+            const rotatingWord = document.getElementById('rotatingWord');
+
+            function rotateWord() {
+                // Fade out
+                rotatingWord.classList.add('fade-out');
+
+                setTimeout(() => {
+                    // Change word
+                    currentIndex = (currentIndex + 1) % words.length;
+                    rotatingWord.textContent = words[currentIndex];
+
+                    // Fade in
+                    rotatingWord.classList.remove('fade-out');
+                }, 500); // Match transition duration
+            }
+
+            // Rotate every 3 seconds
+            setInterval(rotateWord, 3000);
+        })();
+    </script>
 </body>
 </html>
