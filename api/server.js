@@ -34,6 +34,7 @@ import viewRoutes from './src/routes/views.js';
 // Middleware
 import { errorHandler } from './src/middleware/errorHandler.js';
 import { rateLimiter } from './src/middleware/rateLimiter.js';
+import { trackPageVisit } from './src/middleware/pageTracking.js';
 
 // Sockets
 import { initializeSocketHandlers } from './src/sockets/eventHandlers.js';
@@ -102,6 +103,9 @@ app.use((req, res, next) => {
   res.locals.isAuthenticated = !!req.session.user;
   next();
 });
+
+// Track page visits (after session middleware so we can access user info)
+app.use(trackPageVisit);
 
 // API Routes
 app.use('/api/auth', authRoutes);

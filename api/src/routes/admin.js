@@ -2,11 +2,12 @@ import express from 'express';
 import mongoose from 'mongoose';
 import Incident from '../models/Incident.js';
 import NewsEvent from '../models/NewsEvent.js';
-import { AdminPost, Notification, User, SurlinkListing, Subscription, PaymentHistory, ForumThread, ForumComment, ForumSettings, PricingSettings } from '../models/index.js';
+import { AdminPost, Notification, User, SurlinkListing, Subscription, PaymentHistory, ForumThread, ForumComment, ForumSettings, PricingSettings, PageVisit, SystemSettings } from '../models/index.js';
 import { runNewsIngestion } from '../jobs/newsIngestion.js';
 import logger from '../utils/logger.js';
 import { Parser } from 'json2csv';
 import ExcelJS from 'exceljs';
+import { getMaintenanceStatus } from '../middleware/maintenanceCheck.js';
 
 const router = express.Router();
 
@@ -1629,6 +1630,267 @@ router.put('/pricing/settings', requireAdmin, async (req, res) => {
     logger.error('Error updating pricing settings:', error);
     res.status(500).json({
       error: 'Error al actualizar configuración de precios',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * GET /admin/visits/stats
+ * Get page visit statistics
+ */
+router.get('/visits/stats', requireAdmin, async (req, res) => {
+  try {
+    const { from, to } = req.query;
+
+    // Get overall stats
+    const overallStats = await PageVisit.getOverallStats(from, to);
+
+    // Get visits by day (last 30 days)
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const visitsByDay = await PageVisit.aggregate([
+      {
+        $match: {
+          timestamp: { $gte: from ? new Date(from) : thirtyDaysAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$timestamp' }
+          },
+          total: { $sum: 1 },
+          authenticated: {
+            $sum: {
+              $cond: [{ $ne: ['$userId', null] }, 1, 0]
+            }
+          },
+          anonymous: {
+            $sum: {
+              $cond: [{ $eq: ['$userId', null] }, 1, 0]
+            }
+          }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // Get visits by hour (today)
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const visitsByHour = await PageVisit.aggregate([
+      {
+        $match: {
+          timestamp: { $gte: todayStart }
+        }
+      },
+      {
+        $group: {
+          _id: { $hour: '$timestamp' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // Get today's stats
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const todayVisits = await PageVisit.countDocuments({
+      timestamp: { $gte: yesterday }
+    });
+
+    const todayStats = await PageVisit.getOverallStats(yesterday, new Date());
+
+    res.json({
+      success: true,
+      overall: overallStats,
+      today: {
+        total: todayVisits,
+        ...todayStats
+      },
+      timeline: visitsByDay.map(item => ({
+        date: item._id,
+        total: item.total,
+        authenticated: item.authenticated,
+        anonymous: item.anonymous
+      })),
+      hourly: visitsByHour.map(item => ({
+        hour: item._id,
+        count: item.count
+      }))
+    });
+  } catch (error) {
+    logger.error('Error getting visit stats:', error);
+    res.status(500).json({
+      error: 'Error al obtener estadísticas de visitas',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * GET /admin/visits/recent
+ * Get recent page visits
+ */
+router.get('/visits/recent', requireAdmin, async (req, res) => {
+  try {
+    const { limit = 100, page } = req.query;
+
+    // Filter by specific page if provided
+    const filter = page ? { page } : {};
+
+    const recentVisits = await PageVisit.find(filter)
+      .sort({ timestamp: -1 })
+      .limit(parseInt(limit))
+      .populate('userId', 'email name')
+      .select('page userId userEmail ipAddress timestamp userAgent');
+
+    res.json({
+      success: true,
+      visits: recentVisits.map(visit => ({
+        page: visit.page,
+        user: visit.userId ? {
+          id: visit.userId._id,
+          email: visit.userId.email || visit.userEmail,
+          name: visit.userId.name
+        } : null,
+        ipAddress: visit.userId ? null : visit.ipAddress, // Only show IP for anonymous users
+        timestamp: visit.timestamp,
+        userAgent: visit.userAgent
+      })),
+      total: recentVisits.length
+    });
+  } catch (error) {
+    logger.error('Error getting recent visits:', error);
+    res.status(500).json({
+      error: 'Error al obtener visitas recientes',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * GET /admin/system/maintenance-status (PUBLIC)
+ * Get current maintenance status for all platforms
+ */
+router.get('/system/maintenance-status', getMaintenanceStatus);
+
+/**
+ * GET /admin/system/settings
+ * Get system settings including maintenance modes
+ */
+router.get('/system/settings', requireAdmin, async (req, res) => {
+  try {
+    const settings = await SystemSettings.getSettings();
+    res.json({ success: true, settings });
+  } catch (error) {
+    logger.error('Error getting system settings:', error);
+    res.status(500).json({
+      error: 'Error al obtener configuración del sistema',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * PUT /admin/system/settings
+ * Update system settings including maintenance modes
+ */
+router.put('/system/settings', requireAdmin, async (req, res) => {
+  try {
+    const { maintenanceMode, maintenanceMessages } = req.body;
+
+    const updates = {};
+    if (maintenanceMode !== undefined) updates.maintenanceMode = maintenanceMode;
+    if (maintenanceMessages !== undefined) updates.maintenanceMessages = maintenanceMessages;
+
+    const settings = await SystemSettings.updateSettings(
+      updates,
+      req.session.user.email || req.session.user.uid
+    );
+
+    logger.info('System settings updated by admin:', {
+      admin: req.session.user.email,
+      updates
+    });
+
+    res.json({
+      success: true,
+      settings,
+      message: 'Configuración del sistema actualizada correctamente'
+    });
+  } catch (error) {
+    logger.error('Error updating system settings:', error);
+    res.status(500).json({
+      error: 'Error al actualizar configuración del sistema',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * GET /admin/visits/pages
+ * Get visit statistics grouped by page
+ */
+router.get('/visits/pages', requireAdmin, async (req, res) => {
+  try {
+    const { from, to, limit = 20 } = req.query;
+
+    const query = {};
+    if (from || to) {
+      query.timestamp = {};
+      if (from) query.timestamp.$gte = new Date(from);
+      if (to) query.timestamp.$lte = new Date(to);
+    }
+
+    const pageStats = await PageVisit.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: '$page',
+          total: { $sum: 1 },
+          authenticated: {
+            $sum: {
+              $cond: [{ $ne: ['$userId', null] }, 1, 0]
+            }
+          },
+          anonymous: {
+            $sum: {
+              $cond: [{ $eq: ['$userId', null] }, 1, 0]
+            }
+          },
+          uniqueUsers: { $addToSet: '$userId' },
+          uniqueIPs: { $addToSet: '$ipAddress' }
+        }
+      },
+      {
+        $project: {
+          page: '$_id',
+          total: 1,
+          authenticated: 1,
+          anonymous: 1,
+          uniqueAuthUsers: { $size: { $filter: { input: '$uniqueUsers', cond: { $ne: ['$$this', null] } } } },
+          uniqueAnonIPs: { $size: { $filter: { input: '$uniqueIPs', cond: { $ne: ['$$this', null] } } } }
+        }
+      },
+      { $sort: { total: -1 } },
+      { $limit: parseInt(limit) }
+    ]);
+
+    res.json({
+      success: true,
+      pages: pageStats.map(stat => ({
+        page: stat.page,
+        total: stat.total,
+        authenticated: stat.authenticated,
+        anonymous: stat.anonymous,
+        uniqueUsers: stat.uniqueAuthUsers + stat.uniqueAnonIPs
+      }))
+    });
+  } catch (error) {
+    logger.error('Error getting page visit stats:', error);
+    res.status(500).json({
+      error: 'Error al obtener estadísticas por página',
       details: error.message
     });
   }

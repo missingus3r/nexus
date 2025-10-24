@@ -11,7 +11,8 @@
       "mcp__playwright__browser_click",
       "Bash(for file in ForumComment.js Subscription.js Incident.js)",
       "Bash(do echo \"=== $file ===\")",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(node -c:*)"
     ],
     "deny": [],
     "ask": []

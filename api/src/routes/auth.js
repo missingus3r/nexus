@@ -2,6 +2,7 @@ import express from 'express';
 import { generateGuestToken, generateUserToken } from '../middleware/auth.js';
 import { User, Incident, Validation, Subscription } from '../models/index.js';
 import logger from '../utils/logger.js';
+import { checkAuthMaintenance } from '../middleware/maintenanceCheck.js';
 
 const router = express.Router();
 
@@ -29,11 +30,11 @@ router.post('/guest-token', (req, res) => {
 });
 
 /**
- * POST /auth/auth0/callback
+ * POST /auth0/callback
  * Handle Auth0 authentication callback
  * Verifica el usuario y lo crea si no existe
  */
-router.post('/auth0/callback', async (req, res) => {
+router.post('/auth0/callback', checkAuthMaintenance, async (req, res) => {
   try {
     const { code, redirect_uri } = req.body;
 

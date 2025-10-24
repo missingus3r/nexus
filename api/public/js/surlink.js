@@ -744,7 +744,8 @@
           btn.classList.toggle('active', btn === link);
         });
 
-        const targetSection = elements.sections[0];
+        // Find the correct section for the selected category
+        const targetSection = document.querySelector(`[data-surlink-section="${category}"]`);
         if (targetSection) {
           window.scrollTo({ top: targetSection.offsetTop - 80, behavior: 'smooth' });
         }

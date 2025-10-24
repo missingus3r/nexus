@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mantenimiento - <%= title %></title>
+    <%- include('partials/theme-init') %>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .maintenance-container {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .maintenance-card {
+            background: var(--surface);
+            border-radius: 24px;
+            padding: 3rem 2rem;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 8px 32px var(--shadow-elevation);
+            border: 1px solid var(--border-color);
+        }
+
+        .maintenance-icon {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .maintenance-card h1 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+
+        .maintenance-card p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .maintenance-card .btn {
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/header', { page: page, isAuthenticated: isAuthenticated || false }) %>
+
+    <div class="maintenance-container">
+        <div class="maintenance-card">
+            <div class="maintenance-icon">🔧</div>
+            <h1>Sitio en Mantenimiento</h1>
+            <p><%= message || 'Esta sección está temporalmente en mantenimiento. Volveremos pronto.' %></p>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">
+                Disculpe las molestias. Estamos trabajando para mejorar su experiencia.
+            </p>
+            <a href="/" class="btn btn-primary">Volver al Inicio</a>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+</body>
+</html>

@@ -1,4 +1,5 @@
 import express from 'express';
+import { checkMaintenance } from '../middleware/maintenanceCheck.js';
 
 const router = express.Router();
 
@@ -32,7 +33,7 @@ router.get('/plataforma', (req, res) => {
 /**
  * Centinel page (map + security features)
  */
-router.get('/centinel', (req, res) => {
+router.get('/centinel', checkMaintenance('centinel'), (req, res) => {
   res.render('centinel', {
     title: 'NEXUS Centinel - Mapa en Tiempo Real',
     page: 'centinel'
@@ -52,7 +53,7 @@ router.get('/news', (req, res) => {
 /**
  * Forum page
  */
-router.get('/forum', (req, res) => {
+router.get('/forum', checkMaintenance('forum'), (req, res) => {
   res.render('forum', {
     title: 'Foro Comunitario - Nexus',
     page: 'forum'
@@ -62,7 +63,7 @@ router.get('/forum', (req, res) => {
 /**
  * Nexus Forum - Thread list
  */
-router.get('/forum-nexus', (req, res) => {
+router.get('/forum-nexus', checkMaintenance('forum'), (req, res) => {
   res.render('forum-nexus', {
     title: 'Foro Nexus - Nexus',
     page: 'forum'
@@ -72,7 +73,7 @@ router.get('/forum-nexus', (req, res) => {
 /**
  * Nexus Forum - Thread view
  */
-router.get('/forum-thread/:id', (req, res) => {
+router.get('/forum-thread/:id', checkMaintenance('forum'), (req, res) => {
   res.render('forum-thread', {
     title: 'Thread - Foro Nexus',
     page: 'forum'
@@ -92,7 +93,7 @@ router.get('/links', (req, res) => {
 /**
  * Surlink hub
  */
-router.get('/surlink', (req, res) => {
+router.get('/surlink', checkMaintenance('surlink'), (req, res) => {
   res.render('surlink', {
     title: 'NEXUS Surlink - Ecosistema inmobiliario, académico y automotriz',
     page: 'surlink'

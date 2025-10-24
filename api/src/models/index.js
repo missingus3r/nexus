@@ -12,3 +12,5 @@ export { default as ForumThread } from './ForumThread.js';
 export { default as ForumComment } from './ForumComment.js';
 export { default as ForumSettings } from './ForumSettings.js';
 export { default as PricingSettings } from './PricingSettings.js';
+export { default as PageVisit } from './PageVisit.js';
+export { default as SystemSettings } from './SystemSettings.js';
