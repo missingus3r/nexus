@@ -2,8 +2,11 @@
 
 let currentPage = 1;
 let currentSort = 'recent';
+let currentHashtag = null;
 let currentThreadId = null;
 let threadQuillEditor = null;
+let availableHashtags = [];
+let selectedHashtags = [];
 
 document.addEventListener('DOMContentLoaded', () => {
   // Check which page we're on
@@ -22,6 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
 function initForumList() {
   // Check if this is the first time visiting the forum
   checkForumWelcomeModal();
+
+  // Load hashtags first
+  loadHashtags();
 
   loadThreads();
 
@@ -47,7 +53,10 @@ function initForumList() {
         // Delay to ensure modal is visible
         setTimeout(() => {
           initThreadQuillEditor();
+          loadHashtagsSelector();
         }, 100);
+      } else {
+        loadHashtagsSelector();
       }
     });
   }
@@ -96,10 +105,103 @@ function initThreadQuillEditor() {
   });
 }
 
+// Load available hashtags from API
+async function loadHashtags() {
+  try {
+    const response = await fetch('/api/forum/hashtags');
+    const data = await response.json();
+    availableHashtags = data.hashtags || [];
+  } catch (error) {
+    console.error('Error loading hashtags:', error);
+    availableHashtags = [];
+  }
+}
+
+// Load hashtags selector in modal
+function loadHashtagsSelector() {
+  const container = document.getElementById('hashtagsContainer');
+  if (!container || availableHashtags.length === 0) return;
+
+  selectedHashtags = []; // Reset selection
+
+  container.innerHTML = availableHashtags.map(tag => `
+    <button type="button" class="hashtag-btn" data-hashtag="${tag}" onclick="toggleHashtag('${tag}')">
+      #${tag}
+    </button>
+  `).join('');
+}
+
+// Toggle hashtag selection
+function toggleHashtag(tag) {
+  const index = selectedHashtags.indexOf(tag);
+
+  if (index > -1) {
+    // Deselect
+    selectedHashtags.splice(index, 1);
+  } else {
+    // Select (max 5)
+    if (selectedHashtags.length >= 5) {
+      alert('Máximo 5 hashtags permitidos');
+      return;
+    }
+    selectedHashtags.push(tag);
+  }
+
+  // Update UI
+  const btn = document.querySelector(`.hashtag-btn[data-hashtag="${tag}"]`);
+  if (btn) {
+    btn.classList.toggle('selected');
+  }
+
+  // Update hidden input
+  document.getElementById('threadHashtags').value = JSON.stringify(selectedHashtags);
+}
+
+window.toggleHashtag = toggleHashtag;
+
+// Filter threads by hashtag
+function filterByHashtag(tag) {
+  currentHashtag = tag;
+  currentPage = 1;
+
+  // Update UI to show active filter
+  const hashtagFilters = document.querySelectorAll('.hashtag-filter-btn');
+  hashtagFilters.forEach(btn => {
+    if (btn.dataset.hashtag === tag) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  loadThreads();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Clear hashtag filter
+function clearHashtagFilter() {
+  currentHashtag = null;
+  currentPage = 1;
+
+  // Update UI
+  const hashtagFilters = document.querySelectorAll('.hashtag-filter-btn');
+  hashtagFilters.forEach(btn => btn.classList.remove('active'));
+
+  loadThreads();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+window.filterByHashtag = filterByHashtag;
+window.clearHashtagFilter = clearHashtagFilter;
+
 async function loadThreads() {
   try {
     const token = localStorage.getItem('jwt');
-    const response = await fetch(`/api/forum/threads?page=${currentPage}&limit=20&sort=${currentSort}`, {
+    let url = `/api/forum/threads?page=${currentPage}&limit=20&sort=${currentSort}`;
+    if (currentHashtag) {
+      url += `&hashtag=${currentHashtag}`;
+    }
+    const response = await fetch(url, {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {}
     });
 
@@ -145,6 +247,14 @@ function displayThreads(threads) {
         </h3>
         <p class="thread-excerpt">${escapeHtml(excerpt)}</p>
 
+        ${thread.hashtags && thread.hashtags.length > 0 ? `
+          <div class="thread-hashtags" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem;">
+            ${thread.hashtags.map(tag => `
+              <span class="hashtag-tag" onclick="filterByHashtag('${tag}')">#${tag}</span>
+            `).join('')}
+          </div>
+        ` : ''}
+
         ${thread.images && thread.images.length > 0 ? `
           <div class="thread-images-preview">
             ${thread.images.slice(0, 3).map(img => `
@@ -155,7 +265,10 @@ function displayThreads(threads) {
         ` : ''}
 
         <div class="thread-meta">
-          <span class="thread-author">Por ${escapeHtml(thread.author.name || thread.author.email || 'Usuario')}</span>
+          <span class="thread-author" style="display: flex; align-items: center; gap: 0.5rem;">
+            <img src="${thread.author.picture || '/images/default-avatar.svg'}" alt="Avatar" class="user-avatar" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+            Por ${escapeHtml(thread.author.name || thread.author.email || 'Usuario')}
+          </span>
           <span class="thread-date">${formatDate(thread.createdAt)}</span>
           <span class="thread-stats">
             <span>💬 ${thread.commentsCount || 0}</span>
@@ -237,10 +350,19 @@ async function handleNewThreadSubmit(e) {
     return;
   }
 
+  // Validate hashtags
+  if (selectedHashtags.length === 0) {
+    alert('Debes seleccionar al menos un hashtag');
+    return;
+  }
+
   const formData = new FormData(e.target);
 
   // Replace the content with HTML from Quill
   formData.set('content', htmlContent);
+
+  // Add hashtags
+  formData.set('hashtags', JSON.stringify(selectedHashtags));
 
   try {
     const response = await fetch('/api/forum/threads', {
@@ -281,6 +403,11 @@ function closeNewThreadModal() {
   if (threadQuillEditor) {
     threadQuillEditor.setText('');
   }
+
+  // Clear hashtags selection
+  selectedHashtags = [];
+  const hashtagBtns = document.querySelectorAll('.hashtag-btn');
+  hashtagBtns.forEach(btn => btn.classList.remove('selected'));
 }
 
 // Make function global
@@ -367,15 +494,26 @@ function displayThread(thread) {
         ` : ''}
       </div>
 
-      <div class="thread-meta" style="margin-bottom: 2rem; color: var(--text-secondary); display: flex; gap: 1rem; flex-wrap: wrap;">
-        <span>Por <strong>${escapeHtml(thread.author.name || thread.author.email || 'Usuario')}</strong></span>
+      <div class="thread-meta" style="margin-bottom: 2rem; color: var(--text-secondary); display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+        <span style="display: flex; align-items: center; gap: 0.5rem;">
+          <img src="${thread.author.picture || '/images/default-avatar.svg'}" alt="Avatar" class="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+          Por <strong>${escapeHtml(thread.author.name || thread.author.email || 'Usuario')}</strong>
+        </span>
         <span>${formatDate(thread.createdAt)}</span>
         ${thread.updatedAt && thread.updatedAt !== thread.createdAt ? '<span style="font-style: italic;">(editado)</span>' : ''}
       </div>
 
-      <div class="thread-content" style="line-height: 1.7; white-space: pre-wrap; margin-bottom: 2rem;">
+      <div class="thread-content" style="line-height: 1.7; white-space: pre-wrap; margin-bottom: 1.5rem;">
         ${formatContent(thread.content)}
       </div>
+
+      ${thread.hashtags && thread.hashtags.length > 0 ? `
+        <div class="thread-hashtags" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem;">
+          ${thread.hashtags.map(tag => `
+            <a href="/forum-nexus?hashtag=${tag}" class="hashtag-tag">#${tag}</a>
+          `).join('')}
+        </div>
+      ` : ''}
 
       ${thread.images && thread.images.length > 0 ? `
         <div class="thread-images" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
@@ -436,10 +574,13 @@ function renderComment(comment, depth = 0) {
   return `
     <div class="comment" data-comment-id="${comment._id}" style="margin-left: ${marginLeft}rem; margin-bottom: 1rem; padding: 1rem; background: var(--surface); border-radius: 8px; border-left: 3px solid var(--primary-color);">
       <div class="comment-header" style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
-        <div>
-          <strong style="color: var(--text-primary);">${escapeHtml(comment.author.name || comment.author.email || 'Usuario')}</strong>
-          <span style="color: var(--text-secondary); font-size: 0.875rem; margin-left: 0.5rem;">${formatDate(comment.createdAt)}</span>
-          ${comment.updatedAt && comment.updatedAt !== comment.createdAt ? '<span style="color: var(--text-secondary); font-size: 0.875rem; font-style: italic; margin-left: 0.5rem;">(editado)</span>' : ''}
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <img src="${comment.author.picture || '/images/default-avatar.svg'}" alt="Avatar" class="user-avatar" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;">
+          <div>
+            <strong style="color: var(--text-primary);">${escapeHtml(comment.author.name || comment.author.email || 'Usuario')}</strong>
+            <span style="color: var(--text-secondary); font-size: 0.875rem; margin-left: 0.5rem;">${formatDate(comment.createdAt)}</span>
+            ${comment.updatedAt && comment.updatedAt !== comment.createdAt ? '<span style="color: var(--text-secondary); font-size: 0.875rem; font-style: italic; margin-left: 0.5rem;">(editado)</span>' : ''}
+          </div>
         </div>
         ${canEdit || canDelete ? `
           <div style="display: flex; gap: 0.5rem;">

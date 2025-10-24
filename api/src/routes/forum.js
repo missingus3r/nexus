@@ -1,6 +1,7 @@
 import express from 'express';
 import sanitizeHtml from 'sanitize-html';
 import { ForumThread, ForumComment, ForumSettings } from '../models/index.js';
+import { ALLOWED_HASHTAGS } from '../models/ForumThread.js';
 import { checkJwt, attachUser } from '../middleware/auth.js';
 import { uploadForumImages, handleUploadErrors } from '../middleware/upload.js';
 
@@ -98,6 +99,14 @@ const checkCommentRateLimit = async (req, res, next) => {
 };
 
 /**
+ * GET /api/forum/hashtags
+ * Get all allowed hashtags
+ */
+router.get('/hashtags', (req, res) => {
+  res.json({ hashtags: ALLOWED_HASHTAGS });
+});
+
+/**
  * GET /api/forum/threads
  * Get all forum threads with pagination and sorting
  */
@@ -106,6 +115,7 @@ router.get('/threads', optionalAuth, async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const sort = req.query.sort || 'recent'; // recent, popular
+    const hashtag = req.query.hashtag; // Filter by hashtag
     const skip = (page - 1) * limit;
 
     let sortQuery = {};
@@ -115,14 +125,20 @@ router.get('/threads', optionalAuth, async (req, res) => {
       sortQuery = { isPinned: -1, createdAt: -1 };
     }
 
-    const threads = await ForumThread.find({ status: 'active' })
-      .populate('author', 'email name')
+    // Build query filter
+    const queryFilter = { status: 'active' };
+    if (hashtag && ALLOWED_HASHTAGS.includes(hashtag.toLowerCase())) {
+      queryFilter.hashtags = hashtag.toLowerCase();
+    }
+
+    const threads = await ForumThread.find(queryFilter)
+      .populate('author', 'email name picture')
       .sort(sortQuery)
       .skip(skip)
       .limit(limit)
       .lean();
 
-    const total = await ForumThread.countDocuments({ status: 'active' });
+    const total = await ForumThread.countDocuments(queryFilter);
 
     // Add liked status if user is authenticated
     let enrichedThreads = threads;
@@ -156,7 +172,7 @@ router.get('/threads', optionalAuth, async (req, res) => {
  */
 router.post('/threads', authenticate, checkThreadRateLimit, uploadForumImages, handleUploadErrors, async (req, res) => {
   try {
-    const { title, content, links } = req.body;
+    const { title, content, links, hashtags } = req.body;
 
     // Validation
     if (!title || title.trim().length < 3) {
@@ -164,6 +180,35 @@ router.post('/threads', authenticate, checkThreadRateLimit, uploadForumImages, h
     }
     if (!content || content.trim().length < 10) {
       return res.status(400).json({ error: 'Content must be at least 10 characters' });
+    }
+
+    // Parse and validate hashtags
+    let parsedHashtags = [];
+    if (hashtags) {
+      try {
+        parsedHashtags = typeof hashtags === 'string' ? JSON.parse(hashtags) : hashtags;
+      } catch (e) {
+        parsedHashtags = Array.isArray(hashtags) ? hashtags : [];
+      }
+    }
+
+    // Validate hashtags are required and valid
+    if (!parsedHashtags || parsedHashtags.length === 0) {
+      return res.status(400).json({ error: 'Debes seleccionar al menos un hashtag' });
+    }
+
+    // Filter only valid hashtags
+    const validHashtags = parsedHashtags
+      .map(h => h.toLowerCase())
+      .filter(h => ALLOWED_HASHTAGS.includes(h));
+
+    if (validHashtags.length === 0) {
+      return res.status(400).json({ error: 'Debes seleccionar hashtags válidos' });
+    }
+
+    // Limit to max 5 hashtags
+    if (validHashtags.length > 5) {
+      return res.status(400).json({ error: 'Máximo 5 hashtags permitidos' });
     }
 
     // Process uploaded images
@@ -188,13 +233,14 @@ router.post('/threads', authenticate, checkThreadRateLimit, uploadForumImages, h
     const thread = new ForumThread({
       title: title.trim(),
       content: sanitizedContent,
+      hashtags: validHashtags,
       author: req.user._id,
       images,
       links: parsedLinks
     });
 
     await thread.save();
-    await thread.populate('author', 'email name');
+    await thread.populate('author', 'email name picture');
 
     res.status(201).json({
       success: true,
@@ -216,7 +262,7 @@ router.get('/threads/:id', optionalAuth, async (req, res) => {
     const thread = await ForumThread.findOne({
       _id: req.params.id,
       status: 'active'
-    }).populate('author', 'email name').lean();
+    }).populate('author', 'email name picture').lean();
 
     if (!thread) {
       return res.status(404).json({ error: 'Thread not found' });
@@ -227,7 +273,7 @@ router.get('/threads/:id', optionalAuth, async (req, res) => {
       threadId: req.params.id,
       status: 'active'
     })
-      .populate('author', 'email name')
+      .populate('author', 'email name picture')
       .sort({ createdAt: 1 })
       .lean();
 
@@ -353,7 +399,7 @@ router.post('/threads/:id/comments', authenticate, checkCommentRateLimit, upload
     });
 
     await comment.save();
-    await comment.populate('author', 'email name');
+    await comment.populate('author', 'email name picture');
 
     // Update thread comments count
     thread.commentsCount += 1;
@@ -418,7 +464,7 @@ router.put('/threads/:id', authenticate, uploadForumImages, handleUploadErrors, 
       return res.status(403).json({ error: 'Can only edit within 5 minutes of posting' });
     }
 
-    const { title, content } = req.body;
+    const { title, content, hashtags } = req.body;
 
     if (title) {
       if (title.trim().length < 3) {
@@ -435,6 +481,27 @@ router.put('/threads/:id', authenticate, uploadForumImages, handleUploadErrors, 
       thread.content = sanitizedContent;
     }
 
+    // Update hashtags if provided
+    if (hashtags) {
+      let parsedHashtags = [];
+      try {
+        parsedHashtags = typeof hashtags === 'string' ? JSON.parse(hashtags) : hashtags;
+      } catch (e) {
+        parsedHashtags = Array.isArray(hashtags) ? hashtags : [];
+      }
+
+      if (parsedHashtags.length > 0) {
+        const validHashtags = parsedHashtags
+          .map(h => h.toLowerCase())
+          .filter(h => ALLOWED_HASHTAGS.includes(h))
+          .slice(0, 5); // Max 5 hashtags
+
+        if (validHashtags.length > 0) {
+          thread.hashtags = validHashtags;
+        }
+      }
+    }
+
     // Process new images if uploaded
     if (req.files && req.files.length > 0) {
       const newImages = req.files.map(file => ({
@@ -446,7 +513,7 @@ router.put('/threads/:id', authenticate, uploadForumImages, handleUploadErrors, 
 
     thread.updatedAt = new Date();
     await thread.save();
-    await thread.populate('author', 'email name');
+    await thread.populate('author', 'email name picture');
 
     res.json({
       success: true,
@@ -574,7 +641,7 @@ router.put('/comments/:id', authenticate, uploadForumImages, handleUploadErrors,
 
     comment.updatedAt = new Date();
     await comment.save();
-    await comment.populate('author', 'email name');
+    await comment.populate('author', 'email name picture');
 
     res.json({
       success: true,

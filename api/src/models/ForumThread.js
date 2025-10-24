@@ -1,5 +1,24 @@
 import mongoose from 'mongoose';
 
+// Hashtags predefinidos permitidos
+export const ALLOWED_HASHTAGS = [
+  'centinel',
+  'surlink',
+  'seguridad',
+  'inmuebles',
+  'autos',
+  'educacion',
+  'finanzas',
+  'transporte',
+  'tecnologia',
+  'comunidad',
+  'ayuda',
+  'sugerencia',
+  'bug',
+  'pregunta',
+  'discusion'
+];
+
 const forumThreadSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -14,6 +33,11 @@ const forumThreadSchema = new mongoose.Schema({
     trim: true,
     maxlength: 10000
   },
+  hashtags: [{
+    type: String,
+    enum: ALLOWED_HASHTAGS,
+    lowercase: true
+  }],
   author: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -70,6 +94,7 @@ forumThreadSchema.index({ createdAt: -1 });
 forumThreadSchema.index({ likesCount: -1 });
 forumThreadSchema.index({ status: 1, createdAt: -1 });
 forumThreadSchema.index({ author: 1, createdAt: -1 });
+forumThreadSchema.index({ hashtags: 1 });
 
 // Virtual for like status
 forumThreadSchema.virtual('isLiked').get(function() {

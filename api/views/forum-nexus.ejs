@@ -24,10 +24,18 @@
         <div class="container">
             <div class="forum-nexus-container" style="max-width: 900px; margin: 0 auto;">
 
+                <!-- Back Button -->
+                <a href="/forum" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; text-decoration: none;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Volver a Selección de Foro
+                </a>
+
                 <!-- Header -->
                 <div class="forum-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
                     <div>
-                        <h2 style="margin: 0 0 0.5rem 0;">Foro Nexus</h2>
                         <p style="margin: 0; color: var(--text-secondary);">Comparte y discute sobre Centinel, Surlink y todos los servicios de Nexus</p>
                     </div>
                     <% if (isAuthenticated) { %>
@@ -45,9 +53,42 @@
 
                 <!-- Filter/Sort Options -->
                 <div class="forum-controls" style="display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center; flex-wrap: wrap;">
-                    <button id="sortRecent" class="sort-btn active" data-sort="recent">🕒 Recientes</button>
-                    <button id="sortPopular" class="sort-btn" data-sort="popular">🔥 Populares</button>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button id="sortRecent" class="sort-btn active" data-sort="recent">🕒 Recientes</button>
+                        <button id="sortPopular" class="sort-btn" data-sort="popular">🔥 Populares</button>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;"></div>
+                    <div id="hashtagFilters" style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                        <span style="font-size: 0.85rem; color: var(--text-secondary);">Filtrar por:</span>
+                        <button class="hashtag-filter-btn" onclick="clearHashtagFilter()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                            Todos
+                        </button>
+                    </div>
                 </div>
+
+                <script>
+                    // Load hashtag filters dynamically
+                    fetch('/api/forum/hashtags')
+                        .then(res => res.json())
+                        .then(data => {
+                            const container = document.getElementById('hashtagFilters');
+                            if (data.hashtags && data.hashtags.length > 0) {
+                                data.hashtags.slice(0, 8).forEach(tag => {
+                                    const btn = document.createElement('button');
+                                    btn.className = 'hashtag-filter-btn';
+                                    btn.dataset.hashtag = tag;
+                                    btn.textContent = `#${tag}`;
+                                    btn.onclick = () => filterByHashtag(tag);
+                                    container.appendChild(btn);
+                                });
+                            }
+                        })
+                        .catch(err => console.error('Error loading hashtag filters:', err));
+                </script>
 
                 <!-- Threads List -->
                 <div id="threadsList">
@@ -135,6 +176,14 @@
                     <label for="threadTitle">Título *</label>
                     <input type="text" id="threadTitle" name="title" maxlength="200" required placeholder="Título del thread...">
                     <small><span id="titleCharCount">0</span>/200</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="threadHashtags">Hashtags * (selecciona al menos 1, máximo 5)</label>
+                    <div id="hashtagsContainer" style="display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; background: var(--surface); border: 1px solid var(--border-color); border-radius: 4px; min-height: 60px;">
+                        <small style="width: 100%; color: var(--text-secondary);">Cargando hashtags...</small>
+                    </div>
+                    <input type="hidden" id="threadHashtags" name="hashtags" required>
                 </div>
 
                 <div class="form-group">
