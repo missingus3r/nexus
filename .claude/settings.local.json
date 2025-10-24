@@ -5,7 +5,13 @@
       "Bash(npm run clean-fake-data)",
       "Bash(cat:*)",
       "Bash(curl:*)",
-      "WebSearch"
+      "WebSearch",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_click",
+      "Bash(for file in ForumComment.js Subscription.js Incident.js)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

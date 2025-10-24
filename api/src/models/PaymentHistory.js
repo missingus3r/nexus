@@ -36,7 +36,6 @@ const paymentHistorySchema = new mongoose.Schema({
   },
   transactionId: {
     type: String,
-    index: true,
     description: 'External payment processor transaction ID'
   },
   paymentGateway: {

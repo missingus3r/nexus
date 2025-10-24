@@ -44,8 +44,7 @@ const forumThreadSchema = new mongoose.Schema({
   }],
   likesCount: {
     type: Number,
-    default: 0,
-    index: true
+    default: 0
   },
   commentsCount: {
     type: Number,
@@ -55,8 +54,7 @@ const forumThreadSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['active', 'deleted', 'hidden'],
-    default: 'active',
-    index: true
+    default: 'active'
   },
   isPinned: {
     type: Boolean,

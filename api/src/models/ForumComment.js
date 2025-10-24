@@ -61,8 +61,7 @@ const forumCommentSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['active', 'deleted', 'hidden'],
-    default: 'active',
-    index: true
+    default: 'active'
   }
 }, {
   timestamps: true

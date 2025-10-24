@@ -36,24 +36,36 @@ router.get('/', checkJwt, async (req, res, next) => {
     }).select('geohash score color incidentCount percentile updatedAt');
 
     // Convert to GeoJSON features
-    const features = cells.map(cell => {
-      const decoded = geohash.decode(cell.geohash);
-      return {
-        type: 'Feature',
-        geometry: {
-          type: 'Point',
-          coordinates: [decoded.longitude, decoded.latitude]
-        },
-        properties: {
-          geohash: cell.geohash,
-          score: cell.score,
-          color: cell.color,
-          incidentCount: cell.incidentCount,
-          percentile: cell.percentile,
-          updatedAt: cell.updatedAt
+    const features = cells
+      .map(cell => {
+        const decoded = geohash.decode(cell.geohash);
+
+        // Validate coordinates - skip if null or invalid
+        if (!decoded ||
+            typeof decoded.latitude !== 'number' ||
+            typeof decoded.longitude !== 'number' ||
+            isNaN(decoded.latitude) ||
+            isNaN(decoded.longitude)) {
+          return null;
         }
-      };
-    });
+
+        return {
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [decoded.longitude, decoded.latitude]
+          },
+          properties: {
+            geohash: cell.geohash,
+            score: cell.score,
+            color: cell.color,
+            incidentCount: cell.incidentCount,
+            percentile: cell.percentile,
+            updatedAt: cell.updatedAt
+          }
+        };
+      })
+      .filter(feature => feature !== null); // Remove invalid features
 
     res.json({
       type: 'FeatureCollection',
