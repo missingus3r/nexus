@@ -11,9 +11,9 @@ router.get('/mi', (req, res) => {
     title: 'Enlaces Oficiales - Ministerio del Interior',
     links: [
       {
-        name: 'Procesados y Evadidos',
+        name: 'Personas Condenadas',
         url: 'https://anterior.minterior.gub.uy/index.php/component/procesados/?task=procesados',
-        description: 'Listado oficial de personas procesadas y evadidas'
+        description: 'Listado oficial de personas procesadas'
       },
       {
         name: 'Denuncias Anónimas',

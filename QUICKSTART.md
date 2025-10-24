@@ -150,7 +150,7 @@ node --loader ./node_modules/dotenv/config.js \
 ```
 api/
 ├── views/              # Templates EJS
-│   ├── map.ejs        # Mapa principal
+│   ├── centinel.ejs   # Mapa principal
 │   ├── news.ejs       # Noticias
 │   ├── forum.ejs      # Foro
 │   ├── links.ejs      # Enlaces MI

@@ -29,7 +29,7 @@
                 <a href="/logout" class="btn btn-secondary">Salir</a>
             <% } else { %>
                 <!-- Normal User Menu: Original limited menu -->
-                <a href="/centinel" class="platform-btn <%= page === 'centinel' || page === 'map' ? 'active' : '' %>">Mapa</a>
+                <a href="/centinel" class="platform-btn <%= page === 'centinel' ? 'active' : '' %>">Mapa</a>
                 <a href="/news" class="nav-link <%= page === 'news' ? 'active' : '' %>">Noticias</a>
                 <a href="/forum" class="platform-btn <%= page === 'forum' ? 'active' : '' %>">Foro</a>
                 <a href="/links" class="nav-link <%= page === 'links' ? 'active' : '' %>">Enlaces MI</a>

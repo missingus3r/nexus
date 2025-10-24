@@ -7,6 +7,110 @@
     <%- include('partials/theme-init') %>
     <link rel="stylesheet" href="/css/style.css">
     <script src="/js/theme-toggle.js" defer></script>
+    <style>
+        /* Modal styles */
+        .links-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .links-modal-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            cursor: pointer;
+        }
+
+        .links-modal-content {
+            position: relative;
+            width: 90%;
+            height: 90%;
+            max-width: 1400px;
+            max-height: 900px;
+            background-color: var(--bg-color, #fff);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 10000;
+        }
+
+        .links-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color, #e0e0e0);
+            background-color: var(--header-bg, #f8f9fa);
+        }
+
+        .links-modal-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: var(--text-color, #333);
+        }
+
+        .links-modal-close {
+            background: none;
+            border: none;
+            font-size: 32px;
+            line-height: 1;
+            cursor: pointer;
+            color: var(--text-color, #666);
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .links-modal-close:hover {
+            background-color: var(--hover-bg, #e9ecef);
+            color: var(--text-color, #000);
+        }
+
+        .links-modal-body {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .links-modal-body iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .links-modal-content {
+                width: 95%;
+                height: 95%;
+            }
+
+            .links-modal-header {
+                padding: 15px 16px;
+            }
+
+            .links-modal-header h3 {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <%- include('partials/header-centinel', { page: page, isAuthenticated: isAuthenticated }) %>
@@ -27,6 +131,20 @@
 
     <%- include('partials/footer') %>
 
+    <!-- Modal for iframe -->
+    <div id="linksModal" class="links-modal" style="display: none;">
+        <div class="links-modal-backdrop" onclick="closeLinksModal()"></div>
+        <div class="links-modal-content">
+            <div class="links-modal-header">
+                <h3 id="linksModalTitle"></h3>
+                <button class="links-modal-close" onclick="closeLinksModal()" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="links-modal-body">
+                <iframe id="linksModalIframe" src="" frameborder="0"></iframe>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', loadLinks);
 
@@ -40,9 +158,14 @@
                     <div class="link-item">
                         <h3>${link.name}</h3>
                         <p>${link.description}</p>
-                        <a href="${link.url}" target="_blank" class="btn btn-primary">
-                            Visitar &rarr;
-                        </a>
+                        ${link.name === 'Personas Condenadas'
+                            ? `<button onclick="openLinksModal('${link.url}', '${link.name}')" class="btn btn-primary">
+                                Visitar &rarr;
+                               </button>`
+                            : `<a href="${link.url}" target="_blank" class="btn btn-primary">
+                                Visitar &rarr;
+                               </a>`
+                        }
                     </div>
                 `).join('');
 
@@ -56,6 +179,37 @@
                 document.getElementById('linksList').innerHTML = '<p class="text-center">Error al cargar enlaces</p>';
             }
         }
+
+        function openLinksModal(url, title) {
+            const modal = document.getElementById('linksModal');
+            const iframe = document.getElementById('linksModalIframe');
+            const modalTitle = document.getElementById('linksModalTitle');
+
+            modalTitle.textContent = title;
+            iframe.src = url;
+            modal.style.display = 'flex';
+
+            // Prevent body scroll when modal is open
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLinksModal() {
+            const modal = document.getElementById('linksModal');
+            const iframe = document.getElementById('linksModalIframe');
+
+            modal.style.display = 'none';
+            iframe.src = '';
+
+            // Restore body scroll
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeLinksModal();
+            }
+        });
     </script>
 </body>
 </html>

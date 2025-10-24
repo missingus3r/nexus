@@ -31,7 +31,7 @@
 ```
 ├── api/                          # Aplicación Node.js completa
 │   ├── views/                    # Templates EJS
-│   │   ├── map.ejs              # Página principal
+│   │   ├── centinel.ejs         # Página principal (Mapa)
 │   │   ├── news.ejs             # Noticias
 │   │   ├── forum.ejs            # Foro
 │   │   ├── surlink.ejs          # Agregador Surlink (casas, academy, autos)
