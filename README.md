@@ -1,7 +1,7 @@
 # Vortex - Plataforma Comunitaria
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Node](https://img.shields.io/badge/node-18+-green.svg)
+![Node](https://img.shields.io/badge/node-22+-green.svg)
 
 **Vortex** es una plataforma web comunitaria para Uruguay que integra:
 - **Centinel**: Mapeo de incidentes de seguridad ciudadana
@@ -31,7 +31,7 @@
 
 ### Prerrequisitos
 
-- Node.js 18+
+- Node.js 22+
 - Cuenta MongoDB Atlas
 - Cuenta Auth0
 
