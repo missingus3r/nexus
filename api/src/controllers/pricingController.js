@@ -1,5 +1,4 @@
 import subscriptionService from '../services/subscriptionService.js';
-import emailService from '../services/emailService.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -23,6 +22,7 @@ export const getPlans = (req, res) => {
 
 /**
  * Submit a plan inquiry
+ * NOTE: No automatic emails are sent. User should use mailto: links in the UI.
  */
 export const submitInquiry = async (req, res) => {
   try {
@@ -56,35 +56,24 @@ export const submitInquiry = async (req, res) => {
       });
     }
 
-    // Send inquiry email to admin
-    const emailSent = await emailService.sendPlanInquiry({
-      plan,
-      planType,
+    // Log the inquiry (no email is sent automatically)
+    logger.info(`Plan inquiry received: ${plan} (${planType}) from ${email}`, {
       name,
-      email,
       company,
       phone,
       message
     });
 
-    if (!emailSent) {
-      logger.warn('Failed to send inquiry email, but continuing...');
-    }
-
-    // Send confirmation email to user
-    await emailService.sendConfirmationEmail(email, name, plan, planType);
-
     res.json({
       success: true,
-      message: 'Consulta enviada exitosamente. Te contactaremos pronto.'
+      message: 'Consulta registrada. Por favor envía tu consulta usando el enlace de contacto.'
     });
 
-    logger.info(`Plan inquiry received: ${plan} (${planType}) from ${email}`);
   } catch (error) {
     logger.error('Error submitting inquiry:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al enviar la consulta'
+      message: 'Error al procesar la consulta'
     });
   }
 };
