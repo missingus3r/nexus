@@ -15,17 +15,17 @@ router.use((req, res, next) => {
  */
 router.get('/', (req, res) => {
   res.render('landing', {
-    title: 'NEXUS - Plataforma Integral',
+    title: 'VORTEX - Plataforma Integral',
     page: 'landing'
   });
 });
 
 /**
- * Detalle plataforma Nexus
+ * Detalle plataforma Vortex
  */
 router.get('/plataforma', (req, res) => {
   res.render('plataforma', {
-    title: 'NEXUS Plataforma - Capacidades y Experiencia',
+    title: 'VORTEX Plataforma - Capacidades y Experiencia',
     page: 'plataforma'
   });
 });
@@ -35,7 +35,7 @@ router.get('/plataforma', (req, res) => {
  */
 router.get('/centinel', checkMaintenance('centinel'), (req, res) => {
   res.render('centinel', {
-    title: 'NEXUS Centinel - Mapa en Tiempo Real',
+    title: 'VORTEX Centinel - Mapa en Tiempo Real',
     page: 'centinel'
   });
 });
@@ -45,7 +45,7 @@ router.get('/centinel', checkMaintenance('centinel'), (req, res) => {
  */
 router.get('/news', (req, res) => {
   res.render('news', {
-    title: 'Noticias Geolocalizadas - Nexus',
+    title: 'Noticias Geolocalizadas - Vortex',
     page: 'news'
   });
 });
@@ -55,27 +55,27 @@ router.get('/news', (req, res) => {
  */
 router.get('/forum', checkMaintenance('forum'), (req, res) => {
   res.render('forum', {
-    title: 'Foro Comunitario - Nexus',
+    title: 'Foro Comunitario - Vortex',
     page: 'forum'
   });
 });
 
 /**
- * Nexus Forum - Thread list
+ * Vortex Forum - Thread list
  */
-router.get('/forum-nexus', checkMaintenance('forum'), (req, res) => {
-  res.render('forum-nexus', {
-    title: 'Foro Nexus - Nexus',
+router.get('/forum-vortex', checkMaintenance('forum'), (req, res) => {
+  res.render('forum-vortex', {
+    title: 'Foro Vortex - Vortex',
     page: 'forum'
   });
 });
 
 /**
- * Nexus Forum - Thread view
+ * Vortex Forum - Thread view
  */
 router.get('/forum-thread/:id', checkMaintenance('forum'), (req, res) => {
   res.render('forum-thread', {
-    title: 'Thread - Foro Nexus',
+    title: 'Thread - Foro Vortex',
     page: 'forum'
   });
 });
@@ -85,7 +85,7 @@ router.get('/forum-thread/:id', checkMaintenance('forum'), (req, res) => {
  */
 router.get('/links', (req, res) => {
   res.render('links', {
-    title: 'Enlaces Oficiales - Nexus',
+    title: 'Enlaces Oficiales - Vortex',
     page: 'links'
   });
 });
@@ -95,7 +95,7 @@ router.get('/links', (req, res) => {
  */
 router.get('/surlink', checkMaintenance('surlink'), (req, res) => {
   res.render('surlink', {
-    title: 'NEXUS Surlink - Ecosistema inmobiliario, académico y automotriz',
+    title: 'VORTEX Surlink - Ecosistema inmobiliario, académico y automotriz',
     page: 'surlink'
   });
 });
@@ -105,7 +105,7 @@ router.get('/surlink', checkMaintenance('surlink'), (req, res) => {
  */
 router.get('/pricing', (req, res) => {
   res.render('pricing', {
-    title: 'Planes y Precios - Nexus',
+    title: 'Planes y Precios - Vortex',
     page: 'pricing'
   });
 });
@@ -118,7 +118,7 @@ router.get('/perfil', (req, res) => {
     return res.redirect('/login');
   }
   res.render('perfil', {
-    title: 'Mi Perfil - Nexus',
+    title: 'Mi Perfil - Vortex',
     page: 'perfil'
   });
 });
@@ -128,7 +128,7 @@ router.get('/perfil', (req, res) => {
  */
 router.get('/login', (req, res) => {
   res.render('login', {
-    title: 'Iniciar Sesión - Nexus',
+    title: 'Iniciar Sesión - Vortex',
     page: 'login'
   });
 });
@@ -138,7 +138,7 @@ router.get('/login', (req, res) => {
  */
 router.get('/privacy', (req, res) => {
   res.render('privacy', {
-    title: 'Política de Privacidad - Nexus',
+    title: 'Política de Privacidad - Vortex',
     page: 'privacy'
   });
 });
@@ -148,7 +148,7 @@ router.get('/privacy', (req, res) => {
  */
 router.get('/terms', (req, res) => {
   res.render('terms', {
-    title: 'Términos de Servicio - Nexus',
+    title: 'Términos de Servicio - Vortex',
     page: 'terms'
   });
 });
@@ -166,7 +166,7 @@ router.get('/admin', (req, res) => {
   }
 
   res.render('admin', {
-    title: 'Panel de Administración - Nexus',
+    title: 'Panel de Administración - Vortex',
     page: 'admin'
   });
 });

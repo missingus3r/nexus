@@ -1,8 +1,8 @@
-# Algoritmo de Heatmap - Nexus
+# Algoritmo de Heatmap - Vortex
 
 ## Descripción General
 
-El heatmap de Nexus utiliza un sistema de scoring dinámico que combina múltiples factores para representar el nivel de riesgo en diferentes zonas geográficas.
+El heatmap de Vortex utiliza un sistema de scoring dinámico que combina múltiples factores para representar el nivel de riesgo en diferentes zonas geográficas.
 
 ## Componentes del Score
 

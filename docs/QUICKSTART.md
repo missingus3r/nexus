@@ -1,4 +1,4 @@
-# 🚀 Guía de Inicio Rápido - Nexus
+# 🚀 Guía de Inicio Rápido - Vortex
 
 ## Paso 1: Configurar MongoDB Atlas
 
@@ -17,8 +17,8 @@
    - **Allowed Logout URLs**: `http://localhost:3000`
    - **Allowed Web Origins**: `http://localhost:3000`
 4. En "APIs" → Create API:
-   - Name: Nexus API
-   - Identifier: `https://api.nexus.uy`
+   - Name: Vortex API
+   - Identifier: `https://api.vortexlabs.cc`
 5. En "Permissions" agregar:
    - `create:incident`
    - `validate:incident`
@@ -189,4 +189,4 @@ api/
 
 ---
 
-**¿Problemas?** Abrir issue en GitHub o contactar: soporte@nexus.uy
+**¿Problemas?** Abrir issue en GitHub o contactar: info.vortexlabs@protonmail.com

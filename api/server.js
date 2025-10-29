@@ -20,6 +20,7 @@ const __dirname = path.dirname(__filename);
 import authRoutes from './src/routes/auth.js';
 import incidentRoutes from './src/routes/incidents.js';
 import heatmapRoutes from './src/routes/heatmap.js';
+import neighborhoodRoutes from './src/routes/neighborhoods.js';
 import newsRoutes from './src/routes/news.js';
 import linksRoutes from './src/routes/links.js';
 import adminRoutes from './src/routes/admin.js';
@@ -64,7 +65,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Session middleware
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'nexus-secret-key-change-in-production',
+  secret: process.env.SESSION_SECRET || 'vortex-secret-key-change-in-production',
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -111,6 +112,7 @@ app.use(trackPageVisit);
 app.use('/api/auth', authRoutes);
 app.use('/api/map/incidents', incidentRoutes);
 app.use('/api/heatmap', heatmapRoutes);
+app.use('/api/neighborhoods', neighborhoodRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/links', linksRoutes);
 app.use('/api/admin', adminRoutes);

@@ -11,6 +11,11 @@ router.get('/mi', (req, res) => {
     title: 'Enlaces Oficiales - Ministerio del Interior',
     links: [
       {
+        name: 'Personas Ausentes',
+        url: 'https://personasausentes.minterior.gub.uy/galeria',
+        description: 'Galería de personas desaparecidas, guía de actuación, servicios del D.R.B.P.A. (Departamento de Registro y Búsqueda de Personas Ausentes), información sobre Alerta Amber Uruguay y acceso a sistemas de alerta regional (Alerta Sofia Argentina y Amber Alert Brasil)'
+      },
+      {
         name: 'Personas Condenadas',
         url: 'https://anterior.minterior.gub.uy/index.php/component/procesados/?task=procesados',
         description: 'Listado oficial de personas procesadas'
@@ -31,7 +36,7 @@ router.get('/mi', (req, res) => {
         description: 'Información oficial sobre el servicio de emergencias 9-1-1'
       }
     ],
-    disclaimer: 'Estos enlaces son proporcionados para acceso a información oficial. Nexus no almacena ni procesa datos de personas procesadas.'
+    disclaimer: 'Estos enlaces son proporcionados para acceso a información oficial. Vortex no almacena ni procesa datos de personas procesadas.'
   });
 });
 

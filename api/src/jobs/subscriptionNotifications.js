@@ -125,7 +125,7 @@ async function sendExpirationNotification(email, name, plan, endDate, daysRemain
       <body>
         <div class="container">
           <div class="header">
-            <h1>NEXUS</h1>
+            <h1>VORTEX</h1>
             <p>Tu Suscripción Está Por Vencer</p>
           </div>
           <div class="content">
@@ -146,23 +146,23 @@ async function sendExpirationNotification(email, name, plan, endDate, daysRemain
               </ul>
             </div>
 
-            <p>Para continuar disfrutando de todas las funcionalidades de Nexus sin interrupciones, por favor renueva tu suscripción antes de que expire.</p>
+            <p>Para continuar disfrutando de todas las funcionalidades de Vortex sin interrupciones, por favor renueva tu suscripción antes de que expire.</p>
 
             <div style="text-align: center; margin: 30px 0;">
-              <a href="mailto:${process.env.ADMIN_EMAIL || 'contacto@nexus.uy'}?subject=Renovar%20suscripción%20${planName}&body=Hola,%0A%0AQuisiera%20renovar%20mi%20suscripción%20al%20plan%20${planName}.%0A%0ANombre:%20${name}%0AEmail:%20${email}%0A%0AGracias." class="button">
+              <a href="mailto:${process.env.ADMIN_EMAIL || 'info.vortexlabs@protonmail.com'}?subject=Renovar%20suscripción%20${planName}&body=Hola,%0A%0AQuisiera%20renovar%20mi%20suscripción%20al%20plan%20${planName}.%0A%0ANombre:%20${name}%0AEmail:%20${email}%0A%0AGracias." class="button">
                 Renovar Suscripción
               </a>
             </div>
 
             <p><strong>¿Necesitas ayuda?</strong><br>
-            Contáctanos en <a href="mailto:${process.env.ADMIN_EMAIL || 'contacto@nexus.uy'}">${process.env.ADMIN_EMAIL || 'contacto@nexus.uy'}</a></p>
+            Contáctanos en <a href="mailto:${process.env.ADMIN_EMAIL || 'info.vortexlabs@protonmail.com'}">${process.env.ADMIN_EMAIL || 'info.vortexlabs@protonmail.com'}</a></p>
 
-            <p>Gracias por confiar en Nexus,<br>
-            El equipo de Nexus</p>
+            <p>Gracias por confiar en Vortex,<br>
+            El equipo de Vortex</p>
           </div>
           <div class="footer">
             <p>Este es un mensaje automático. Por favor no respondas a este email.</p>
-            <p>&copy; ${new Date().getFullYear()} Nexus. Todos los derechos reservados.</p>
+            <p>&copy; ${new Date().getFullYear()} Vortex. Todos los derechos reservados.</p>
           </div>
         </div>
       </body>
@@ -176,7 +176,7 @@ async function sendExpirationNotification(email, name, plan, endDate, daysRemain
     }
 
     const mailOptions = {
-      from: `"Nexus Suscripciones" <${process.env.SMTP_USER}>`,
+      from: `"Vortex Suscripciones" <${process.env.SMTP_USER}>`,
       to: email,
       subject,
       html: emailContent

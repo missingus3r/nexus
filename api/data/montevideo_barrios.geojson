@@ -1,0 +1,185 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id_barrio": 1,
+        "nombre": "Centro",
+        "codigo": "CENTRO"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-56.200, -34.900],
+          [-56.180, -34.900],
+          [-56.180, -34.910],
+          [-56.200, -34.910],
+          [-56.200, -34.900]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id_barrio": 2,
+        "nombre": "Ciudad Vieja",
+        "codigo": "CIUDAD_VIEJA"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-56.210, -34.900],
+          [-56.200, -34.900],
+          [-56.200, -34.910],
+          [-56.210, -34.910],
+          [-56.210, -34.900]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id_barrio": 3,
+        "nombre": "Pocitos",
+        "codigo": "POCITOS"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-56.160, -34.900],
+          [-56.140, -34.900],
+          [-56.140, -34.920],
+          [-56.160, -34.920],
+          [-56.160, -34.900]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id_barrio": 4,
+        "nombre": "Carrasco",
+        "codigo": "CARRASCO"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-56.120, -34.880],
+          [-56.080, -34.880],
+          [-56.080, -34.910],
+          [-56.120, -34.910],
+          [-56.120, -34.880]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id_barrio": 5,
+        "nombre": "Cordón",
+        "codigo": "CORDON"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-56.180, -34.900],
+          [-56.160, -34.900],
+          [-56.160, -34.915],
+          [-56.180, -34.915],
+          [-56.180, -34.900]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id_barrio": 6,
+        "nombre": "Palermo",
+        "codigo": "PALERMO"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-56.180, -34.915],
+          [-56.160, -34.915],
+          [-56.160, -34.930],
+          [-56.180, -34.930],
+          [-56.180, -34.915]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id_barrio": 7,
+        "nombre": "Parque Rodó",
+        "codigo": "PARQUE_RODO"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-56.170, -34.910],
+          [-56.160, -34.910],
+          [-56.160, -34.920],
+          [-56.170, -34.920],
+          [-56.170, -34.910]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id_barrio": 8,
+        "nombre": "Punta Carretas",
+        "codigo": "PUNTA_CARRETAS"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-56.160, -34.920],
+          [-56.140, -34.920],
+          [-56.140, -34.935],
+          [-56.160, -34.935],
+          [-56.160, -34.920]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id_barrio": 9,
+        "nombre": "Malvín",
+        "codigo": "MALVIN"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-56.140, -34.880],
+          [-56.120, -34.880],
+          [-56.120, -34.900],
+          [-56.140, -34.900],
+          [-56.140, -34.880]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id_barrio": 10,
+        "nombre": "Buceo",
+        "codigo": "BUCEO"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-56.140, -34.900],
+          [-56.120, -34.900],
+          [-56.120, -34.915],
+          [-56.140, -34.915],
+          [-56.140, -34.900]
+        ]]
+      }
+    }
+  ]
+}

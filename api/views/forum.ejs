@@ -10,50 +10,46 @@
     <script src="/js/theme-toggle.js" defer></script>
 </head>
 <body>
-    <%- include('partials/header-forum-nexus', { page: page, isAuthenticated: isAuthenticated }) %>
+    <%- include('partials/header-forum-vortex', { page: page, isAuthenticated: isAuthenticated }) %>
 
     <div class="main-content">
         <div class="container">
             <div class="forum-container">
-                <p>Participa en la discusión sobre temas del momento en la comunidad Nexus. Elige tu plataforma preferida:</p>
+                <p>Participa en la discusión sobre temas del momento en la comunidad Vortex. Elige tu plataforma preferida:</p>
 
                 <!-- Forum Options -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 2rem 0;">
 
-                    <!-- Nexus Forum -->
+                    <!-- Vortex Forum -->
                     <div style="text-align: center; padding: 3rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; border: 2px solid var(--primary-color); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); position: relative; overflow: hidden;">
                         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="margin-bottom: 1rem;">
-                            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-                            <path d="M2 17l10 5 10-5"></path>
-                            <path d="M2 12l10 5 10-5"></path>
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                         </svg>
-                        <h3 style="margin-bottom: 0.75rem; color: white;">Foro Nexus</h3>
+                        <h3 style="margin-bottom: 0.75rem; color: white;">Foro Vortex</h3>
                         <p style="margin-bottom: 1.5rem; color: rgba(255, 255, 255, 0.9); font-size: 0.95rem;">
                             Nuestro foro interno con sistema de threads, comentarios anidados, likes e imágenes.
                         </p>
-                        <a href="/forum-nexus" class="btn" style="background: white; color: #667eea; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.5rem; font-size: 1.05rem; font-weight: 600; text-decoration: none;">
+                        <a href="/forum-vortex" class="btn" style="background: white; color: #667eea; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.5rem; font-size: 1.05rem; font-weight: 600; text-decoration: none;">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                                 <circle cx="9" cy="7" r="4"></circle>
                                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                             </svg>
-                            Ir al Foro Nexus
+                            Ir al Foro Vortex
                         </a>
                     </div>
 
                     <!-- Reddit Forum -->
                     <div style="text-align: center; padding: 3rem 2rem; background: var(--surface); border-radius: 12px; border: 1px solid var(--border-color); position: relative; overflow: hidden;">
                         <div style="position: absolute; top: 10px; right: 10px; background: #ff9800; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">PRÓXIMAMENTE</div>
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 1rem; opacity: 0.5;">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 16 16" fill="currentColor" style="margin-bottom: 1rem; opacity: 0.5;">
+                          <path d="M6.167 8a.83.83 0 0 0-.83.83c0 .459.372.84.83.831a.831.831 0 0 0 0-1.661m1.843 3.647c.315 0 1.403-.038 1.976-.611a.23.23 0 0 0 0-.306.213.213 0 0 0-.306 0c-.353.363-1.126.487-1.67.487-.545 0-1.308-.124-1.671-.487a.213.213 0 0 0-.306 0 .213.213 0 0 0 0 .306c.564.563 1.652.61 1.977.61zm.992-2.807c0 .458.373.83.831.83s.83-.381.83-.83a.831.831 0 0 0-1.66 0z"/>
+                          <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.828-1.165c-.315 0-.602.124-.812.325-.801-.573-1.9-.945-3.121-.993l.534-2.501 1.738.372a.83.83 0 1 0 .83-.869.83.83 0 0 0-.744.468l-1.938-.41a.2.2 0 0 0-.153.028.2.2 0 0 0-.086.134l-.592 2.788c-1.24.038-2.358.41-3.17.992-.21-.2-.496-.324-.81-.324a1.163 1.163 0 0 0-.478 2.224q-.03.17-.029.353c0 1.795 2.091 3.256 4.669 3.256s4.668-1.451 4.668-3.256c0-.114-.01-.238-.029-.353.401-.181.688-.592.688-1.069 0-.65-.525-1.165-1.165-1.165"/>
                         </svg>
                         <h3 style="margin-bottom: 0.75rem; color: var(--text-primary);">Foro Reddit</h3>
                         <p style="margin-bottom: 1.5rem; color: var(--text-secondary); font-size: 0.95rem;">
-                            Únete a la comunidad de r/Nexus en Reddit para discusiones más amplias.
+                            Únete a la comunidad de r/Vortex en Reddit para discusiones más amplias.
                         </p>
                         <button class="btn btn-secondary" disabled style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.5rem; font-size: 1.05rem; opacity: 0.6; cursor: not-allowed;">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">

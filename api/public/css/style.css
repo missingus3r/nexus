@@ -1,4 +1,4 @@
-/* Mobile-first responsive styles for Nexus */
+/* Mobile-first responsive styles for Vortex */
 
 :root {
     color-scheme: light;
@@ -865,7 +865,7 @@ html[data-theme="dark"] #welcomeModal .modal-content > div[style*="background: #
 }
 
 /* Forum Styles */
-.forum-nexus-container,
+.forum-vortex-container,
 .forum-thread-container {
     padding: 2rem 0;
 }

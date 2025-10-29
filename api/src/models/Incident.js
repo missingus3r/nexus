@@ -62,6 +62,17 @@ const incidentSchema = new mongoose.Schema({
     index: true,
     description: 'Geohash precision 6-7 for heatmap cells'
   },
+  neighborhoodId: {
+    type: Number,
+    required: false,
+    index: true,
+    description: 'ID of the neighborhood where the incident occurred'
+  },
+  neighborhoodName: {
+    type: String,
+    required: false,
+    description: 'Name of the neighborhood (denormalized for performance)'
+  },
   description: {
     type: String,
     maxlength: 1000,

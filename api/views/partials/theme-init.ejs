@@ -2,7 +2,7 @@
     (function () {
         var theme = 'light';
         try {
-            var stored = localStorage.getItem('nexus-theme');
+            var stored = localStorage.getItem('vortex-theme');
             if (stored === 'dark' || stored === 'light') {
                 theme = stored;
             } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {

@@ -4,6 +4,7 @@ import { checkJwt, attachUser } from '../middleware/auth.js';
 import { writeRateLimiter } from '../middleware/rateLimiter.js';
 import { validateIncident } from '../services/validationService.js';
 import { updateHeatmapForIncident } from '../services/heatmapService.js';
+import { assignNeighborhoodToIncident, updateNeighborhoodHeatmap } from '../services/neighborhoodService.js';
 import { uploadIncidentPhotos, handleUploadErrors } from '../middleware/upload.js';
 import logger from '../utils/logger.js';
 import crypto from 'crypto';
@@ -180,6 +181,11 @@ router.post('/', checkJwt, attachUser, writeRateLimiter, uploadIncidentPhotos, h
     // Increment user's report count
     await req.user.incrementReportCount();
 
+    // Assign neighborhood to incident (async, don't wait)
+    assignNeighborhoodToIncident(incident._id).catch(err =>
+      logger.error('Neighborhood assignment failed:', err)
+    );
+
     logger.info('Incident created', {
       id: incident._id,
       type: incident.type,
@@ -303,6 +309,13 @@ router.post('/:id/validate', checkJwt, attachUser, writeRateLimiter, async (req,
       updateHeatmapForIncident(id).catch(err =>
         logger.error('Heatmap update failed:', err)
       );
+
+      // Update neighborhood heatmap if incident has neighborhood assigned
+      if (incident.neighborhoodId) {
+        updateNeighborhoodHeatmap(incident.neighborhoodId).catch(err =>
+          logger.error('Neighborhood heatmap update failed:', err)
+        );
+      }
     }
 
     res.json({

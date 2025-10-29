@@ -235,7 +235,7 @@ async function parseRssFeed(url) {
   try {
     const response = await axios.get(url, {
       headers: {
-        'User-Agent': 'Nexus-UY/1.0'
+        'User-Agent': 'Vortex-UY/1.0'
       },
       timeout: 10000
     });
@@ -264,7 +264,7 @@ async function fetchArticleContent(url) {
   try {
     const response = await axios.get(url, {
       headers: {
-        'User-Agent': 'Nexus-UY/1.0'
+        'User-Agent': 'Vortex-UY/1.0'
       },
       timeout: 10000
     });

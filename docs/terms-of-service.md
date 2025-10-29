@@ -1,14 +1,14 @@
-# Términos de Servicio - Nexus
+# Términos de Servicio - Vortex
 
 **Última actualización**: Octubre 2025
 
 ## 1. Aceptación de los Términos
 
-Al acceder y usar Nexus ("el Servicio"), usted acepta estar sujeto a estos Términos de Servicio ("Términos"). Si no acepta, no use el Servicio.
+Al acceder y usar Vortex ("el Servicio"), usted acepta estar sujeto a estos Términos de Servicio ("Términos"). Si no acepta, no use el Servicio.
 
 ## 2. Descripción del Servicio
 
-Nexus es una plataforma colaborativa para:
+Vortex es una plataforma colaborativa para:
 - Mapeo de incidentes de seguridad
 - Visualización de datos de seguridad ciudadana
 - Compartir información de fuentes públicas
@@ -92,14 +92,14 @@ Nos reservamos el derecho de:
 ## 7. Disclaimers (Limitaciones de Responsabilidad)
 
 ### 7.1 Exactitud
-Nexus depende de **reportes de usuarios** y fuentes públicas. **NO GARANTIZAMOS**:
+Vortex depende de **reportes de usuarios** y fuentes públicas. **NO GARANTIZAMOS**:
 - Exactitud de ubicaciones o datos
 - Completitud de información
 - Actualización en tiempo real
 
 ### 7.2 Uso de la Información
 **Use el sentido común**:
-- No basar decisiones críticas solo en Nexus
+- No basar decisiones críticas solo en Vortex
 - Verificar información importante con fuentes oficiales
 - Tomar precauciones de seguridad razonables
 
@@ -111,7 +111,7 @@ Nexus depende de **reportes de usuarios** y fuentes públicas. **NO GARANTIZAMOS
 
 **HASTA EL MÁXIMO PERMITIDO POR LA LEY**:
 
-Nexus y sus operadores **NO SON RESPONSABLES** de:
+Vortex y sus operadores **NO SON RESPONSABLES** de:
 - Daños directos, indirectos, incidentales o consecuentes
 - Pérdida de datos o beneficios
 - Interrupciones del servicio
@@ -120,15 +120,15 @@ Nexus y sus operadores **NO SON RESPONSABLES** de:
 
 ## 9. Indemnización
 
-Usted acepta **indemnizar y eximir** a Nexus de cualquier reclamo, daño o gasto (incluidos honorarios legales) derivado de:
+Usted acepta **indemnizar y eximir** a Vortex de cualquier reclamo, daño o gasto (incluidos honorarios legales) derivado de:
 - Su violación de estos Términos
 - Su uso del Servicio
 - Su contenido subido
 
 ## 10. Propiedad Intelectual
 
-### 10.1 Nexus
-- Código, diseño, logo → Copyright Nexus UY
+### 10.1 Vortex
+- Código, diseño, logo → Copyright Vortex UY
 - Código backend/frontend → MIT License (ver GitHub)
 
 ### 10.2 Datos
@@ -166,10 +166,10 @@ Cualquier disputa será resuelta en los tribunales de **Montevideo, Uruguay**.
 
 ## 14. Contacto
 
-**General**: contacto@nexus.uy
-**Soporte**: soporte@nexus.uy
-**Legal**: legal@nexus.uy
+**General**: info.vortexlabs@protonmail.com
+**Soporte**: info.vortexlabs@protonmail.com
+**Legal**: info.vortexlabs@protonmail.com
 
 ---
 
-**Al usar Nexus, usted declara haber leído, entendido y aceptado estos Términos de Servicio.**
+**Al usar Vortex, usted declara haber leído, entendido y aceptado estos Términos de Servicio.**

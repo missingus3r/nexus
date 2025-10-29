@@ -1,5 +1,5 @@
 (function () {
-    const STORAGE_KEY = 'nexus-theme';
+    const STORAGE_KEY = 'vortex-theme';
     const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
 
     const safeStorage = {

@@ -16,7 +16,7 @@ class SubscriptionService {
         {
           id: 'free',
           name: 'Free',
-          description: 'Perfecto para comenzar a explorar Nexus',
+          description: 'Perfecto para comenzar a explorar Vortex',
           priceMonthly: { usd: 0, uyu: 0 },
           priceYearly: { usd: 0, uyu: 0 },
           features: [

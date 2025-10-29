@@ -1,7 +1,7 @@
 {
-  "name": "nexus-api",
+  "name": "vortex-api",
   "version": "1.0.0",
-  "description": "Backend API para Nexus - Plataforma de mapeo de incidentes en tiempo real",
+  "description": "Backend API para Vortex - Plataforma de mapeo de incidentes en tiempo real",
   "main": "server.js",
   "type": "module",
   "scripts": {
@@ -18,7 +18,7 @@
     "mapping",
     "realtime"
   ],
-  "author": "Nexus Team",
+  "author": "Vortex Team",
   "license": "MIT",
   "dependencies": {
     "axios": "^1.6.5",

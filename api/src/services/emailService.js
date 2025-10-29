@@ -71,7 +71,7 @@ class EmailService {
 
     // Build email content
     const emailContent = `
-      <h2>Nueva Consulta de Plan - Nexus</h2>
+      <h2>Nueva Consulta de Plan - Vortex</h2>
 
       <h3>Información del Plan</h3>
       <ul>
@@ -94,11 +94,11 @@ class EmailService {
       ` : ''}
 
       <hr>
-      <p><small>Enviado desde Nexus - Plataforma de Seguridad Ciudadana</small></p>
+      <p><small>Enviado desde Vortex - Plataforma de Seguridad Ciudadana</small></p>
     `;
 
     const mailOptions = {
-      from: `"Nexus Pricing" <${process.env.SMTP_USER}>`,
+      from: `"Vortex Pricing" <${process.env.SMTP_USER}>`,
       to: process.env.ADMIN_EMAIL || process.env.SMTP_USER,
       subject: `Nueva Consulta: Plan ${planDetails.name} - ${name}`,
       html: emailContent,
@@ -136,7 +136,7 @@ class EmailService {
     const planDetails = this.getPlanDetails(plan, planType);
 
     const emailContent = `
-      <h2>¡Gracias por tu interés en Nexus!</h2>
+      <h2>¡Gracias por tu interés en Vortex!</h2>
 
       <p>Hola ${name},</p>
 
@@ -153,17 +153,17 @@ class EmailService {
       <p>Mientras tanto, puedes seguir explorando nuestra plataforma.</p>
 
       <p>Saludos,<br>
-      El equipo de Nexus</p>
+      El equipo de Vortex</p>
 
       <hr>
       <p><small>
-        <a href="https://nexus.uy">Visitar Nexus</a> |
+        <a href="https://vortexlabs.cc">Visitar Vortex</a> |
         <a href="mailto:${process.env.ADMIN_EMAIL || process.env.SMTP_USER}">Contacto</a>
       </small></p>
     `;
 
     const mailOptions = {
-      from: `"Nexus" <${process.env.SMTP_USER}>`,
+      from: `"Vortex" <${process.env.SMTP_USER}>`,
       to: email,
       subject: `Confirmación de Consulta - Plan ${planDetails.name}`,
       html: emailContent

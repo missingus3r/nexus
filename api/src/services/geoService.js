@@ -89,7 +89,7 @@ export async function geocode(placeName) {
           // No country restriction - allow worldwide geocoding
         },
         headers: {
-          'User-Agent': 'Nexus-UY/1.0'
+          'User-Agent': 'Vortex-UY/1.0'
         }
       }
     );
@@ -153,7 +153,7 @@ export async function reverseGeocode(lat, lon) {
           format: 'json'
         },
         headers: {
-          'User-Agent': 'Nexus-UY/1.0'
+          'User-Agent': 'Vortex-UY/1.0'
         }
       }
     );

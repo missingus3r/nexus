@@ -2,6 +2,7 @@ let map;
 let socket;
 let incidentsSource;
 let heatmapSource;
+let neighborhoodsSource;
 
 // Location selection state
 let isSelectingLocation = false;
@@ -33,6 +34,7 @@ function initializeMap() {
     window.map = map;
 
     map.on('load', () => {
+        addNeighborhoodsLayer();
         addIncidentsLayer();
         addHeatmapLayer();
 
@@ -346,6 +348,76 @@ function addHeatmapLayer() {
     heatmapSource = map.getSource('heatmap');
 }
 
+function addNeighborhoodsLayer() {
+    map.addSource('neighborhoods', {
+        type: 'geojson',
+        data: {
+            type: 'FeatureCollection',
+            features: []
+        }
+    });
+
+    // Add neighborhood fill layer (overlay with average color)
+    map.addLayer({
+        id: 'neighborhoods-fill',
+        type: 'fill',
+        source: 'neighborhoods',
+        paint: {
+            'fill-color': ['coalesce', ['get', 'averageColor'], '#cccccc'],
+            'fill-opacity': 0.35
+        }
+    }, 'incidents-approximate-glow'); // Add below incidents layers
+
+    // Add neighborhood border layer
+    map.addLayer({
+        id: 'neighborhoods-border',
+        type: 'line',
+        source: 'neighborhoods',
+        paint: {
+            'line-color': '#666666',
+            'line-width': 1.5,
+            'line-opacity': 0.6
+        }
+    }, 'incidents-approximate-glow'); // Add below incidents layers
+
+    // Add popup on hover to show neighborhood name and stats
+    map.on('mouseenter', 'neighborhoods-fill', (e) => {
+        map.getCanvas().style.cursor = 'pointer';
+
+        const props = e.features[0].properties;
+
+        // Create a simple tooltip
+        const tooltip = new maplibregl.Popup({
+            closeButton: false,
+            closeOnClick: false,
+            className: 'neighborhood-tooltip'
+        })
+            .setLngLat(e.lngLat)
+            .setHTML(`
+                <div style="padding: 8px;">
+                    <strong>${props.nombre}</strong><br>
+                    <small>${props.incidentCount} incidentes verificados</small>
+                </div>
+            `)
+            .addTo(map);
+
+        // Store tooltip reference
+        map._neighborhoodTooltip = tooltip;
+    });
+
+    map.on('mouseleave', 'neighborhoods-fill', () => {
+        map.getCanvas().style.cursor = '';
+
+        // Remove tooltip
+        if (map._neighborhoodTooltip) {
+            map._neighborhoodTooltip.remove();
+            map._neighborhoodTooltip = null;
+        }
+    });
+
+    neighborhoodsSource = map.getSource('neighborhoods');
+}
+
 async function loadMapData() {
     try {
         const token = localStorage.getItem('jwt') || await getGuestToken();
@@ -379,6 +451,18 @@ async function loadMapData() {
         const heatmapData = await heatmapResponse.json();
         if (heatmapSource) {
             heatmapSource.setData(heatmapData);
+        }
+
+        // Load neighborhoods (only those with incidents)
+        const neighborhoodsResponse = await fetch(`/api/neighborhoods?withIncidents=true`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const neighborhoodsData = await neighborhoodsResponse.json();
+
+        console.log('Loaded neighborhoods:', neighborhoodsData.features?.length || 0);
+
+        if (neighborhoodsSource) {
+            neighborhoodsSource.setData(neighborhoodsData);
         }
     } catch (error) {
         console.error('Error loading map data:', error);

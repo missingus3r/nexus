@@ -1,16 +1,16 @@
-# Política de Privacidad - Nexus
+# Política de Privacidad - Vortex
 
 **Última actualización**: Octubre 2025
 
 ## 1. Introducción
 
-Nexus ("nosotros", "nuestro") respeta su privacidad y se compromete a proteger sus datos personales. Esta política explica cómo recopilamos, usamos y protegemos su información en conformidad con la **Ley N° 18.331 de Protección de Datos Personales** de Uruguay.
+Vortex ("nosotros", "nuestro") respeta su privacidad y se compromete a proteger sus datos personales. Esta política explica cómo recopilamos, usamos y protegemos su información en conformidad con la **Ley N° 18.331 de Protección de Datos Personales** de Uruguay.
 
 ## 2. Responsable del Tratamiento
 
-**Nexus UY**
-Email: privacidad@nexus.uy
-Sitio web: https://nexus.uy
+**Vortex UY**
+Email: info.vortexlabs@protonmail.com
+Sitio web: https://vortexlabs.cc
 
 ## 3. Datos que Recopilamos
 
@@ -114,7 +114,7 @@ Usted tiene derecho a:
 - **Oposición**: Objetar ciertos procesamientos
 - **Portabilidad**: Recibir sus datos en formato estructurado
 
-**Ejercer derechos**: Enviar email a privacidad@nexus.uy con asunto "Derechos ARCO"
+**Ejercer derechos**: Enviar email a info.vortexlabs@protonmail.com con asunto "Derechos ARCO"
 
 ## 10. Cookies y Tracking
 
@@ -136,7 +136,7 @@ Usamos **Umami** (privacy-friendly):
 
 ## 11. Menores de Edad
 
-Nexus no está dirigido a menores de 13 años. Si descubrimos que un menor ha proporcionado datos, los eliminaremos inmediatamente.
+Vortex no está dirigido a menores de 13 años. Si descubrimos que un menor ha proporcionado datos, los eliminaremos inmediatamente.
 
 ## 12. Transferencias Internacionales
 
@@ -151,7 +151,7 @@ Notificaremos cambios materiales vía:
 ## 14. Contacto
 
 **Preguntas sobre privacidad**:
-Email: privacidad@nexus.uy
+Email: info.vortexlabs@protonmail.com
 
 **Unidad Reguladora (URCDP)**:
 Sitio: https://www.gub.uy/unidad-reguladora-control-datos-personales
@@ -160,4 +160,4 @@ Email: urcdp@agesic.gub.uy
 ---
 
 **Consentimiento**:
-Al usar Nexus, usted acepta esta Política de Privacidad y el procesamiento de sus datos según lo descrito.
+Al usar Vortex, usted acepta esta Política de Privacidad y el procesamiento de sus datos según lo descrito.
