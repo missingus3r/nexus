@@ -30,9 +30,20 @@ function getAuth0Config() {
     // After successful callback, handle user creation/update
     afterCallback: async (req, res, session) => {
       try {
+        // Validate session has user info
+        if (!session || !session.user) {
+          logger.error('Auth0 afterCallback: session.user is undefined', { session });
+          return session; // Return as-is, let Auth0 handle it
+        }
+
         const userInfo = session.user;
         const email = userInfo.email;
         const auth0Sub = userInfo.sub;
+
+        if (!email || !auth0Sub) {
+          logger.error('Auth0 afterCallback: Missing email or sub', { userInfo });
+          return session;
+        }
 
         logger.info(`Auth0 callback - User logged in: ${email}`);
 
@@ -88,10 +99,13 @@ function getAuth0Config() {
           logger.info(`User updated: ${email}`);
         }
 
-        // Store redirect info in user object so it's accessible in req.oidc.user
+        // Add custom properties to the user object in session
+        // These will be accessible via req.oidc.user
         session.user.redirectTo = isAdmin ? '/admin' : '/dashboard';
         session.user.userId = user._id.toString();
         session.user.dbRole = user.role; // Store DB role
+
+        logger.info(`Redirect set for user ${email}: ${session.user.redirectTo}`);
 
         return session;
       } catch (error) {
