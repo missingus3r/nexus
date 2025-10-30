@@ -8,18 +8,24 @@ import logger from '../utils/logger.js';
 import { Parser } from 'json2csv';
 import ExcelJS from 'exceljs';
 import { getMaintenanceStatus } from '../middleware/maintenanceCheck.js';
+import { getAuthenticatedUser } from '../config/auth0.js';
 
 const router = express.Router();
 
 // Middleware para verificar que el usuario es admin
-const requireAdmin = (req, res, next) => {
-  if (!req.session.user) {
+const requireAdmin = async (req, res, next) => {
+  const user = await getAuthenticatedUser(req);
+
+  if (!user) {
     return res.status(401).json({ error: 'No autenticado' });
   }
 
-  if (req.session.user.role !== 'admin') {
+  if (user.role !== 'admin') {
     return res.status(403).json({ error: 'Acceso denegado - Se requiere rol de administrador' });
   }
+
+  // Make user available to route handlers
+  req.user = user;
 
   next();
 };
@@ -194,7 +200,7 @@ router.post('/posts', requireAdmin, async (req, res) => {
       title,
       content,
       priority: priority || 'normal',
-      authorUid: req.session.user.uid || 'admin'
+      authorUid: req.user.uid || 'admin'
     });
 
     await post.save();
@@ -226,7 +232,7 @@ router.post('/posts', requireAdmin, async (req, res) => {
 
     logger.info('Admin post created', {
       postId: post._id,
-      authorUid: req.session.user.uid,
+      authorUid: req.user.uid,
       usersNotified: users.length
     });
 
@@ -294,7 +300,7 @@ router.patch('/posts/:id', requireAdmin, async (req, res) => {
 
     logger.info('Admin post updated', {
       postId: post._id,
-      updatedBy: req.session.user.uid
+      updatedBy: req.user.uid
     });
 
     res.json({
@@ -323,7 +329,7 @@ router.delete('/posts/:id', requireAdmin, async (req, res) => {
 
     logger.info('Admin post deleted', {
       postId: post._id,
-      deletedBy: req.session.user.uid
+      deletedBy: req.user.uid
     });
 
     res.json({
@@ -350,7 +356,7 @@ router.post('/news/ingest', requireAdmin, async (req, res) => {
       : [];
 
     logger.info('Manual news ingestion triggered', {
-      triggeredBy: req.session.user.uid,
+      triggeredBy: req.user.uid,
       securityFilterEnabled: securityKeywords.length > 0
     });
 
@@ -385,14 +391,14 @@ router.post('/news/ingest', requireAdmin, async (req, res) => {
 router.delete('/news/clear', requireAdmin, async (req, res) => {
   try {
     logger.warn('Mass news deletion triggered', {
-      triggeredBy: req.session.user.uid
+      triggeredBy: req.user.uid
     });
 
     const result = await NewsEvent.deleteMany({});
 
     logger.info('News deletion completed', {
       deletedCount: result.deletedCount,
-      deletedBy: req.session.user.uid
+      deletedBy: req.user.uid
     });
 
     res.json({
@@ -594,7 +600,7 @@ router.post('/surlink/schedule', requireAdmin, async (req, res) => {
     logger.info('Surlink scraping scheduled', {
       category,
       scheduledAt,
-      requestedBy: req.session.user?.uid
+      requestedBy: req.user?.uid
     });
 
     res.json({
@@ -630,7 +636,7 @@ router.post('/surlink/cleanup', requireAdmin, async (req, res) => {
     logger.info('Surlink cleanup executed', {
       archived: result.modifiedCount || 0,
       performedAt: now,
-      requestedBy: req.session.user?.uid
+      requestedBy: req.user?.uid
     });
 
     res.json({
@@ -898,7 +904,7 @@ router.patch('/subscriptions/:id', requireAdmin, async (req, res) => {
 
     logger.info('Subscription updated by admin', {
       subscriptionId: subscription._id,
-      updatedBy: req.session.user.uid,
+      updatedBy: req.user.uid,
       changes: { status, endDate, autoRenew }
     });
 
@@ -930,7 +936,7 @@ router.delete('/subscriptions/:id', requireAdmin, async (req, res) => {
 
     logger.info('Subscription cancelled by admin', {
       subscriptionId: subscription._id,
-      cancelledBy: req.session.user.uid
+      cancelledBy: req.user.uid
     });
 
     res.json({
@@ -962,7 +968,7 @@ router.post('/subscriptions/:id/renew', requireAdmin, async (req, res) => {
 
     logger.info('Subscription renewed by admin', {
       subscriptionId: subscription._id,
-      renewedBy: req.session.user.uid,
+      renewedBy: req.user.uid,
       months
     });
 
@@ -1022,7 +1028,7 @@ router.get('/subscriptions/export/csv', requireAdmin, async (req, res) => {
     res.send(csv);
 
     logger.info('Subscriptions exported to CSV', {
-      exportedBy: req.session.user.uid,
+      exportedBy: req.user.uid,
       count: subscriptions.length
     });
   } catch (error) {
@@ -1108,7 +1114,7 @@ router.get('/subscriptions/export/excel', requireAdmin, async (req, res) => {
     res.end();
 
     logger.info('Subscriptions exported to Excel', {
-      exportedBy: req.session.user.uid,
+      exportedBy: req.user.uid,
       count: subscriptions.length
     });
   } catch (error) {
@@ -1251,7 +1257,7 @@ router.post('/payments', requireAdmin, async (req, res) => {
 
     logger.info('Manual payment created', {
       paymentId: payment._id,
-      createdBy: req.session.user.uid,
+      createdBy: req.user.uid,
       amount,
       userId
     });
@@ -1378,7 +1384,7 @@ router.put('/forum/settings', requireAdmin, async (req, res) => {
 
     const settings = await ForumSettings.updateSettings(updates);
 
-    logger.info('Forum settings updated by admin:', { admin: req.session.user.email, updates });
+    logger.info('Forum settings updated by admin:', { admin: req.user.email, updates });
 
     res.json({
       success: true,
@@ -1607,7 +1613,7 @@ router.put('/pricing/settings', requireAdmin, async (req, res) => {
 
     const settings = await PricingSettings.updateSettings(updates);
 
-    logger.info('Pricing settings updated by admin:', { admin: req.session.user.email, updates });
+    logger.info('Pricing settings updated by admin:', { admin: req.user.email, updates });
 
     res.json({
       success: true,
@@ -1794,11 +1800,11 @@ router.put('/system/settings', requireAdmin, async (req, res) => {
 
     const settings = await SystemSettings.updateSettings(
       updates,
-      req.session.user.email || req.session.user.uid
+      req.user.email || req.user.uid
     );
 
     logger.info('System settings updated by admin:', {
-      admin: req.session.user.email,
+      admin: req.user.email,
       updates
     });
 

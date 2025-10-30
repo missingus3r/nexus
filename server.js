@@ -39,7 +39,7 @@ import { rateLimiter } from './src/middleware/rateLimiter.js';
 import { trackPageVisit } from './src/middleware/pageTracking.js';
 
 // Auth0
-import { auth0Middleware, setupOidcLocals, handlePostLoginRedirect } from './src/config/auth0.js';
+import { auth0Middleware, setupOidcLocals, handleLandingRedirect } from './src/config/auth0.js';
 
 // Sockets
 import { initializeSocketHandlers } from './src/sockets/eventHandlers.js';
@@ -82,8 +82,8 @@ app.use(session({
 // Auth0 middleware - attaches /login, /logout, and /callback routes
 app.use(auth0Middleware);
 
-// Handle post-login redirect
-app.use(handlePostLoginRedirect);
+// Handle post-login redirect from landing page
+app.use(handleLandingRedirect);
 
 // Middleware
 app.use(helmet({

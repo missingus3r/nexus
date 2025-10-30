@@ -1,5 +1,6 @@
 import express from 'express';
 import { checkMaintenance } from '../middleware/maintenanceCheck.js';
+import { getAuthenticatedUser } from '../config/auth0.js';
 
 const router = express.Router();
 
@@ -156,12 +157,14 @@ router.get('/terms', (req, res) => {
 /**
  * Admin page (requires admin role)
  */
-router.get('/admin', (req, res) => {
-  if (!req.session.user) {
+router.get('/admin', async (req, res) => {
+  const user = await getAuthenticatedUser(req);
+
+  if (!user) {
     return res.redirect('/login');
   }
 
-  if (req.session.user.role !== 'admin') {
+  if (user.role !== 'admin') {
     return res.status(403).send('Acceso denegado - Se requiere rol de administrador');
   }
 

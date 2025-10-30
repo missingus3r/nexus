@@ -26,7 +26,11 @@
                     <a href="/centinel" class="platform-btn">Centinel</a>
                     <a href="/forum-vortex" class="platform-btn">Forums</a>
                     <a href="/surlink" class="platform-btn">Surlink</a>
-                    <a href="/login">Iniciar sesión</a>
+                    <% if (isAuthenticated) { %>
+                        <a href="/logout">Cerrar sesión</a>
+                    <% } else { %>
+                        <a href="/login">Iniciar sesión</a>
+                    <% } %>
                 </nav>
             </div>
         </header>

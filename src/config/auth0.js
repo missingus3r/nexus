@@ -30,18 +30,31 @@ function getAuth0Config() {
     // After successful callback, handle user creation/update
     afterCallback: async (req, res, session) => {
       try {
-        // Validate session has user info
-        if (!session || !session.user) {
-          logger.error('Auth0 afterCallback: session.user is undefined', { session });
-          return session; // Return as-is, let Auth0 handle it
+        // Decode the id_token to get user claims
+        // In express-openid-connect, the claims are in the id_token JWT
+        if (!session || !session.id_token) {
+          logger.error('Auth0 afterCallback: session or id_token is undefined', { session });
+          return session;
         }
 
-        const userInfo = session.user;
-        const email = userInfo.email;
-        const auth0Sub = userInfo.sub;
+        // Decode JWT token (it's already validated by Auth0 middleware)
+        // The token has 3 parts: header.payload.signature
+        const tokenParts = session.id_token.split('.');
+        if (tokenParts.length !== 3) {
+          logger.error('Auth0 afterCallback: Invalid JWT format');
+          return session;
+        }
+
+        // Decode the payload (base64url encoded)
+        const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64url').toString());
+
+        const email = payload.email;
+        const auth0Sub = payload.sub;
+        const name = payload.name || payload.nickname || email.split('@')[0];
+        const picture = payload.picture || '';
 
         if (!email || !auth0Sub) {
-          logger.error('Auth0 afterCallback: Missing email or sub', { userInfo });
+          logger.error('Auth0 afterCallback: Missing email or sub', { payload });
           return session;
         }
 
@@ -60,8 +73,8 @@ function getAuth0Config() {
             uid: auth0Sub,
             auth0Sub: auth0Sub,
             email: email,
-            name: userInfo.name || email.split('@')[0],
-            picture: userInfo.picture || '',
+            name: name,
+            picture: picture,
             role: isAdmin ? 'admin' : 'user',
             reputacion: 50,
             reportCount: 0,
@@ -82,11 +95,11 @@ function getAuth0Config() {
           if (user.auth0Sub !== auth0Sub) {
             user.auth0Sub = auth0Sub;
           }
-          if (user.picture !== userInfo.picture) {
-            user.picture = userInfo.picture;
+          if (user.picture !== picture && picture) {
+            user.picture = picture;
           }
-          if (user.name !== userInfo.name && userInfo.name) {
-            user.name = userInfo.name;
+          if (user.name !== name && name) {
+            user.name = name;
           }
 
           // Update role if admin
@@ -99,13 +112,17 @@ function getAuth0Config() {
           logger.info(`User updated: ${email}`);
         }
 
-        // Add custom properties to the user object in session
-        // These will be accessible via req.oidc.user
-        session.user.redirectTo = isAdmin ? '/admin' : '/dashboard';
-        session.user.userId = user._id.toString();
-        session.user.dbRole = user.role; // Store DB role
+        // Add custom properties directly to session
+        // These will be merged into req.oidc.user after the callback
+        const redirectTo = isAdmin ? '/admin' : '/dashboard';
 
-        logger.info(`Redirect set for user ${email}: ${session.user.redirectTo}`);
+        // Store redirect destination in session
+        // Will be picked up by handleLandingRedirect middleware
+        session.pendingRedirect = redirectTo;
+        session.userId = user._id.toString();
+        session.dbRole = user.role;
+
+        logger.info(`Pending redirect set for user ${email}: ${redirectTo}`);
 
         return session;
       } catch (error) {
@@ -186,18 +203,59 @@ export const setupOidcLocals = (req, res, next) => {
 };
 
 /**
- * Middleware to handle post-login redirect
- * Should be placed right after auth0Middleware in server.js
+ * Helper function to get user from either Auth0 or session
+ * Returns user object with email and role, or null if not authenticated
  */
-export const handlePostLoginRedirect = (req, res, next) => {
-  // Only check for redirect on callback route
-  if (req.path === '/callback' && req.oidc.isAuthenticated()) {
-    const redirectTo = req.oidc.user?.redirectTo;
+export const getAuthenticatedUser = async (req) => {
+  // Check Auth0 first
+  if (req.oidc && req.oidc.isAuthenticated && req.oidc.isAuthenticated()) {
+    const oidcUser = req.oidc.user;
 
-    if (redirectTo) {
-      logger.info(`Redirecting user to: ${redirectTo}`);
+    // Get user from database to get role
+    if (oidcUser.email) {
+      const user = await User.findOne({ email: oidcUser.email });
+      if (user) {
+        return {
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          uid: user.uid,
+          picture: user.picture,
+          _id: user._id
+        };
+      }
+    }
+  }
+
+  // Fallback to session-based auth
+  if (req.session && req.session.user) {
+    return req.session.user;
+  }
+
+  return null;
+};
+
+/**
+ * Middleware to handle post-login redirect on landing page
+ * This runs on the root route and redirects users who just logged in
+ */
+export const handleLandingRedirect = async (req, res, next) => {
+  // Only run on root path
+  if (req.path !== '/') {
+    return next();
+  }
+
+  // Check if user just logged in and needs redirect
+  if (req.oidc && req.oidc.isAuthenticated && req.oidc.isAuthenticated()) {
+    // Check if this is a fresh login (has pendingRedirect flag)
+    if (req.session.pendingRedirect) {
+      const redirectTo = req.session.pendingRedirect;
+      delete req.session.pendingRedirect;
+
+      logger.info(`Redirecting user from landing to: ${redirectTo}`);
       return res.redirect(redirectTo);
     }
   }
+
   next();
 };

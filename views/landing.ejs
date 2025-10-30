@@ -562,7 +562,11 @@
             </div>
             <div class="hero-nav">
                 <nav class="nav-links" aria-label="Navegación principal">
-                    <a href="/login" title="Acceder a tu cuenta Vortex" aria-label="Iniciar sesión en Vortex">Iniciar sesión</a>
+                    <% if (isAuthenticated) { %>
+                        <a href="/logout" title="Cerrar sesión" aria-label="Cerrar sesión">Cerrar sesión</a>
+                    <% } else { %>
+                        <a href="/login" title="Acceder a tu cuenta Vortex" aria-label="Iniciar sesión en Vortex">Iniciar sesión</a>
+                    <% } %>
                 </nav>
             </div>
         </header>
@@ -576,7 +580,11 @@
                 <p class="hero-text">Todo conectado con Vortex.</p>
                 <div class="hero-actions">
                     <a class="cta primary" href="/plataforma" title="Descubre todas las funcionalidades de Vortex" aria-label="Conocer más sobre la plataforma Vortex">Conocé más</a>
-                    <a class="cta secondary" href="/login" title="Accede a todas las herramientas de Vortex" aria-label="Explorar la plataforma Vortex">Explora VORTEX</a>
+                    <% if (isAuthenticated) { %>
+                        <a class="cta secondary" href="/dashboard" title="Ir a tu panel de control" aria-label="Acceder al dashboard de Vortex">Ir al Dashboard</a>
+                    <% } else { %>
+                        <a class="cta secondary" href="/login" title="Accede a todas las herramientas de Vortex" aria-label="Explorar la plataforma Vortex">Explora VORTEX</a>
+                    <% } %>
                 </div>
             </section>
 
