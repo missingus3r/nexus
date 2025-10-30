@@ -5,12 +5,10 @@
 
 # Dependencies
 node_modules/
-api/node_modules/
 
 # Logs
 logs/
 *.log
-api/logs/
 
 # OS
 .DS_Store

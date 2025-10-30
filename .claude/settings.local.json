@@ -12,7 +12,9 @@
       "Bash(for file in ForumComment.js Subscription.js Incident.js)",
       "Bash(do echo \"=== $file ===\")",
       "Bash(done)",
-      "Bash(node -c:*)"
+      "Bash(node -c:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill -9)"
     ],
     "deny": [],
     "ask": []
