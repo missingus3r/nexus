@@ -23,7 +23,6 @@ Sitio web: https://vortexlabs.cc
 ### 3.2 Usuarios Anónimos (Guest)
 - Dirección IP (solo para rate limiting)
 - Token JWT temporal (no personal)
-- Actividad de navegación (analytics agregados)
 
 ### 3.3 Reportes de Incidentes
 - **Ubicación GPS** (con jitter de ~100m)
@@ -58,7 +57,6 @@ Procesamos sus datos bajo las siguientes bases legales (Art. 11, Ley 18.331):
 - Calcular heatmap de riesgo
 - Sistema de validación y reputación
 - Moderar contenido
-- Mejorar el servicio (analytics agregados)
 - Comunicaciones importantes (actualizaciones del servicio)
 
 ### 5.2 NO Vendemos Datos
@@ -121,13 +119,6 @@ Usted tiene derecho a:
 ### 10.1 Cookies Esenciales
 - Session cookie (JWT)
 - Preferencias de usuario (local storage)
-
-### 10.2 Analytics (Opcional)
-Usamos **Umami** (privacy-friendly):
-- No cookies de terceros
-- Datos agregados
-- IP anonimizada
-- Puede opt-out en Configuración
 
 **NO usamos**:
 - ❌ Google Analytics

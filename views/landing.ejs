@@ -504,22 +504,35 @@
             }
 
             header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 18px;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+            }
+
+            .brand {
+                font-size: 0.8rem;
             }
 
             .hero-nav {
-                width: 100%;
-                flex-direction: row;
-                flex-wrap: wrap;
-                gap: 12px;
+                flex-shrink: 0;
             }
 
             .hero-nav .nav-links {
-                width: 100%;
-                justify-content: space-between;
-                gap: 12px;
+                gap: 8px;
+            }
+
+            .nav-links a {
+                font-size: 0.85rem;
+                padding: 0.4rem 0.8rem;
+                background: rgba(124, 92, 255, 0.15);
+                border-radius: 8px;
+                border: 1px solid rgba(124, 92, 255, 0.3);
+            }
+
+            .nav-links a:hover {
+                background: rgba(124, 92, 255, 0.25);
+                border-color: rgba(124, 92, 255, 0.5);
             }
 
             footer {
@@ -580,9 +593,9 @@
                     <h2 class="card-title">Foro</h2>
                     <p class="card-text">Comunidad activa para discutir sobre seguridad, inmuebles, autos y todos los servicios de Vortex.</p>
                 </a>
-                <a class="card" href="/pricing" title="Planes y precios de Vortex" aria-label="Ver planes de Vortex: Desde gratis hasta empresarial" itemscope itemtype="https://schema.org/Offer">
+                <a class="card" href="/pricing" title="Planes y precios de Vortex" aria-label="Ver planes de Vortex: Desde gratis hasta premium" itemscope itemtype="https://schema.org/Offer">
                     <h2 class="card-title">Gratis para siempre</h2>
-                    <p class="card-text">Desde gratis hasta empresarial. Elegí el plan que se adapte a tus necesidades y objetivos.</p>
+                    <p class="card-text">Desde gratis hasta premium. Elegí el plan que se adapte a tus necesidades y objetivos.</p>
                 </a>
             </aside>
         </main>

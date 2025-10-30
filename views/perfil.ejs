@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <%- include('partials/theme-init') %>
     <link rel="stylesheet" href="/css/style.css">
     <script src="/js/theme-toggle.js" defer></script>
@@ -93,21 +94,6 @@
         .subscription-badge.pro {
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3);
-        }
-
-        .subscription-badge.business {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            box-shadow: 0 2px 8px rgba(67, 233, 123, 0.3);
-        }
-
-        .subscription-badge.enterprise {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            box-shadow: 0 2px 8px rgba(250, 112, 154, 0.3);
-        }
-
-        .subscription-badge.white-label {
-            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
-            box-shadow: 0 2px 8px rgba(48, 207, 208, 0.3);
         }
 
         .upgrade-section {
@@ -397,7 +383,7 @@
 
                 <!-- Upgrade Section (only shown for free users) -->
                 <div id="upgradeSection" class="upgrade-section" style="display: none;">
-                    <h3>✨ Desbloquea todo el potencial de VORTEX</h3>
+                    <h3>Desbloquea todo el potencial de VORTEX</h3>
                     <p>Accede a reportes ilimitados, alertas personalizadas, datos históricos y mucho más con nuestros planes premium.</p>
                     <a href="/pricing" class="btn">Ver Planes y Precios</a>
                 </div>
@@ -717,10 +703,7 @@
             const planNames = {
                 'free': 'Free',
                 'premium': 'Premium',
-                'pro': 'Pro',
-                'business': 'Business',
-                'enterprise': 'Enterprise',
-                'white-label': 'White Label'
+                'pro': 'Pro'
             };
 
             const subscriptionBadge = document.getElementById('userSubscription');

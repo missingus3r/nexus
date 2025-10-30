@@ -9,15 +9,15 @@ const subscriptionSchema = new mongoose.Schema({
   },
   plan: {
     type: String,
-    enum: ['free', 'premium', 'pro', 'business', 'enterprise', 'white-label'],
+    enum: ['free', 'premium', 'pro'],
     default: 'free',
     required: true
   },
   planType: {
     type: String,
-    enum: ['personal', 'business'],
+    enum: ['personal'],
     required: true,
-    description: 'Type of plan: personal or business'
+    description: 'Type of plan: personal'
   },
   status: {
     type: String,
@@ -71,11 +71,6 @@ const subscriptionSchema = new mongoose.Schema({
       default: false,
       description: 'Access to historical incident data'
     },
-    analytics: {
-      type: Boolean,
-      default: false,
-      description: 'Advanced analytics dashboard'
-    },
     apiAccess: {
       type: Boolean,
       default: false,
@@ -95,16 +90,6 @@ const subscriptionSchema = new mongoose.Schema({
       type: Boolean,
       default: false,
       description: 'Priority customer support'
-    },
-    whiteLabel: {
-      type: Boolean,
-      default: false,
-      description: 'White-label platform customization'
-    },
-    noAds: {
-      type: Boolean,
-      default: false,
-      description: 'Ad-free experience'
     }
   },
   metadata: {
@@ -161,73 +146,28 @@ subscriptionSchema.statics.getPlanFeatures = function(planName) {
       incidentReportsPerMonth: 5,
       customAlerts: false,
       historicalData: false,
-      analytics: false,
       apiAccess: false,
       surlinkHighlights: 0,
       surlinkFavorites: false,
-      prioritySupport: false,
-      whiteLabel: false,
-      noAds: false
+      prioritySupport: false
     },
     premium: {
       incidentReportsPerMonth: -1, // unlimited
       customAlerts: true,
       historicalData: true,
-      analytics: false,
       apiAccess: false,
       surlinkHighlights: 0,
       surlinkFavorites: true,
-      prioritySupport: false,
-      whiteLabel: false,
-      noAds: false
+      prioritySupport: false
     },
     pro: {
       incidentReportsPerMonth: -1,
       customAlerts: true,
       historicalData: true,
-      analytics: true,
       apiAccess: true,
       surlinkHighlights: 0,
       surlinkFavorites: true,
-      prioritySupport: false,
-      whiteLabel: false,
-      noAds: true
-    },
-    business: {
-      incidentReportsPerMonth: -1,
-      customAlerts: true,
-      historicalData: true,
-      analytics: true,
-      apiAccess: false,
-      surlinkHighlights: 10,
-      surlinkFavorites: true,
-      prioritySupport: true,
-      whiteLabel: false,
-      noAds: true
-    },
-    enterprise: {
-      incidentReportsPerMonth: -1,
-      customAlerts: true,
-      historicalData: true,
-      analytics: true,
-      apiAccess: true,
-      surlinkHighlights: 30,
-      surlinkFavorites: true,
-      prioritySupport: true,
-      whiteLabel: false,
-      noAds: true
-    },
-    'white-label': {
-      incidentReportsPerMonth: -1,
-      customAlerts: true,
-      historicalData: true,
-      analytics: true,
-      apiAccess: true,
-      surlinkHighlights: -1,
-      surlinkFavorites: true,
-      prioritySupport: true,
-      whiteLabel: true,
-      noAds: true
+      prioritySupport: false
     }
   };
 

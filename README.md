@@ -69,16 +69,6 @@ api/
 └── server.js       # Punto de entrada
 ```
 
-## 🎯 Planes de Suscripción
-
-| Plan | Precio | Características |
-|------|--------|----------------|
-| Free | Gratis | Funcionalidad básica |
-| Premium | $9.99/mes | Reportes ilimitados, alertas personalizadas |
-| Pro | $19.99/mes | Analytics avanzado, API access |
-| Business | $49.99/mes | Listados destacados, soporte prioritario |
-| Enterprise | $149.99/mes | API completa, datos históricos ilimitados |
-
 ## 🛡️ Seguridad
 
 - Autenticación JWT vía Auth0

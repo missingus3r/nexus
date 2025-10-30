@@ -66,18 +66,6 @@ router.get('/settings', async (req, res) => {
           pro: {
             monthly: settings.proMonthly,
             yearly: settings.proYearly
-          },
-          business: {
-            monthly: settings.businessMonthly,
-            yearly: settings.businessYearly
-          },
-          enterprise: {
-            monthly: settings.enterpriseMonthly,
-            yearly: settings.enterpriseYearly
-          },
-          whiteLabel: {
-            monthly: settings.whiteLabelMonthly,
-            yearly: settings.whiteLabelYearly
           }
         }
       }

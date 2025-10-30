@@ -677,7 +677,7 @@ router.get('/subscriptions/stats', requireAdmin, async (req, res) => {
       { $sort: { count: -1 } }
     ]);
 
-    // Subscriptions by type (personal vs business)
+    // Subscriptions by type
     const subscriptionsByType = await Subscription.aggregate([
       { $match: { status: 'active' } },
       {
@@ -1595,13 +1595,7 @@ router.put('/pricing/settings', requireAdmin, async (req, res) => {
       premiumMonthly,
       premiumYearly,
       proMonthly,
-      proYearly,
-      businessMonthly,
-      businessYearly,
-      enterpriseMonthly,
-      enterpriseYearly,
-      whiteLabelMonthly,
-      whiteLabelYearly
+      proYearly
     } = req.body;
 
     const updates = {};
@@ -1610,12 +1604,6 @@ router.put('/pricing/settings', requireAdmin, async (req, res) => {
     if (premiumYearly !== undefined) updates.premiumYearly = Number(premiumYearly);
     if (proMonthly !== undefined) updates.proMonthly = Number(proMonthly);
     if (proYearly !== undefined) updates.proYearly = Number(proYearly);
-    if (businessMonthly !== undefined) updates.businessMonthly = Number(businessMonthly);
-    if (businessYearly !== undefined) updates.businessYearly = Number(businessYearly);
-    if (enterpriseMonthly !== undefined) updates.enterpriseMonthly = Number(enterpriseMonthly);
-    if (enterpriseYearly !== undefined) updates.enterpriseYearly = Number(enterpriseYearly);
-    if (whiteLabelMonthly !== undefined) updates.whiteLabelMonthly = Number(whiteLabelMonthly);
-    if (whiteLabelYearly !== undefined) updates.whiteLabelYearly = Number(whiteLabelYearly);
 
     const settings = await PricingSettings.updateSettings(updates);
 

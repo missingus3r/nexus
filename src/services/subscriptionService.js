@@ -28,9 +28,7 @@ class SubscriptionService {
           ],
           limitations: [
             'Sin alertas personalizadas',
-            'Sin datos históricos',
-            'Sin analytics',
-            'Publicidad incluida'
+            'Sin datos históricos'
           ],
           popular: false
         },
@@ -49,9 +47,7 @@ class SubscriptionService {
             'Todo lo del plan Free'
           ],
           limitations: [
-            'Sin analytics avanzado',
-            'Sin acceso a la API',
-            'Publicidad incluida'
+            'Sin acceso a la API'
           ],
           popular: true
         },
@@ -65,73 +61,8 @@ class SubscriptionService {
             'Dashboard de analytics avanzado',
             'Acceso a la API REST',
             'Exportación de datos (PDF/Excel)',
-            'Experiencia sin publicidad',
             'Soporte prioritario vía email',
             'Todo lo del plan Premium'
-          ],
-          limitations: [],
-          popular: false
-        }
-      ],
-      business: [
-        {
-          id: 'business',
-          name: 'Business',
-          description: 'Para inmobiliarias y concesionarias',
-          priceMonthly: { usd: 50, uyu: 2200 },
-          priceYearly: { usd: 540, uyu: 23760 }, // 10% discount
-          features: [
-            '10 publicaciones destacadas/mes en Surlink',
-            'Analytics de vistas y contactos',
-            'Reportes ilimitados de incidentes',
-            'Acceso a datos históricos de zonas',
-            'Alertas de seguridad personalizadas',
-            'Sin publicidad',
-            'Soporte prioritario'
-          ],
-          limitations: [
-            'Sin acceso a la API',
-            'Sin white-label'
-          ],
-          popular: true
-        },
-        {
-          id: 'enterprise',
-          name: 'Enterprise',
-          description: 'Para grandes empresas y corporaciones',
-          priceMonthly: { usd: 150, uyu: 6600 },
-          priceYearly: { usd: 1620, uyu: 71280 }, // 10% discount
-          features: [
-            '30 publicaciones destacadas/mes en Surlink',
-            'Analytics avanzado con exportación',
-            'Acceso completo a la API',
-            'Dashboard corporativo personalizado',
-            'Integración con sistemas propios',
-            'Soporte técnico prioritario',
-            'Sin publicidad',
-            'Todo lo del plan Business'
-          ],
-          limitations: [
-            'Sin white-label completo'
-          ],
-          popular: false
-        },
-        {
-          id: 'white-label',
-          name: 'White-Label',
-          description: 'Plataforma completa para tu ciudad o región',
-          priceMonthly: { usd: 500, uyu: 22000 },
-          priceYearly: { usd: 5400, uyu: 237600 }, // 10% discount
-          features: [
-            'Plataforma completa personalizada',
-            'Publicaciones destacadas ilimitadas',
-            'Branding personalizado',
-            'Dominio propio incluido',
-            'API completa sin restricciones',
-            'Soporte técnico dedicado',
-            'Setup y configuración incluidos',
-            'Actualizaciones y mantenimiento',
-            'Todo lo del plan Enterprise'
           ],
           limitations: [],
           popular: false
@@ -144,7 +75,7 @@ class SubscriptionService {
    * Create a new subscription for a user
    * @param {string} userId - User ID
    * @param {string} plan - Plan ID
-   * @param {string} planType - 'personal' or 'business'
+   * @param {string} planType - 'personal'
    * @param {string} billingCycle - 'monthly' or 'yearly'
    * @returns {Promise<Object>} - Created subscription
    */

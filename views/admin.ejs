@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <%- include('partials/theme-init') %>
     <link rel="stylesheet" href="/css/style.css">
     <script src="/js/theme-toggle.js" defer></script>
@@ -661,9 +662,6 @@
                                 <option value="free">Free</option>
                                 <option value="premium">Premium</option>
                                 <option value="pro">Pro</option>
-                                <option value="business">Business</option>
-                                <option value="enterprise">Enterprise</option>
-                                <option value="white-label">White-Label</option>
                             </select>
                         </div>
                         <div class="filter-group">
@@ -671,7 +669,6 @@
                             <select id="filterPlanType" onchange="applyFilters()">
                                 <option value="">Todos</option>
                                 <option value="personal">Personal</option>
-                                <option value="business">Empresarial</option>
                             </select>
                         </div>
                         <div class="filter-group" style="display: flex; align-items: flex-end;">
@@ -908,7 +905,7 @@
 
             <!-- Pricing Management -->
             <div class="surlink-controls">
-                <h2>💰 Gestión de Precios</h2>
+                <h2>Gestión de Precios</h2>
                 <p>
                     Configura los precios de cada plan y el valor del dólar para conversión a pesos UYU.
                 </p>
@@ -930,7 +927,7 @@
 
                     <!-- Premium Plan -->
                     <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
-                        <h4 style="margin-bottom: 1rem;">✨ Plan Premium</h4>
+                        <h4 style="margin-bottom: 1rem;">Plan Premium</h4>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
                             <div class="control-group">
                                 <label for="premiumMonthly">
@@ -950,7 +947,7 @@
 
                     <!-- Pro Plan -->
                     <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
-                        <h4 style="margin-bottom: 1rem;">🚀 Plan Pro</h4>
+                        <h4 style="margin-bottom: 1rem;">Plan Pro</h4>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
                             <div class="control-group">
                                 <label for="proMonthly">
@@ -963,63 +960,6 @@
                                     Precio Anual (USD)
                                 </label>
                                 <input type="number" id="proYearly" min="0" step="0.01" placeholder="54" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Business Plan -->
-                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
-                        <h4 style="margin-bottom: 1rem;">🏢 Plan Business</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-                            <div class="control-group">
-                                <label for="businessMonthly">
-                                    Precio Mensual (USD)
-                                </label>
-                                <input type="number" id="businessMonthly" min="0" step="0.01" placeholder="15" />
-                            </div>
-                            <div class="control-group">
-                                <label for="businessYearly">
-                                    Precio Anual (USD)
-                                </label>
-                                <input type="number" id="businessYearly" min="0" step="0.01" placeholder="162" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Enterprise Plan -->
-                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
-                        <h4 style="margin-bottom: 1rem;">🏆 Plan Enterprise</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-                            <div class="control-group">
-                                <label for="enterpriseMonthly">
-                                    Precio Mensual (USD)
-                                </label>
-                                <input type="number" id="enterpriseMonthly" min="0" step="0.01" placeholder="50" />
-                            </div>
-                            <div class="control-group">
-                                <label for="enterpriseYearly">
-                                    Precio Anual (USD)
-                                </label>
-                                <input type="number" id="enterpriseYearly" min="0" step="0.01" placeholder="540" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- White Label Plan -->
-                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                        <h4 style="margin-bottom: 1rem;">⚪ Plan White-Label</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-                            <div class="control-group">
-                                <label for="whiteLabelMonthly">
-                                    Precio Mensual (USD)
-                                </label>
-                                <input type="number" id="whiteLabelMonthly" min="0" step="0.01" placeholder="100" />
-                            </div>
-                            <div class="control-group">
-                                <label for="whiteLabelYearly">
-                                    Precio Anual (USD)
-                                </label>
-                                <input type="number" id="whiteLabelYearly" min="0" step="0.01" placeholder="1080" />
                             </div>
                         </div>
                     </div>
@@ -1460,10 +1400,7 @@
             const planLabels = {
                 'free': 'Free',
                 'premium': 'Premium',
-                'pro': 'Pro',
-                'business': 'Business',
-                'enterprise': 'Enterprise',
-                'white-label': 'White-Label'
+                'pro': 'Pro'
             };
 
             container.innerHTML = `
@@ -1520,14 +1457,10 @@
 
                 <div style="margin-top: 2rem;">
                     <h3 style="margin-bottom: 1rem;">Por Tipo</h3>
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
                         <div class="stat-card">
                             <h3>Personales</h3>
                             <div class="value" style="font-size: 2rem;">${stats.byType.personal || 0}</div>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Empresariales</h3>
-                            <div class="value" style="font-size: 2rem;">${stats.byType.business || 0}</div>
                         </div>
                     </div>
                 </div>
@@ -1551,10 +1484,7 @@
             const planLabels = {
                 'free': 'Free',
                 'premium': 'Premium',
-                'pro': 'Pro',
-                'business': 'Business',
-                'enterprise': 'Enterprise',
-                'white-label': 'White-Label'
+                'pro': 'Pro'
             };
 
             const statusLabels = {
@@ -1693,10 +1623,7 @@
                 const planLabels = {
                     'free': 'Free',
                     'premium': 'Premium',
-                    'pro': 'Pro',
-                    'business': 'Business',
-                    'enterprise': 'Enterprise',
-                    'white-label': 'White-Label'
+                    'pro': 'Pro'
                 };
 
                 planDistributionChart = new Chart(planCtx, {
@@ -2367,12 +2294,6 @@
                 document.getElementById('premiumYearly').value = settings.premiumYearly;
                 document.getElementById('proMonthly').value = settings.proMonthly;
                 document.getElementById('proYearly').value = settings.proYearly;
-                document.getElementById('businessMonthly').value = settings.businessMonthly;
-                document.getElementById('businessYearly').value = settings.businessYearly;
-                document.getElementById('enterpriseMonthly').value = settings.enterpriseMonthly;
-                document.getElementById('enterpriseYearly').value = settings.enterpriseYearly;
-                document.getElementById('whiteLabelMonthly').value = settings.whiteLabelMonthly;
-                document.getElementById('whiteLabelYearly').value = settings.whiteLabelYearly;
             } catch (error) {
                 console.error('Error loading pricing settings:', error);
                 const statusDiv = document.getElementById('pricingSettingsStatus');
@@ -2388,13 +2309,7 @@
                     premiumMonthly: parseFloat(document.getElementById('premiumMonthly').value),
                     premiumYearly: parseFloat(document.getElementById('premiumYearly').value),
                     proMonthly: parseFloat(document.getElementById('proMonthly').value),
-                    proYearly: parseFloat(document.getElementById('proYearly').value),
-                    businessMonthly: parseFloat(document.getElementById('businessMonthly').value),
-                    businessYearly: parseFloat(document.getElementById('businessYearly').value),
-                    enterpriseMonthly: parseFloat(document.getElementById('enterpriseMonthly').value),
-                    enterpriseYearly: parseFloat(document.getElementById('enterpriseYearly').value),
-                    whiteLabelMonthly: parseFloat(document.getElementById('whiteLabelMonthly').value),
-                    whiteLabelYearly: parseFloat(document.getElementById('whiteLabelYearly').value)
+                    proYearly: parseFloat(document.getElementById('proYearly').value)
                 };
 
                 const response = await fetch('/api/admin/pricing/settings', {

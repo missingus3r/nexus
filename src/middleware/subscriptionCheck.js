@@ -130,11 +130,6 @@ export const checkUsageLimit = (limitName) => {
 };
 
 /**
- * Middleware to check if user has a business plan
- */
-export const requireBusinessPlan = requireSubscription(['business', 'enterprise', 'white-label']);
-
-/**
  * Middleware to check if user is on premium or higher
  */
-export const requirePremium = requireSubscription(['premium', 'pro', 'business', 'enterprise', 'white-label']);
+export const requirePremium = requireSubscription(['premium', 'pro']);

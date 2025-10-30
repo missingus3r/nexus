@@ -136,6 +136,38 @@ header {
     position: static;
 }
 
+/* Hamburger Menu */
+.hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    z-index: 1001;
+}
+
+.hamburger span {
+    width: 24px;
+    height: 2px;
+    background: var(--text-primary);
+    transition: all 0.3s ease;
+    border-radius: 2px;
+}
+
+.hamburger.active span:nth-child(1) {
+    transform: rotate(45deg) translate(7px, 7px);
+}
+
+.hamburger.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
+}
+
 footer {
     display: flex;
     align-items: center;
@@ -326,11 +358,6 @@ input:checked + .slider:before {
     background: rgba(12, 15, 32, 0.65);
 }
 
-.plan-card.business {
-    background: rgba(12, 15, 32, 0.55);
-    border-color: rgba(16, 198, 255, 0.3);
-}
-
 .popular-badge {
     position: absolute;
     top: -14px;
@@ -465,16 +492,6 @@ input:checked + .slider:before {
     transform: translateY(-3px);
 }
 
-.btn-plan.btn-business {
-    border-color: rgba(16, 198, 255, 0.4);
-    background: rgba(16, 198, 255, 0.1);
-}
-
-.btn-plan.btn-business:hover {
-    background: rgba(16, 198, 255, 0.2);
-    border-color: rgba(16, 198, 255, 0.6);
-}
-
 /* FAQ Section */
 .faq-section {
     margin-bottom: 4rem;
@@ -572,6 +589,63 @@ input:checked + .slider:before {
 .btn-cta:hover {
     transform: translateY(-3px);
     box-shadow: 0 20px 45px rgba(124, 92, 255, 0.45);
+}
+
+/* Mobile & Tablet - Hamburger Menu */
+@media (max-width: 768px) {
+    .hamburger {
+        display: flex;
+    }
+
+    .page-nav .nav-links {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 280px;
+        height: 100vh;
+        background: rgba(6, 7, 15, 0.98);
+        backdrop-filter: blur(20px);
+        border-left: 1px solid rgba(124, 92, 255, 0.2);
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 80px 32px 32px;
+        gap: 24px;
+        transition: right 0.3s ease;
+        z-index: 1000;
+        box-shadow: -5px 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .page-nav .nav-links.active {
+        right: 0;
+    }
+
+    .page-nav .nav-links a {
+        width: 100%;
+        padding: 12px 0;
+        font-size: 1.1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .page-nav .nav-links a.platform-btn {
+        background: none;
+        box-shadow: none;
+        padding: 12px 0;
+        color: var(--accent) !important;
+    }
+
+    .page-nav .nav-links a:last-child {
+        border-bottom: none;
+    }
+
+    header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .page-nav {
+        position: relative;
+    }
 }
 
 /* Tablet Styles */

@@ -18,16 +18,6 @@ const pricingSettingsSchema = new mongoose.Schema({
   proMonthly: { type: Number, default: 5, min: 0 },
   proYearly: { type: Number, default: 54, min: 0 }, // 5 * 12 * 0.9
 
-  // Business plans
-  businessMonthly: { type: Number, default: 15, min: 0 },
-  businessYearly: { type: Number, default: 162, min: 0 }, // 15 * 12 * 0.9
-
-  enterpriseMonthly: { type: Number, default: 50, min: 0 },
-  enterpriseYearly: { type: Number, default: 540, min: 0 }, // 50 * 12 * 0.9
-
-  whiteLabelMonthly: { type: Number, default: 100, min: 0 },
-  whiteLabelYearly: { type: Number, default: 1080, min: 0 }, // 100 * 12 * 0.9
-
   updatedAt: { type: Date, default: Date.now }
 }, {
   timestamps: true
