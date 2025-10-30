@@ -125,10 +125,39 @@ export const auth0Middleware = (req, res, next) => {
  * Use this to protect routes that require authentication
  */
 export const requireAuth = (req, res, next) => {
-  if (!req.oidc.isAuthenticated()) {
+  try {
+    // Check if oidc is available
+    if (!req.oidc) {
+      logger.error('OIDC context not available in requireAuth middleware');
+      return res.status(500).json({
+        error: 'Authentication system not properly initialized',
+        details: 'OIDC context missing'
+      });
+    }
+
+    // Check if user is authenticated
+    if (!req.oidc.isAuthenticated || !req.oidc.isAuthenticated()) {
+      // If this is an API request, return JSON error
+      if (req.path.startsWith('/api/')) {
+        return res.status(401).json({ error: 'No autenticado' });
+      }
+      // Otherwise redirect to login
+      return res.redirect('/login');
+    }
+
+    next();
+  } catch (error) {
+    logger.error('Error in requireAuth middleware:', error);
+    // If this is an API request, return JSON error
+    if (req.path.startsWith('/api/')) {
+      return res.status(500).json({
+        error: 'Error de autenticación',
+        message: error.message
+      });
+    }
+    // Otherwise redirect to login
     return res.redirect('/login');
   }
-  next();
 };
 
 /**

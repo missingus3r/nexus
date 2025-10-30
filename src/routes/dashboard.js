@@ -12,14 +12,24 @@ const router = express.Router();
  * Dashboard home page
  * Requires authentication
  */
-router.get('/dashboard', requireAuth, async (req, res) => {
+router.get('/dashboard', requireAuth, async (req, res, next) => {
   try {
+    // Verify user info is available
+    if (!req.oidc || !req.oidc.user) {
+      console.error('Dashboard: User info not available in OIDC context');
+      return res.status(500).json({
+        error: 'User information not available',
+        details: 'OIDC user context missing'
+      });
+    }
+
     res.render('dashboard', {
       title: 'Dashboard - Vortex'
     });
   } catch (error) {
     console.error('Error rendering dashboard:', error);
-    res.status(500).send('Error al cargar el dashboard');
+    // Pass error to errorHandler middleware
+    next(error);
   }
 });
 
@@ -27,8 +37,17 @@ router.get('/dashboard', requireAuth, async (req, res) => {
  * API endpoint to get dashboard data
  * Returns latest alerts, surlink posts, forum threads, and notifications
  */
-router.get('/api/dashboard/data', requireAuth, async (req, res) => {
+router.get('/api/dashboard/data', requireAuth, async (req, res, next) => {
   try {
+    // Verify OIDC context exists
+    if (!req.oidc || !req.oidc.user) {
+      console.error('Dashboard data: OIDC user context not available');
+      return res.status(500).json({
+        error: 'Authentication context not available',
+        details: 'OIDC user missing'
+      });
+    }
+
     const userEmail = req.oidc.user?.email;
 
     if (!userEmail) {
@@ -130,14 +149,19 @@ router.get('/api/dashboard/data', requireAuth, async (req, res) => {
 
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
-    res.status(500).json({ error: 'Error al cargar los datos del dashboard' });
+    // Return detailed error in development, generic in production
+    res.status(500).json({
+      error: 'Error al cargar los datos del dashboard',
+      message: process.env.NODE_ENV === 'production' ? undefined : error.message,
+      stack: process.env.NODE_ENV === 'production' ? undefined : error.stack
+    });
   }
 });
 
 /**
  * Mark notification as read
  */
-router.patch('/api/dashboard/notifications/:id/read', requireAuth, async (req, res) => {
+router.patch('/api/dashboard/notifications/:id/read', requireAuth, async (req, res, next) => {
   try {
     const userEmail = req.oidc.user?.email;
     const notificationId = req.params.id;
@@ -173,7 +197,7 @@ router.patch('/api/dashboard/notifications/:id/read', requireAuth, async (req, r
 /**
  * Mark all notifications as read
  */
-router.post('/api/dashboard/notifications/read-all', requireAuth, async (req, res) => {
+router.post('/api/dashboard/notifications/read-all', requireAuth, async (req, res, next) => {
   try {
     const userEmail = req.oidc.user?.email;
 
