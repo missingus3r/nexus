@@ -88,9 +88,10 @@ function getAuth0Config() {
           logger.info(`User updated: ${email}`);
         }
 
-        // Store redirect info in session
-        session.redirectTo = isAdmin ? '/admin' : '/dashboard';
-        session.userId = user._id.toString();
+        // Store redirect info in user object so it's accessible in req.oidc.user
+        session.user.redirectTo = isAdmin ? '/admin' : '/dashboard';
+        session.user.userId = user._id.toString();
+        session.user.dbRole = user.role; // Store DB role
 
         return session;
       } catch (error) {
