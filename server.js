@@ -37,6 +37,9 @@ import { errorHandler } from './src/middleware/errorHandler.js';
 import { rateLimiter } from './src/middleware/rateLimiter.js';
 import { trackPageVisit } from './src/middleware/pageTracking.js';
 
+// Auth0
+import { auth0Middleware, setupOidcLocals } from './src/config/auth0.js';
+
 // Sockets
 import { initializeSocketHandlers } from './src/sockets/eventHandlers.js';
 
@@ -75,6 +78,9 @@ app.use(session({
   }
 }));
 
+// Auth0 middleware - attaches /login, /logout, and /callback routes
+app.use(auth0Middleware);
+
 // Middleware
 app.use(helmet({
   contentSecurityPolicy: false // Allow inline scripts for MapLibre
@@ -99,9 +105,16 @@ mongoose.connect(process.env.MONGO_URI)
 app.set('io', io);
 
 // Middleware to pass user to all views
+// This integrates both the legacy session-based auth and Auth0
 app.use((req, res, next) => {
-  res.locals.user = req.session.user || null;
-  res.locals.isAuthenticated = !!req.session.user;
+  // Check Auth0 authentication
+  const oidcUser = req.oidc?.user || null;
+  const isOidcAuthenticated = req.oidc?.isAuthenticated() || false;
+
+  // Prefer Auth0 user if authenticated, fallback to session user
+  res.locals.user = isOidcAuthenticated ? oidcUser : (req.session.user || null);
+  res.locals.isAuthenticated = isOidcAuthenticated || !!req.session.user;
+  res.locals.oidc = req.oidc; // Make OIDC context available in views
   next();
 });
 
@@ -131,6 +144,111 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     mongo: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
   });
+});
+
+// Auth0 test route
+app.get('/auth-status', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Auth0 Status</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          max-width: 800px;
+          margin: 50px auto;
+          padding: 20px;
+          background-color: #f5f5f5;
+        }
+        .container {
+          background-color: white;
+          padding: 30px;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+          padding: 15px;
+          margin: 20px 0;
+          border-radius: 4px;
+        }
+        .authenticated {
+          background-color: #d4edda;
+          color: #155724;
+          border: 1px solid #c3e6cb;
+        }
+        .not-authenticated {
+          background-color: #f8d7da;
+          color: #721c24;
+          border: 1px solid #f5c6cb;
+        }
+        .user-info {
+          background-color: #e7f3ff;
+          padding: 15px;
+          border-radius: 4px;
+          margin: 20px 0;
+        }
+        .button {
+          display: inline-block;
+          padding: 10px 20px;
+          margin: 10px 5px;
+          background-color: #007bff;
+          color: white;
+          text-decoration: none;
+          border-radius: 4px;
+          transition: background-color 0.3s;
+        }
+        .button:hover {
+          background-color: #0056b3;
+        }
+        .logout-button {
+          background-color: #dc3545;
+        }
+        .logout-button:hover {
+          background-color: #c82333;
+        }
+        pre {
+          background-color: #f4f4f4;
+          padding: 15px;
+          border-radius: 4px;
+          overflow-x: auto;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>🔐 Auth0 Integration Status</h1>
+
+        <div class="status ${req.oidc.isAuthenticated() ? 'authenticated' : 'not-authenticated'}">
+          <strong>Authentication Status:</strong> ${req.oidc.isAuthenticated() ? '✅ Logged in' : '❌ Logged out'}
+        </div>
+
+        ${req.oidc.isAuthenticated() ? `
+          <div class="user-info">
+            <h3>User Information</h3>
+            <pre>${JSON.stringify(req.oidc.user, null, 2)}</pre>
+          </div>
+          <a href="/logout" class="button logout-button">Logout</a>
+        ` : `
+          <p>You are not currently logged in. Click the button below to authenticate with Auth0.</p>
+          <a href="/login" class="button">Login with Auth0</a>
+        `}
+
+        <hr style="margin: 30px 0;">
+
+        <h3>Available Routes</h3>
+        <ul>
+          <li><code>/login</code> - Redirect to Auth0 login</li>
+          <li><code>/logout</code> - Logout and redirect to homepage</li>
+          <li><code>/callback</code> - Auth0 callback handler (automatic)</li>
+          <li><code>/auth-status</code> - This page (authentication status)</li>
+        </ul>
+
+        <a href="/" class="button">← Back to Home</a>
+      </div>
+    </body>
+    </html>
+  `);
 });
 
 // Error handler (must be last)
