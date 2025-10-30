@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <%- include('partials/theme-init') %>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/theme-toggle.js" defer></script>
+    <style>
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .dashboard-header h1 {
+            color: var(--text-primary);
+            font-size: 2rem;
+            margin: 0;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color);
+        }
+
+        .user-details h3 {
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .user-details p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .notifications-btn {
+            position: relative;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background-color 0.3s;
+        }
+
+        .notifications-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .notification-badge {
+            background: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px var(--shadow-elevation);
+            border: 1px solid var(--border-color);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .card-header h2 {
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-header .icon {
+            font-size: 1.5rem;
+        }
+
+        .view-all-btn {
+            background: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .view-all-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .item {
+            padding: 1rem;
+            background: var(--background);
+            border-radius: 8px;
+            border-left: 3px solid var(--primary-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px var(--shadow-elevation);
+        }
+
+        .item h3 {
+            color: var(--text-primary);
+            font-size: 1rem;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .item p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .item-meta {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .item-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .severity-1, .severity-2 {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .severity-3 {
+            background: #FFC107;
+            color: #333;
+        }
+
+        .severity-4, .severity-5 {
+            background: #F44336;
+            color: white;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px var(--shadow-elevation);
+            animation: slideUp 0.3s;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .close-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .close-btn:hover {
+            background: var(--background);
+        }
+
+        .notification-item {
+            padding: 1rem;
+            background: var(--background);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--primary-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .notification-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px var(--shadow-elevation);
+        }
+
+        .notification-item.unread {
+            background: var(--primary-color-light, #e3f2fd);
+            border-left-color: var(--primary-color);
+        }
+
+        .notification-item h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .notification-item p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .notification-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .mark-all-read-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .mark-all-read-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 1rem;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/navbar') %>
+
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <div>
+                <h1>Bienvenido a Vortex</h1>
+                <p style="color: var(--text-secondary); margin-top: 0.5rem;">Tu resumen de actividad reciente</p>
+            </div>
+            <div class="user-info">
+                <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
+                <div class="user-details">
+                    <h3 id="userName">Cargando...</h3>
+                    <p id="userEmail">usuario@ejemplo.com</p>
+                </div>
+                <button class="notifications-btn" onclick="openNotificationsModal()">
+                    🔔 Notificaciones
+                    <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Centinel Alerts Card -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h2><span class="icon">🚨</span> Alertas de Centinel</h2>
+                    <a href="/centinel" class="view-all-btn">Ver todas</a>
+                </div>
+                <div class="item-list" id="centinelList">
+                    <div class="loading">Cargando alertas...</div>
+                </div>
+            </div>
+
+            <!-- Surlink Posts Card -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h2><span class="icon">🏠</span> Nuevos en Surlink</h2>
+                    <a href="/surlink" class="view-all-btn">Ver todas</a>
+                </div>
+                <div class="item-list" id="surlinkList">
+                    <div class="loading">Cargando publicaciones...</div>
+                </div>
+            </div>
+
+            <!-- Forum Threads Card -->
+            <div class="dashboard-card">
+                <div class="card-header">
+                    <h2><span class="icon">💬</span> Foro Vortex</h2>
+                    <a href="/forum-vortex" class="view-all-btn">Ver todas</a>
+                </div>
+                <div class="item-list" id="forumList">
+                    <div class="loading">Cargando discusiones...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div id="notificationsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔔 Notificaciones</h2>
+                <button class="close-btn" onclick="closeNotificationsModal()">×</button>
+            </div>
+            <div id="notificationsList">
+                <div class="loading">Cargando notificaciones...</div>
+            </div>
+            <button class="mark-all-read-btn" onclick="markAllAsRead()">Marcar todas como leídas</button>
+        </div>
+    </div>
+
+    <script>
+        let dashboardData = null;
+
+        // Load dashboard data on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadDashboardData();
+        });
+
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/dashboard/data');
+                const result = await response.json();
+
+                if (result.success) {
+                    dashboardData = result.data;
+                    renderDashboard(dashboardData);
+                } else {
+                    console.error('Error loading dashboard:', result.error);
+                }
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+            }
+        }
+
+        function renderDashboard(data) {
+            // Render user info
+            document.getElementById('userName').textContent = data.user.name;
+            document.getElementById('userEmail').textContent = data.user.email;
+            document.getElementById('userAvatar').src = data.user.picture || '/images/default-avatar.png';
+
+            // Update notification badge
+            if (data.unreadNotificationsCount > 0) {
+                document.getElementById('notificationBadge').textContent = data.unreadNotificationsCount;
+                document.getElementById('notificationBadge').style.display = 'inline-block';
+            } else {
+                document.getElementById('notificationBadge').style.display = 'none';
+            }
+
+            // Render Centinel alerts
+            renderCentinelAlerts(data.incidents);
+
+            // Render Surlink posts
+            renderSurlinkPosts(data.surlinkPosts);
+
+            // Render forum threads
+            renderForumThreads(data.forumThreads);
+        }
+
+        function renderCentinelAlerts(incidents) {
+            const container = document.getElementById('centinelList');
+
+            if (incidents.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>No hay alertas recientes</p></div>';
+                return;
+            }
+
+            container.innerHTML = incidents.map(incident => {
+                const typeLabels = {
+                    'homicidio': 'Homicidio',
+                    'rapiña': 'Rapiña',
+                    'hurto': 'Hurto',
+                    'copamiento': 'Copamiento',
+                    'violencia_domestica': 'Violencia Doméstica',
+                    'narcotrafico': 'Narcotráfico',
+                    'otro': 'Otro'
+                };
+
+                const date = new Date(incident.createdAt);
+                const timeAgo = getTimeAgo(date);
+
+                return `
+                    <div class="item">
+                        <h3>${typeLabels[incident.type] || incident.type}</h3>
+                        <p>${incident.description || 'Sin descripción'}</p>
+                        <div class="item-meta">
+                            <span class="severity-badge severity-${incident.severity}">Nivel ${incident.severity}</span>
+                            <span>📍 ${incident.neighborhood || 'Ubicación desconocida'}</span>
+                            <span>🕒 ${timeAgo}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderSurlinkPosts(posts) {
+            const container = document.getElementById('surlinkList');
+
+            if (posts.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>No hay publicaciones recientes</p></div>';
+                return;
+            }
+
+            container.innerHTML = posts.map(post => {
+                const categoryLabels = {
+                    'casas': 'Inmuebles',
+                    'autos': 'Autos',
+                    'academy': 'Academia'
+                };
+
+                const date = new Date(post.createdAt);
+                const timeAgo = getTimeAgo(date);
+
+                const price = post.price?.amount
+                    ? `${post.price.currency} ${post.price.amount.toLocaleString()}`
+                    : 'Consultar';
+
+                return `
+                    <div class="item" onclick="window.location.href='/surlink?id=${post.id}'">
+                        <h3>${post.title}</h3>
+                        <div class="item-meta">
+                            <span class="category-badge">${categoryLabels[post.category] || post.category}</span>
+                            <span>💰 ${price}</span>
+                            <span>📍 ${post.city || 'Sin ubicación'}</span>
+                            <span>🕒 ${timeAgo}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderForumThreads(threads) {
+            const container = document.getElementById('forumList');
+
+            if (threads.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>No hay discusiones recientes</p></div>';
+                return;
+            }
+
+            container.innerHTML = threads.map(thread => {
+                const date = new Date(thread.createdAt);
+                const timeAgo = getTimeAgo(date);
+
+                return `
+                    <div class="item" onclick="window.location.href='/forum-thread/${thread.id}'">
+                        <h3>${thread.title}</h3>
+                        <div class="item-meta">
+                            ${thread.hashtags.slice(0, 3).map(tag =>
+                                `<span class="category-badge">#${tag}</span>`
+                            ).join('')}
+                            <span>❤️ ${thread.likesCount}</span>
+                            <span>💬 ${thread.commentsCount}</span>
+                            <span>🕒 ${timeAgo}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openNotificationsModal() {
+            const modal = document.getElementById('notificationsModal');
+            modal.classList.add('active');
+            renderNotifications(dashboardData?.notifications || []);
+        }
+
+        function closeNotificationsModal() {
+            const modal = document.getElementById('notificationsModal');
+            modal.classList.remove('active');
+        }
+
+        function renderNotifications(notifications) {
+            const container = document.getElementById('notificationsList');
+
+            if (notifications.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">✅</div><p>No tienes notificaciones pendientes</p></div>';
+                return;
+            }
+
+            container.innerHTML = notifications.map(notification => {
+                const date = new Date(notification.createdAt);
+                const timeAgo = getTimeAgo(date);
+                const unreadClass = !notification.read ? 'unread' : '';
+
+                return `
+                    <div class="notification-item ${unreadClass}" onclick="markNotificationAsRead('${notification._id}')">
+                        <h4>${notification.title}</h4>
+                        <p>${notification.message}</p>
+                        <div class="notification-time">🕒 ${timeAgo}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function markNotificationAsRead(notificationId) {
+            try {
+                const response = await fetch(`/api/dashboard/notifications/${notificationId}/read`, {
+                    method: 'PATCH'
+                });
+
+                if (response.ok) {
+                    // Reload dashboard data
+                    await loadDashboardData();
+                    // Re-render notifications
+                    renderNotifications(dashboardData?.notifications || []);
+                }
+            } catch (error) {
+                console.error('Error marking notification as read:', error);
+            }
+        }
+
+        async function markAllAsRead() {
+            try {
+                const response = await fetch('/api/dashboard/notifications/read-all', {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    // Reload dashboard data
+                    await loadDashboardData();
+                    closeNotificationsModal();
+                }
+            } catch (error) {
+                console.error('Error marking all notifications as read:', error);
+            }
+        }
+
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + ' años';
+
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + ' meses';
+
+            interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) + ' días';
+
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + ' horas';
+
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + ' minutos';
+
+            return 'Hace un momento';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('notificationsModal');
+            if (event.target === modal) {
+                closeNotificationsModal();
+            }
+        };
+    </script>
+</body>
+</html>

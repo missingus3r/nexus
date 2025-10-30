@@ -28,6 +28,7 @@ import notificationRoutes from './src/routes/notifications.js';
 import surlinkRoutes from './src/routes/surlink.js';
 import pricingRoutes from './src/routes/pricing.js';
 import forumRoutes from './src/routes/forum.js';
+import dashboardRoutes from './src/routes/dashboard.js';
 
 // View Routes
 import viewRoutes from './src/routes/views.js';
@@ -38,7 +39,7 @@ import { rateLimiter } from './src/middleware/rateLimiter.js';
 import { trackPageVisit } from './src/middleware/pageTracking.js';
 
 // Auth0
-import { auth0Middleware, setupOidcLocals } from './src/config/auth0.js';
+import { auth0Middleware, setupOidcLocals, handlePostLoginRedirect } from './src/config/auth0.js';
 
 // Sockets
 import { initializeSocketHandlers } from './src/sockets/eventHandlers.js';
@@ -80,6 +81,9 @@ app.use(session({
 
 // Auth0 middleware - attaches /login, /logout, and /callback routes
 app.use(auth0Middleware);
+
+// Handle post-login redirect
+app.use(handlePostLoginRedirect);
 
 // Middleware
 app.use(helmet({
@@ -133,6 +137,9 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/surlink', surlinkRoutes);
 app.use('/api/pricing', pricingRoutes);
 app.use('/api/forum', forumRoutes);
+
+// Dashboard routes (includes both view and API routes)
+app.use('/', dashboardRoutes);
 
 // View Routes (serve HTML pages)
 app.use('/', viewRoutes);

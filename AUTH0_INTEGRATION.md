@@ -14,6 +14,9 @@ AUTH0_SECRET=a-long-randomly-generated-string-stored-in-env
 AUTH0_BASE_URL=http://localhost:3000
 AUTH0_CLIENT_ID=HetyeLu60pGh5IHRO3CgKattM0i52MvP
 AUTH0_ISSUER_BASE_URL=https://dev-prhjewaq2xjvur6a.us.auth0.com
+
+# Admin Configuration
+ADMIN_EMAIL=tu-email-admin@ejemplo.com
 ```
 
 **Importante:** El `AUTH0_SECRET` debe ser una cadena larga y aleatoria. Puedes generarla usando:
@@ -36,6 +39,40 @@ El middleware de Auth0 crea automáticamente las siguientes rutas:
 - `/login` - Redirige al usuario a Auth0 para iniciar sesión
 - `/logout` - Cierra la sesión y redirige al usuario
 - `/callback` - Maneja el callback de Auth0 (no acceder directamente)
+
+## Flujo de Autenticación Post-Login
+
+Después del login exitoso con Auth0:
+
+1. **Usuario Admin** (email coincide con `ADMIN_EMAIL` en .env):
+   - Se crea o actualiza en la base de datos con rol `admin`
+   - Redirección automática a `/admin`
+
+2. **Usuario Regular**:
+   - Se crea o actualiza en la base de datos con rol `user`
+   - Redirección automática a `/dashboard` (página de bienvenida)
+   - El dashboard muestra:
+     - Últimas alertas de Centinel
+     - Nuevas publicaciones en Surlink
+     - Últimas discusiones del foro
+     - Notificaciones del usuario (modal)
+
+## Dashboard de Usuario
+
+La página de dashboard (`/dashboard`) es accesible solo para usuarios autenticados y muestra:
+
+### Características:
+- **Información del usuario**: Avatar, nombre, email
+- **Notificaciones**: Botón con badge que abre modal de notificaciones
+- **Resumen de Centinel**: Últimas 10 alertas de seguridad
+- **Resumen de Surlink**: Últimas 10 publicaciones
+- **Resumen del Foro**: Últimas 10 discusiones
+
+### API Endpoints del Dashboard:
+- `GET /dashboard` - Vista del dashboard
+- `GET /api/dashboard/data` - Obtiene todos los datos del dashboard
+- `PATCH /api/dashboard/notifications/:id/read` - Marca una notificación como leída
+- `POST /api/dashboard/notifications/read-all` - Marca todas las notificaciones como leídas
 
 ## Ruta de Prueba
 

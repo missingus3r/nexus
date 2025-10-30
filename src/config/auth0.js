@@ -1,7 +1,10 @@
 import { auth } from 'express-openid-connect';
+import User from '../models/User.js';
+import logger from '../utils/logger.js';
 
 /**
- * Auth0 Configuration
+ * Get Auth0 Configuration
+ * This function creates the config at runtime to ensure env vars are loaded
  *
  * This configuration uses express-openid-connect to integrate Auth0
  * Automatically creates routes:
@@ -9,26 +12,113 @@ import { auth } from 'express-openid-connect';
  * - /logout - Logs out and redirects
  * - /callback - Auth0 callback handler
  */
-const auth0Config = {
-  authRequired: false,
-  auth0Logout: true,
-  secret: process.env.AUTH0_SECRET,
-  baseURL: process.env.AUTH0_BASE_URL || 'http://localhost:3000',
-  clientID: process.env.AUTH0_CLIENT_ID,
-  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
-  // Additional useful settings
-  routes: {
-    callback: '/callback',
-    login: '/login',
-    logout: '/logout'
-  }
-};
+function getAuth0Config() {
+  return {
+    authRequired: false,
+    auth0Logout: true,
+    secret: process.env.AUTH0_SECRET,
+    baseURL: process.env.AUTH0_BASE_URL || 'http://localhost:3000',
+    clientID: process.env.AUTH0_CLIENT_ID,
+    issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
+    // Additional useful settings
+    routes: {
+      callback: '/callback',
+      login: '/login',
+      logout: '/logout',
+      postLogoutRedirect: '/'
+    },
+    // After successful callback, handle user creation/update
+    afterCallback: async (req, res, session) => {
+      try {
+        const userInfo = session.user;
+        const email = userInfo.email;
+        const auth0Sub = userInfo.sub;
+
+        logger.info(`Auth0 callback - User logged in: ${email}`);
+
+        // Check if user is admin
+        const adminEmail = process.env.ADMIN_EMAIL;
+        const isAdmin = adminEmail && email === adminEmail;
+
+        // Find or create user in database
+        let user = await User.findOne({ email });
+
+        if (!user) {
+          // Create new user
+          user = new User({
+            uid: auth0Sub,
+            auth0Sub: auth0Sub,
+            email: email,
+            name: userInfo.name || email.split('@')[0],
+            picture: userInfo.picture || '',
+            role: isAdmin ? 'admin' : 'user',
+            reputacion: 50,
+            reportCount: 0,
+            validationCount: 0,
+            strikes: 0,
+            banned: false,
+            lastLogin: new Date()
+          });
+
+          await user.save();
+          logger.info(`New user created: ${email} with role: ${user.role}`);
+        } else {
+          // Update existing user
+          user.lastLogin = new Date();
+          user.lastActivity = new Date();
+
+          // Update Auth0 info if changed
+          if (user.auth0Sub !== auth0Sub) {
+            user.auth0Sub = auth0Sub;
+          }
+          if (user.picture !== userInfo.picture) {
+            user.picture = userInfo.picture;
+          }
+          if (user.name !== userInfo.name && userInfo.name) {
+            user.name = userInfo.name;
+          }
+
+          // Update role if admin
+          if (isAdmin && user.role !== 'admin') {
+            user.role = 'admin';
+            logger.info(`User ${email} promoted to admin`);
+          }
+
+          await user.save();
+          logger.info(`User updated: ${email}`);
+        }
+
+        // Store redirect info in session
+        session.redirectTo = isAdmin ? '/admin' : '/dashboard';
+        session.userId = user._id.toString();
+
+        return session;
+      } catch (error) {
+        logger.error('Error in Auth0 afterCallback:', error);
+        // Continue with default behavior even if there's an error
+        return session;
+      }
+    }
+  };
+}
 
 /**
- * Auth0 middleware
- * Attaches /login, /logout, and /callback routes to the baseURL
+ * Auth0 middleware factory
+ * Returns middleware that attaches /login, /logout, and /callback routes to the baseURL
+ * Created lazily to ensure env vars are loaded
  */
-export const auth0Middleware = auth(auth0Config);
+let _auth0Middleware = null;
+export function getAuth0Middleware() {
+  if (!_auth0Middleware) {
+    _auth0Middleware = auth(getAuth0Config());
+  }
+  return _auth0Middleware;
+}
+
+// For backward compatibility, export as middleware function
+export const auth0Middleware = (req, res, next) => {
+  return getAuth0Middleware()(req, res, next);
+};
 
 /**
  * Middleware to check if user is authenticated
@@ -48,5 +138,22 @@ export const requireAuth = (req, res, next) => {
 export const setupOidcLocals = (req, res, next) => {
   res.locals.isAuthenticated = req.oidc.isAuthenticated();
   res.locals.user = req.oidc.user || null;
+  next();
+};
+
+/**
+ * Middleware to handle post-login redirect
+ * Should be placed right after auth0Middleware in server.js
+ */
+export const handlePostLoginRedirect = (req, res, next) => {
+  // Only check for redirect on callback route
+  if (req.path === '/callback' && req.oidc.isAuthenticated()) {
+    const redirectTo = req.oidc.user?.redirectTo;
+
+    if (redirectTo) {
+      logger.info(`Redirecting user to: ${redirectTo}`);
+      return res.redirect(redirectTo);
+    }
+  }
   next();
 };
