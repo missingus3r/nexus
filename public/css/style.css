@@ -406,6 +406,13 @@ body {
     margin: 0;
 }
 
+/* Prevent body scroll when modal is open */
+body.modal-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+}
+
 /* Modal */
 .modal {
     display: none;
@@ -417,12 +424,15 @@ body {
     height: 100%;
     background-color: var(--overlay-color);
     transition: opacity 0.3s ease, transform 0.3s ease;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal.active {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 20px 0;
 }
 
 /* Modal minimized state for location selection */
@@ -443,6 +453,15 @@ body {
         opacity: 0.1;
         transform: scale(0.4) translateY(150%);
     }
+
+    /* Improve modal scrolling on mobile */
+    .modal {
+        align-items: flex-start;
+    }
+
+    .modal.active {
+        padding: 10px 0;
+    }
 }
 
 .modal-content {
@@ -451,11 +470,15 @@ body {
     border-radius: 8px;
     max-width: 500px;
     width: 90%;
-    max-height: 90vh;
+    max-height: calc(100vh - 40px);
     overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
     box-shadow: 0 20px 40px var(--shadow-elevation-strong);
     border: 1px solid var(--border-color);
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    margin: auto;
+    position: relative;
 }
 
 .modal-header {
@@ -732,6 +755,12 @@ body {
 
     .modal-content {
         padding: 1rem;
+        width: 95%;
+        max-height: calc(100vh - 20px);
+    }
+
+    .modal.active {
+        padding: 10px 0;
     }
 }
 
