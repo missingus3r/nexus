@@ -241,7 +241,27 @@
                     throw new Error(data.error || 'Error al programar el scrapping');
                 }
 
-                showSurlinkStatus(data.message || `Scrapping programado para ${label}.`, 'success');
+                let statusMessage = data.message || `Scrapping programado para ${label}.`;
+                const extra = [];
+
+                if (typeof data.processedSources === 'number') {
+                    extra.push(`Fuentes procesadas: ${data.processedSources}`);
+                }
+                if (typeof data.scrapedOffers === 'number') {
+                    extra.push(`Ofertas analizadas: ${data.scrapedOffers}`);
+                }
+                if (typeof data.inserted === 'number' || typeof data.updated === 'number') {
+                    extra.push(`Ingresadas: ${data.inserted ?? 0}, Actualizadas: ${data.updated ?? 0}`);
+                }
+                if (data.implemented === false) {
+                    extra.push('Funcionalidad en preparación');
+                }
+
+                if (extra.length) {
+                    statusMessage = `${statusMessage}\n${extra.join(' • ')}`;
+                }
+
+                showSurlinkStatus(statusMessage, 'success');
             } catch (error) {
                 console.error('Error scheduling Surlink ingest:', error);
                 showSurlinkStatus(error.message, 'error');

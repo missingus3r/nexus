@@ -9,6 +9,8 @@ import { Parser } from 'json2csv';
 import ExcelJS from 'exceljs';
 import { getMaintenanceStatus } from '../middleware/maintenanceCheck.js';
 import { getAuthenticatedUser } from '../config/auth0.js';
+import { scrapeRealEstateSources } from '../scripts/scrapeRealEstate.js';
+import { ingestRealEstateOffers } from '../services/realEstateIngestService.js';
 
 const router = express.Router();
 
@@ -760,17 +762,94 @@ router.post('/surlink/schedule', requireAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Categoría inválida para scrapping' });
     }
 
+    if (category === 'autos') {
+      const scheduledAt = new Date();
+
+      logger.info('Surlink autos scraping requested (pending implementation)', {
+        category,
+        scheduledAt,
+        requestedBy: req.user?.uid || req.user?._id
+      });
+
+      return res.json({
+        message: 'La automatización para autos todavía no está disponible. Tu solicitud fue registrada.',
+        scheduledAt,
+        implemented: false
+      });
+    }
+
+    const maxOffersPerSource =
+      req.body?.maxOffersPerSource != null ? Number(req.body.maxOffersPerSource) : undefined;
+    const limitSources =
+      req.body?.limitSources != null ? Number(req.body.limitSources) : undefined;
+    const allowedDomains = Array.isArray(req.body?.domains) ? req.body.domains : undefined;
+
+    const scraperOptions = {
+      maxOffersPerSource,
+      limitSources,
+      allowedDomains,
+      allowedOperations: ['rent', 'sale']
+    };
+
+    const startedAt = Date.now();
+
+    const scrapeResult = await scrapeRealEstateSources({
+      ...scraperOptions,
+      onSourceStart: (source) => {
+        logger.info('Iniciando scraping de inmueble', {
+          source: source.url,
+          domain: source.domain,
+          operation: source.operation
+        });
+      },
+      onSourceComplete: ({ source, offers, error, durationMs }) => {
+        if (error) {
+          logger.warn('Scraping de fuente finalizado con errores', {
+            source: source.url,
+            error,
+            durationMs
+          });
+        } else {
+          logger.info('Scraping de fuente finalizado', {
+            source: source.url,
+            offers: offers.length,
+            durationMs
+          });
+        }
+      }
+    });
+
+    const ingestResult = await ingestRealEstateOffers({
+      offers: scrapeResult.offers,
+      category: 'casas',
+      requestedBy: req.user?.uid || req.user?._id || 'admin',
+      logger
+    });
+
+    const durationMs = Date.now() - startedAt;
     const scheduledAt = new Date();
 
-    logger.info('Surlink scraping scheduled', {
-      category,
-      scheduledAt,
-      requestedBy: req.user?.uid
+    logger.info('Surlink Casas scraping completed', {
+      requestedBy: req.user?.uid || req.user?._id,
+      processedSources: scrapeResult.sourcesProcessed,
+      scrapedOffers: scrapeResult.totalOffers,
+      inserted: ingestResult.inserted,
+      updated: ingestResult.updated,
+      skipped: ingestResult.skipped,
+      durationMs
     });
 
     res.json({
-      message: `Scrapping de ${category === 'casas' ? 'Surlink Casas' : 'Surlink Autos'} programado correctamente.`,
-      scheduledAt
+      message: `Scraping completado: ${ingestResult.inserted} nuevas ofertas y ${ingestResult.updated} actualizadas (fuentes: ${scrapeResult.sourcesProcessed}).`,
+      scheduledAt,
+      durationMs,
+      processedSources: scrapeResult.sourcesProcessed,
+      scrapedOffers: scrapeResult.totalOffers,
+      inserted: ingestResult.inserted,
+      updated: ingestResult.updated,
+      skipped: ingestResult.skipped,
+      limitSources: scraperOptions.limitSources ?? null,
+      maxOffersPerSource: scraperOptions.maxOffersPerSource ?? null
     });
   } catch (error) {
     logger.error('Error scheduling Surlink scraping', { error });
