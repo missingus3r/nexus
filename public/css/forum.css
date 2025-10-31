@@ -1,0 +1,5 @@
+@media (max-width: 768px) {
+    .forum-container > div[style*="grid"] {
+        grid-template-columns: 1fr !important;
+    }
+}

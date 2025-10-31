@@ -1,0 +1,238 @@
+/* Incidents List Button - Desktop */
+.incidents-list-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 10;
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+    color: white;
+    border: none;
+    border-radius: 28px;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(25, 118, 210, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.incidents-list-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.incidents-list-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(25, 118, 210, 0.5), 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.incidents-list-btn:hover::before {
+    left: 100%;
+}
+
+.incidents-list-btn:active {
+    transform: translateY(0px);
+    box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.incidents-list-btn svg {
+    flex-shrink: 0;
+}
+
+/* Incidents List Modal Improvements */
+#incidentsListModal .modal-content {
+    animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#incidentsListContent {
+    padding: 1.5rem;
+}
+
+#incidentsListContent::-webkit-scrollbar {
+    width: 8px;
+}
+
+#incidentsListContent::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 4px;
+}
+
+#incidentsListContent::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+}
+
+#incidentsListContent::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+}
+
+/* Improved incident cards in modal */
+.incident-card {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    background: var(--surface);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.incident-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--primary-color);
+    transform: scaleY(0);
+    transition: transform 0.2s ease;
+}
+
+.incident-card:hover {
+    box-shadow: 0 4px 12px var(--shadow-elevation);
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
+}
+
+.incident-card:hover::before {
+    transform: scaleY(1);
+}
+
+.incident-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.incident-card-title {
+    margin: 0 0 0.25rem 0;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.incident-card-date {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.incident-card-status {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.incident-card-reporter {
+    margin: 0.75rem 0;
+    padding: 0.5rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.incident-card-reporter strong {
+    color: var(--text-primary);
+}
+
+.incident-card-reporter span {
+    color: var(--text-secondary);
+}
+
+.incident-card-description {
+    margin: 0.75rem 0;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.incident-card-btn {
+    width: 100%;
+    padding: 0.75rem;
+    margin-top: 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.incident-card-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+.incident-card-btn:active {
+    transform: translateY(0);
+}
+
+/* Empty state */
+.incidents-empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-secondary);
+}
+
+.incidents-empty-state svg {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 1rem;
+    opacity: 0.3;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .incidents-list-btn span {
+        display: none;
+    }
+
+    .incidents-list-btn {
+        width: 56px;
+        height: 56px;
+        padding: 0;
+        border-radius: 50%;
+        justify-content: center;
+    }
+
+    .incident-card {
+        padding: 1rem;
+    }
+
+    .incident-card-title {
+        font-size: 1rem;
+    }
+}

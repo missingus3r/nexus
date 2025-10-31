@@ -14,7 +14,14 @@
       "Bash(done)",
       "Bash(node -c:*)",
       "Bash(lsof:*)",
-      "Bash(xargs kill -9)"
+      "Bash(xargs kill -9)",
+      "Bash(awk:*)",
+      "Bash(for file in login.ejs perfil.ejs admin.ejs)",
+      "Bash(echo:*)",
+      "Bash(for file in forum maintenance privacy terms news links centinel login perfil admin)",
+      "Bash(do echo \"=== $file.ejs ===\")",
+      "Bash(wc:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []
