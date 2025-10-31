@@ -65,8 +65,9 @@ function getAuth0Config() {
         logger.info(`Auth0 callback - User logged in: ${email}`);
 
         // Check if user is admin
-        const adminEmail = process.env.ADMIN_EMAIL;
-        const isAdmin = adminEmail && email === adminEmail;
+        const adminEmailEnv = process.env.ADMIL_EMAIL || process.env.ADMIN_EMAIL;
+        const normalizedAdminEmail = adminEmailEnv ? adminEmailEnv.toLowerCase() : null;
+        const isAdmin = normalizedAdminEmail ? email.toLowerCase() === normalizedAdminEmail : false;
 
         // Find or create user in database
         let user = await User.findOne({ email });
@@ -116,27 +117,19 @@ function getAuth0Config() {
           logger.info(`User updated: ${email}`);
         }
 
-        // Store redirect destination in Express session (not OIDC session)
-        // CRITICAL: The session parameter here is the OIDC session, not req.session
-        // We need to store pendingRedirect in req.session for the redirect to work
-        const redirectTo = isAdmin ? '/admin' : '/dashboard';
-
-        // Store in Express session via req.session
+        // Store user metadata in Express session when available
         if (req.session) {
-          req.session.pendingRedirect = redirectTo;
           req.session.userId = user._id.toString();
           req.session.dbRole = user.role;
 
           // Force session save to ensure data persists
-          // This is important because afterCallback runs during the callback flow
-          // and the session might not auto-save before the redirect happens
           return new Promise((resolve, reject) => {
             req.session.save((err) => {
               if (err) {
                 logger.error('Error saving session in afterCallback:', err);
                 reject(err);
               } else {
-                logger.info(`Pending redirect stored and saved in Express session for user ${email}: ${redirectTo}`);
+                logger.info(`Session data stored for user ${email} with role ${user.role}`);
                 resolve(session);
               }
             });
@@ -265,31 +258,20 @@ export const handleLandingRedirect = async (req, res, next) => {
     return next();
   }
 
-  // Debug logging to verify middleware is being called
-  if (req.session?.pendingRedirect) {
-    logger.info(`handleLandingRedirect - Detected pendingRedirect: ${req.session.pendingRedirect}, isAuthenticated: ${req.oidc?.isAuthenticated()}`);
-  }
+  // If the user is authenticated, send them to the appropriate dashboard
+  if (req.oidc?.isAuthenticated && req.oidc.isAuthenticated()) {
+    const email = req.oidc.user?.email;
+    const adminEmailEnv = process.env.ADMIL_EMAIL || process.env.ADMIN_EMAIL;
+    const normalizedAdminEmail = adminEmailEnv ? adminEmailEnv.toLowerCase() : null;
 
-  // Check if user just logged in and needs redirect
-  if (req.oidc && req.oidc.isAuthenticated && req.oidc.isAuthenticated()) {
-    // Check if this is a fresh login (has pendingRedirect flag)
-    if (req.session && req.session.pendingRedirect) {
-      const redirectTo = req.session.pendingRedirect;
+    if (email) {
+      const redirectTo =
+        normalizedAdminEmail && email.toLowerCase() === normalizedAdminEmail
+          ? '/admin'
+          : '/dashboard';
 
-      // Clear the redirect flag before redirecting
-      delete req.session.pendingRedirect;
-
-      // Save session to ensure the deletion persists
-      req.session.save((err) => {
-        if (err) {
-          logger.error('Error saving session after clearing pendingRedirect:', err);
-        }
-        logger.info(`Redirecting authenticated user from landing to: ${redirectTo}`);
-        return res.redirect(redirectTo);
-      });
-
-      // Don't call next() here - we're handling the response
-      return;
+      logger.info(`handleLandingRedirect - Redirecting authenticated user ${email} to ${redirectTo}`);
+      return res.redirect(redirectTo);
     }
   }
 
