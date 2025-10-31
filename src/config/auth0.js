@@ -112,19 +112,35 @@ function getAuth0Config() {
           logger.info(`User updated: ${email}`);
         }
 
-        // Add custom properties directly to session
-        // These will be merged into req.oidc.user after the callback
+        // Store redirect destination in Express session (not OIDC session)
+        // CRITICAL: The session parameter here is the OIDC session, not req.session
+        // We need to store pendingRedirect in req.session for the redirect to work
         const redirectTo = isAdmin ? '/admin' : '/dashboard';
 
-        // Store redirect destination in session
-        // Will be picked up by handleLandingRedirect middleware
-        session.pendingRedirect = redirectTo;
-        session.userId = user._id.toString();
-        session.dbRole = user.role;
+        // Store in Express session via req.session
+        if (req.session) {
+          req.session.pendingRedirect = redirectTo;
+          req.session.userId = user._id.toString();
+          req.session.dbRole = user.role;
 
-        logger.info(`Pending redirect set for user ${email}: ${redirectTo}`);
-
-        return session;
+          // Force session save to ensure data persists
+          // This is important because afterCallback runs during the callback flow
+          // and the session might not auto-save before the redirect happens
+          return new Promise((resolve, reject) => {
+            req.session.save((err) => {
+              if (err) {
+                logger.error('Error saving session in afterCallback:', err);
+                reject(err);
+              } else {
+                logger.info(`Pending redirect stored and saved in Express session for user ${email}: ${redirectTo}`);
+                resolve(session);
+              }
+            });
+          });
+        } else {
+          logger.error('Express session not available in afterCallback');
+          return session;
+        }
       } catch (error) {
         logger.error('Error in Auth0 afterCallback:', error);
         // Continue with default behavior even if there's an error
@@ -245,15 +261,31 @@ export const handleLandingRedirect = async (req, res, next) => {
     return next();
   }
 
+  // Debug logging to verify middleware is being called
+  if (req.session?.pendingRedirect) {
+    logger.info(`handleLandingRedirect - Detected pendingRedirect: ${req.session.pendingRedirect}, isAuthenticated: ${req.oidc?.isAuthenticated()}`);
+  }
+
   // Check if user just logged in and needs redirect
   if (req.oidc && req.oidc.isAuthenticated && req.oidc.isAuthenticated()) {
     // Check if this is a fresh login (has pendingRedirect flag)
-    if (req.session.pendingRedirect) {
+    if (req.session && req.session.pendingRedirect) {
       const redirectTo = req.session.pendingRedirect;
+
+      // Clear the redirect flag before redirecting
       delete req.session.pendingRedirect;
 
-      logger.info(`Redirecting user from landing to: ${redirectTo}`);
-      return res.redirect(redirectTo);
+      // Save session to ensure the deletion persists
+      req.session.save((err) => {
+        if (err) {
+          logger.error('Error saving session after clearing pendingRedirect:', err);
+        }
+        logger.info(`Redirecting authenticated user from landing to: ${redirectTo}`);
+        return res.redirect(redirectTo);
+      });
+
+      // Don't call next() here - we're handling the response
+      return;
     }
   }
 
