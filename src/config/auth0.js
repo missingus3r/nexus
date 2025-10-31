@@ -27,6 +27,10 @@ function getAuth0Config() {
       logout: '/logout',
       postLogoutRedirect: '/'
     },
+    authorizationParams: {
+      // Force reauthentication so Google shows the account picker
+      prompt: 'login'
+    },
     // After successful callback, handle user creation/update
     afterCallback: async (req, res, session) => {
       try {

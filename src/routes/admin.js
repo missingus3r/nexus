@@ -24,10 +24,43 @@ const requireAdmin = async (req, res, next) => {
     return res.status(403).json({ error: 'Acceso denegado - Se requiere rol de administrador' });
   }
 
-  // Make user available to route handlers
+  // Ensure we always have the admin MongoDB _id available for downstream checks
+  if (!user._id && user.email) {
+    try {
+      const dbUser = await User.findOne({ email: user.email }).select('_id').lean();
+      if (dbUser?._id) {
+        user._id = dbUser._id.toString();
+      }
+    } catch (error) {
+      logger.warn('No se pudo recuperar el _id del admin autenticado', { error: error.message });
+    }
+  }
+
   req.user = user;
 
   next();
+};
+
+const sanitizeUser = (user) => {
+  if (!user) return null;
+
+  const plainUser = typeof user.toObject === 'function' ? user.toObject() : user;
+
+  return {
+    id: plainUser._id ? plainUser._id.toString() : null,
+    email: plainUser.email || '',
+    name: plainUser.name || '',
+    role: plainUser.role || 'user',
+    banned: !!plainUser.banned,
+    bannedUntil: plainUser.bannedUntil || null,
+    createdAt: plainUser.createdAt || null,
+    updatedAt: plainUser.updatedAt || null,
+    lastLogin: plainUser.lastLogin || null,
+    reportCount: plainUser.reportCount || 0,
+    validationCount: plainUser.validationCount || 0,
+    strikes: plainUser.strikes || 0,
+    subscription: plainUser.subscription || null
+  };
 };
 
 /**
@@ -179,6 +212,138 @@ router.get('/users', requireAdmin, async (req, res) => {
     logger.error('Error getting user stats:', error);
     res.status(500).json({
       error: 'Error al obtener estadísticas de usuarios',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * GET /admin/users/list
+ * Retrieve full user list for management actions
+ */
+router.get('/users/list', requireAdmin, async (req, res) => {
+  try {
+    const search = (req.query.search || '').trim();
+    const filter = {};
+
+    if (search) {
+      const regex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter.$or = [
+        { email: regex },
+        { name: regex }
+      ];
+    }
+
+    const users = await User.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(200)
+      .select('email name role banned bannedUntil createdAt updatedAt lastLogin reportCount validationCount strikes subscription')
+      .lean();
+
+    res.json({
+      success: true,
+      count: users.length,
+      users: users.map(sanitizeUser)
+    });
+  } catch (error) {
+    logger.error('Error fetching admin user list:', error);
+    res.status(500).json({
+      error: 'Error al obtener la lista de usuarios',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * PATCH /admin/users/:id/status
+ * Update banned status of user (block/unblock)
+ */
+router.patch('/users/:id/status', requireAdmin, async (req, res) => {
+  try {
+    const { banned } = req.body;
+    const userId = req.params.id;
+
+    if (typeof banned !== 'boolean') {
+      return res.status(400).json({ error: 'El campo "banned" es requerido y debe ser booleano' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: 'ID de usuario inválido' });
+    }
+
+    if (req.user?._id && req.user._id.toString() === userId && banned) {
+      return res.status(400).json({ error: 'No podés bloquear tu propia cuenta de administrador' });
+    }
+
+    const targetUser = await User.findById(userId);
+
+    if (!targetUser) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    if (targetUser.role === 'admin' && targetUser._id.toString() !== req.user?._id?.toString()) {
+      return res.status(403).json({ error: 'No está permitido modificar el estado de otros administradores' });
+    }
+
+    targetUser.banned = banned;
+    targetUser.bannedUntil = banned ? (req.body.bannedUntil ? new Date(req.body.bannedUntil) : null) : null;
+
+    await targetUser.save();
+
+    logger.info(`Admin ${req.user?.email} ${banned ? 'bloqueó' : 'desbloqueó'} al usuario ${targetUser.email}`);
+
+    res.json({
+      success: true,
+      message: banned ? 'Usuario bloqueado correctamente' : 'Usuario desbloqueado correctamente',
+      user: sanitizeUser(targetUser)
+    });
+  } catch (error) {
+    logger.error('Error updating user status:', error);
+    res.status(500).json({
+      error: 'Error al actualizar el estado del usuario',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * DELETE /admin/users/:id
+ * Remove a user account
+ */
+router.delete('/users/:id', requireAdmin, async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: 'ID de usuario inválido' });
+    }
+
+    if (req.user?._id && req.user._id.toString() === userId) {
+      return res.status(400).json({ error: 'No podés eliminar tu propia cuenta' });
+    }
+
+    const targetUser = await User.findById(userId);
+
+    if (!targetUser) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    if (targetUser.role === 'admin') {
+      return res.status(403).json({ error: 'No está permitido eliminar cuentas de administrador' });
+    }
+
+    await User.deleteOne({ _id: userId });
+
+    logger.warn(`Admin ${req.user?.email} eliminó al usuario ${targetUser.email}`);
+
+    res.json({
+      success: true,
+      message: 'Usuario eliminado correctamente'
+    });
+  } catch (error) {
+    logger.error('Error deleting user:', error);
+    res.status(500).json({
+      error: 'Error al eliminar el usuario',
       details: error.message
     });
   }

@@ -9,6 +9,7 @@
             loadTopPages();
             loadRecentVisits();
             loadMaintenanceSettings();
+            setupUserManagementHandlers();
         });
 
         async function loadStats() {
@@ -282,6 +283,286 @@
         }
 
         // User Management Functions
+        const userManagementState = {
+            loaded: false,
+            loading: false,
+            search: ''
+        };
+
+        function setupUserManagementHandlers() {
+            const manageBtn = document.getElementById('manageUsersBtn');
+            const refreshBtn = document.getElementById('refreshUserListBtn');
+            const searchBtn = document.getElementById('userSearchBtn');
+            const searchInput = document.getElementById('userSearchInput');
+            const tableBody = document.getElementById('userManagementTableBody');
+
+            if (manageBtn) {
+                manageBtn.addEventListener('click', () => {
+                    toggleUserManagement();
+                });
+            }
+
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', () => {
+                    loadUserList(userManagementState.search);
+                });
+            }
+
+            if (searchBtn && searchInput) {
+                searchBtn.addEventListener('click', () => {
+                    userManagementState.search = searchInput.value.trim();
+                    loadUserList(userManagementState.search);
+                });
+
+                searchInput.addEventListener('keypress', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        userManagementState.search = searchInput.value.trim();
+                        loadUserList(userManagementState.search);
+                    }
+                });
+            }
+
+            if (tableBody) {
+                tableBody.addEventListener('click', handleUserManagementAction);
+            }
+        }
+
+        function toggleUserManagement() {
+            const container = document.getElementById('userManagementContainer');
+            const manageBtn = document.getElementById('manageUsersBtn');
+
+            if (!container || !manageBtn) {
+                return;
+            }
+
+            const isHidden = container.dataset.visible !== 'true';
+
+            if (isHidden) {
+                container.style.display = 'block';
+                container.dataset.visible = 'true';
+                manageBtn.textContent = 'Ocultar gestión de usuarios';
+
+                if (!userManagementState.loaded && !userManagementState.loading) {
+                    loadUserList(userManagementState.search);
+                }
+            } else {
+                container.style.display = 'none';
+                container.dataset.visible = 'false';
+                manageBtn.textContent = 'Gestionar usuarios';
+            }
+        }
+
+        function showUserManagementStatus(message, type = 'info', autoHide = false) {
+            const statusEl = document.getElementById('userManagementStatus');
+
+            if (!statusEl) {
+                return;
+            }
+
+            statusEl.textContent = message;
+            statusEl.className = `status-message ${type}`;
+            statusEl.style.display = 'block';
+
+            if (autoHide) {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 4000);
+            }
+        }
+
+        async function loadUserList(searchTerm = '') {
+            const tableBody = document.getElementById('userManagementTableBody');
+
+            if (!tableBody) {
+                return;
+            }
+
+            userManagementState.loading = true;
+            showUserManagementStatus('Cargando usuarios...', 'info');
+
+            try {
+                const query = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : '';
+                const response = await fetch(`/api/admin/users/list${query}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al obtener usuarios');
+                }
+
+                userManagementState.loaded = true;
+
+                renderUserList(data.users || []);
+                showUserManagementStatus(`Usuarios cargados (${data.count || 0})`, 'success', true);
+            } catch (error) {
+                console.error('Error loading user list:', error);
+                renderUserList([]);
+                showUserManagementStatus(`Error al cargar usuarios: ${error.message}`, 'error');
+            } finally {
+                userManagementState.loading = false;
+            }
+        }
+
+        function renderUserList(users) {
+            const tableBody = document.getElementById('userManagementTableBody');
+
+            if (!tableBody) {
+                return;
+            }
+
+            if (!Array.isArray(users) || users.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+                            No se encontraron usuarios con los filtros aplicados
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const rows = users.map((user) => {
+                const roleBadge = user.role === 'admin'
+                    ? '<span style="background: var(--warning-color); color: #fff; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">ADMIN</span>'
+                    : '<span style="background: var(--primary-color); color: #fff; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">USER</span>';
+
+                const statusBadge = user.banned
+                    ? '<span style="background: var(--danger-color); color: #fff; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Bloqueado</span>'
+                    : '<span style="background: var(--success-color); color: #fff; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">Activo</span>';
+
+                const createdAt = user.createdAt ? new Date(user.createdAt).toLocaleString('es-UY') : '-';
+                const lastLogin = user.lastLogin ? new Date(user.lastLogin).toLocaleString('es-UY') : 'Nunca';
+
+                const banActionLabel = user.banned ? 'Desbloquear' : 'Bloquear';
+                const banBtnClass = user.banned ? 'btn btn-success' : 'btn btn-secondary';
+
+                const deleteDisabled = user.role === 'admin' ? 'disabled' : '';
+
+                return `
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 1rem; min-width: 220px;">${user.email || '-'}</td>
+                        <td style="padding: 1rem; min-width: 160px;">${user.name || '-'}</td>
+                        <td style="padding: 1rem;">${roleBadge}</td>
+                        <td style="padding: 1rem;">${statusBadge}</td>
+                        <td style="padding: 1rem;">${createdAt}</td>
+                        <td style="padding: 1rem;">${lastLogin}</td>
+                        <td style="padding: 1rem;">
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <button
+                                    class="${banBtnClass}"
+                                    data-action="toggle-ban"
+                                    data-user-id="${user.id}"
+                                    data-banned="${user.banned ? 'true' : 'false'}"
+                                    style="padding: 0.25rem 0.75rem; font-size: 0.85rem;"
+                                >
+                                    ${banActionLabel}
+                                </button>
+                                <button
+                                    class="btn btn-danger"
+                                    data-action="delete"
+                                    data-user-id="${user.id}"
+                                    ${deleteDisabled}
+                                    style="padding: 0.25rem 0.75rem; font-size: 0.85rem;"
+                                >
+                                    Eliminar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            tableBody.innerHTML = rows;
+        }
+
+        async function updateUserStatus(userId, banned) {
+            const response = await fetch(`/api/admin/users/${userId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ banned })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'No se pudo actualizar el estado del usuario');
+            }
+
+            return data;
+        }
+
+        async function deleteUser(userId) {
+            const response = await fetch(`/api/admin/users/${userId}`, {
+                method: 'DELETE'
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'No se pudo eliminar el usuario');
+            }
+
+            return data;
+        }
+
+        async function handleUserManagementAction(event) {
+            const button = event.target.closest('button[data-action]');
+
+            if (!button) {
+                return;
+            }
+
+            const userId = button.getAttribute('data-user-id');
+            const action = button.getAttribute('data-action');
+
+            if (!userId || !action) {
+                return;
+            }
+
+            try {
+                if (action === 'toggle-ban') {
+                    const currentlyBanned = button.getAttribute('data-banned') === 'true';
+                    const nextStatus = !currentlyBanned;
+                    const confirmationMessage = nextStatus
+                        ? '¿Seguro que querés bloquear este usuario? No podrá iniciar sesión.'
+                        : '¿Seguro que querés desbloquear este usuario?';
+
+                    if (!confirm(confirmationMessage)) {
+                        return;
+                    }
+
+                    button.disabled = true;
+                    showUserManagementStatus(`${nextStatus ? 'Bloqueando' : 'Desbloqueando'} usuario...`, 'info');
+
+                    const result = await updateUserStatus(userId, nextStatus);
+
+                    showUserManagementStatus(result.message || 'Estado actualizado correctamente', 'success', true);
+                    await loadUserList(userManagementState.search);
+                    await loadUserStats();
+                } else if (action === 'delete') {
+                    if (!confirm('⚠️ ¿Seguro que querés eliminar este usuario? Esta acción es permanente.')) {
+                        return;
+                    }
+
+                    button.disabled = true;
+                    showUserManagementStatus('Eliminando usuario...', 'info');
+
+                    const result = await deleteUser(userId);
+
+                    showUserManagementStatus(result.message || 'Usuario eliminado correctamente', 'success', true);
+                    await loadUserList(userManagementState.search);
+                    await loadUserStats();
+                }
+            } catch (error) {
+                console.error('Error handling user action:', error);
+                showUserManagementStatus(error.message, 'error');
+            } finally {
+                button.disabled = false;
+            }
+        }
+
         async function loadUserStats() {
             try {
                 const response = await fetch('/api/admin/users');
@@ -935,60 +1216,55 @@
             `;
 
             // Display popular threads
-            let popularHTML = '<div style="background: var(--surface); border-radius: 8px; padding: 1rem; border: 1px solid var(--border-color);">';
+            let popularHTML = '';
             if (stats.popularThreads.length > 0) {
-                stats.popularThreads.forEach(thread => {
+                popularHTML = stats.popularThreads.map(thread => {
                     const authorName = thread.author?.name || thread.author?.email || 'Usuario';
-                    popularHTML += `
-                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color);">
-                            <strong>${thread.title}</strong><br>
-                            <small style="color: var(--text-secondary);">
-                                Por ${authorName} |
-                                👍 ${thread.likesCount} |
-                                💬 ${thread.commentsCount} |
-                                ${new Date(thread.createdAt).toLocaleDateString()}
-                            </small>
+                    const createdDate = thread.createdAt
+                        ? new Date(thread.createdAt).toLocaleDateString('es-UY')
+                        : 'Fecha desconocida';
+                    return `
+                        <div class="forum-top-item">
+                            <strong>${thread.title}</strong>
+                            <small>Por ${authorName} · ${createdDate}</small>
+                            <div class="forum-top-meta">
+                                <span>👍 ${thread.likesCount || 0}</span>
+                                <span>💬 ${thread.commentsCount || 0}</span>
+                            </div>
                         </div>
                     `;
-                });
+                }).join('');
             } else {
-                popularHTML += '<p style="text-align: center; color: var(--text-secondary); padding: 1rem;">No hay threads aún</p>';
+                popularHTML = '<div class="forum-top-empty">No hay threads aún</div>';
             }
-            popularHTML += '</div>';
             document.getElementById('popularThreadsContainer').innerHTML = popularHTML;
 
             // Display top thread authors
-            let threadAuthorsHTML = '<div style="background: var(--surface); border-radius: 8px; padding: 1rem; border: 1px solid var(--border-color);">';
+            let threadAuthorsHTML = '';
             if (stats.topThreadAuthors.length > 0) {
-                stats.topThreadAuthors.forEach((author, idx) => {
-                    threadAuthorsHTML += `
-                        <div style="padding: 0.75rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between;">
-                            <span>${idx + 1}. ${author.name || author.email}</span>
-                            <strong>${author.threadCount} threads</strong>
-                        </div>
-                    `;
-                });
+                threadAuthorsHTML = stats.topThreadAuthors.map((author, idx) => `
+                    <div class="forum-top-item forum-top-item--row">
+                        <span><strong>${idx + 1}.</strong> ${author.name || author.email || 'Usuario'}</span>
+                        <span class="forum-top-pill">${author.threadCount || 0} threads</span>
+                    </div>
+                `).join('');
             } else {
-                threadAuthorsHTML += '<p style="text-align: center; color: var(--text-secondary); padding: 1rem;">Sin datos</p>';
+                threadAuthorsHTML = '<div class="forum-top-empty">Sin datos</div>';
             }
-            threadAuthorsHTML += '</div>';
             document.getElementById('topThreadAuthorsContainer').innerHTML = threadAuthorsHTML;
 
             // Display top comment authors
-            let commentAuthorsHTML = '<div style="background: var(--surface); border-radius: 8px; padding: 1rem; border: 1px solid var(--border-color);">';
+            let commentAuthorsHTML = '';
             if (stats.topCommentAuthors.length > 0) {
-                stats.topCommentAuthors.forEach((author, idx) => {
-                    commentAuthorsHTML += `
-                        <div style="padding: 0.75rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between;">
-                            <span>${idx + 1}. ${author.name || author.email}</span>
-                            <strong>${author.commentCount} comentarios</strong>
-                        </div>
-                    `;
-                });
+                commentAuthorsHTML = stats.topCommentAuthors.map((author, idx) => `
+                    <div class="forum-top-item forum-top-item--row">
+                        <span><strong>${idx + 1}.</strong> ${author.name || author.email || 'Usuario'}</span>
+                        <span class="forum-top-pill">${author.commentCount || 0} comentarios</span>
+                    </div>
+                `).join('');
             } else {
-                commentAuthorsHTML += '<p style="text-align: center; color: var(--text-secondary); padding: 1rem;">Sin datos</p>';
+                commentAuthorsHTML = '<div class="forum-top-empty">Sin datos</div>';
             }
-            commentAuthorsHTML += '</div>';
             document.getElementById('topCommentAuthorsContainer').innerHTML = commentAuthorsHTML;
 
             // Show containers

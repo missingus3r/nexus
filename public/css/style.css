@@ -105,6 +105,18 @@ body {
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+.nav-group {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.nav-group-actions {
+    margin-left: auto;
+    gap: 0.75rem;
+}
+
 .nav-link {
     text-decoration: none;
     color: var(--text-primary);
@@ -709,6 +721,20 @@ body.modal-open {
         overflow-y: auto;
     }
 
+    .nav-group,
+    .nav-group-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .nav-group-actions {
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
     .nav.active {
         right: 0;
     }
@@ -718,6 +744,14 @@ body.modal-open {
         border-radius: 0;
         width: 100%;
         text-align: left;
+    }
+
+    .nav-group .platform-btn,
+    .nav-group-actions .platform-btn {
+        display: block;
+        width: calc(100% - 2rem);
+        margin: 0 1rem;
+        text-align: center;
     }
 
     .nav .btn {

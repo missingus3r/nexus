@@ -5,7 +5,8 @@
             domain: '<%= process.env.AUTH0_DOMAIN %>',
             clientId: '<%= process.env.AUTH0_CLIENT_ID %>',
             authorizationParams: {
-                redirect_uri: window.location.origin + '/login'
+                redirect_uri: window.location.origin + '/login',
+                prompt: 'login'
             }
         };
 
@@ -99,7 +100,8 @@
                 await auth0Client.loginWithRedirect({
                     authorizationParams: {
                         redirect_uri: AUTH0_CONFIG.authorizationParams.redirect_uri,
-                        scope: 'openid profile email'
+                        scope: 'openid profile email',
+                        prompt: 'login'
                     }
                 });
             } catch (error) {

@@ -35,6 +35,12 @@
                     Estadísticas y lista de usuarios registrados en la plataforma.
                 </p>
 
+                <div class="button-group" style="margin-top: 1rem;">
+                    <button class="btn btn-secondary" id="manageUsersBtn">
+                        👤 Gestionar usuarios
+                    </button>
+                </div>
+
                 <div id="userStatsContainer" class="loading" style="margin-top: 1rem;">
                     <p>Cargando estadísticas de usuarios...</p>
                 </div>
@@ -56,6 +62,47 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                <div id="userManagementContainer" data-visible="false" style="display: none; margin-top: 2rem;">
+                    <div class="user-management-header" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;">
+                        <h3 style="margin: 0;">Gestión de Usuarios</h3>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <input
+                                type="text"
+                                id="userSearchInput"
+                                placeholder="Buscar por email o nombre"
+                                style="flex: 1; min-width: 220px; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--background); color: var(--text-primary);"
+                            >
+                            <button class="btn btn-secondary" id="userSearchBtn">Buscar</button>
+                            <button class="btn btn-secondary" id="refreshUserListBtn">Actualizar</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1rem; overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 8px; min-width: 720px;">
+                            <thead>
+                                <tr style="background: var(--background); border-bottom: 2px solid var(--border-color); text-align: left;">
+                                    <th style="padding: 1rem;">Email</th>
+                                    <th style="padding: 1rem;">Nombre</th>
+                                    <th style="padding: 1rem;">Rol</th>
+                                    <th style="padding: 1rem;">Estado</th>
+                                    <th style="padding: 1rem;">Registro</th>
+                                    <th style="padding: 1rem;">Último acceso</th>
+                                    <th style="padding: 1rem;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userManagementTableBody">
+                                <tr>
+                                    <td colspan="7" style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+                                        Usá el botón "Gestionar usuarios" para cargar la lista completa
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="userManagementStatus" class="status-message" style="display: none; margin-top: 1rem;"></div>
                 </div>
             </div>
 
@@ -190,78 +237,113 @@
                 </p>
 
                 <!-- Forum Stats -->
-                <div id="forumStatsContainer" class="loading" style="margin-top: 1rem;">
+                <div id="forumStatsContainer" class="forum-stats-card loading" style="margin-top: 1rem;">
                     <p>Cargando estadísticas del foro...</p>
                 </div>
 
                 <!-- Forum Settings -->
-                <div id="forumSettingsContainer" style="margin-top: 2rem; display: none;">
-                    <h3 style="margin-bottom: 1rem;">⚙️ Configuración del Foro</h3>
-
-                    <div class="control-group">
-                        <label for="postCooldownMinutes">
-                            Tiempo entre threads (minutos)
-                            <small>Tiempo mínimo que debe esperar un usuario entre crear threads</small>
-                        </label>
-                        <input type="number" id="postCooldownMinutes" min="0" max="1440" />
+                <div id="forumSettingsContainer" class="forum-settings-panel" style="margin-top: 2rem; display: none;">
+                    <div class="forum-settings-header">
+                        <div>
+                            <h3>⚙️ Configuración del Foro</h3>
+                            <p>Define límites y permisos para mantener el foro sano y ordenado.</p>
+                        </div>
                     </div>
 
-                    <div class="control-group">
-                        <label for="maxCommentsPerDay">
-                            Límite de comentarios por día
-                            <small>Número máximo de comentarios que un usuario puede publicar en 24 horas</small>
-                        </label>
-                        <input type="number" id="maxCommentsPerDay" min="1" max="1000" />
+                    <div class="forum-settings-grid">
+                        <div class="forum-settings-card">
+                            <div class="forum-settings-icon">⏱️</div>
+                            <div class="forum-settings-content">
+                                <label for="postCooldownMinutes">
+                                    Tiempo entre threads (min)
+                                    <span>Tiempo mínimo que debe esperar un usuario entre crear threads.</span>
+                                </label>
+                                <input type="number" id="postCooldownMinutes" min="0" max="1440" />
+                            </div>
+                        </div>
+
+                        <div class="forum-settings-card">
+                            <div class="forum-settings-icon">💬</div>
+                            <div class="forum-settings-content">
+                                <label for="maxCommentsPerDay">
+                                    Comentarios por día
+                                    <span>Límite de comentarios que puede publicar un usuario en 24 horas.</span>
+                                </label>
+                                <input type="number" id="maxCommentsPerDay" min="1" max="1000" />
+                            </div>
+                        </div>
+
+                        <div class="forum-settings-card compact">
+                            <div class="forum-settings-icon">🖼️</div>
+                            <div class="forum-settings-content">
+                                <label class="forum-checkbox">
+                                    <input type="checkbox" id="allowImages" />
+                                    <div class="forum-checkbox-text">
+                                        <span class="forum-setting-title">Permitir subida de imágenes</span>
+                                        <span class="forum-setting-description">Habilita que los usuarios adjunten imágenes en sus threads.</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="forum-settings-card compact">
+                            <div class="forum-settings-icon">🔗</div>
+                            <div class="forum-settings-content">
+                                <label class="forum-checkbox">
+                                    <input type="checkbox" id="allowLinks" />
+                                    <div class="forum-checkbox-text">
+                                        <span class="forum-setting-title">Permitir enlaces externos</span>
+                                        <span class="forum-setting-description">Controla si los usuarios pueden compartir URLs en sus publicaciones.</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="forum-settings-card">
+                            <div class="forum-settings-icon">🖼️+</div>
+                            <div class="forum-settings-content">
+                                <label for="maxImagesPerPost">
+                                    Máximo de imágenes por post
+                                    <span>Cuántas imágenes se pueden subir en un único thread.</span>
+                                </label>
+                                <input type="number" id="maxImagesPerPost" min="0" max="10" />
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="control-group">
-                        <label>
-                            <input type="checkbox" id="allowImages" />
-                            Permitir subida de imágenes
-                        </label>
-                    </div>
-
-                    <div class="control-group">
-                        <label>
-                            <input type="checkbox" id="allowLinks" />
-                            Permitir enlaces en posts
-                        </label>
-                    </div>
-
-                    <div class="control-group">
-                        <label for="maxImagesPerPost">
-                            Máximo de imágenes por post
-                            <small>Número máximo de imágenes que se pueden subir en un thread</small>
-                        </label>
-                        <input type="number" id="maxImagesPerPost" min="0" max="10" />
-                    </div>
-
-                    <div class="button-group">
+                    <div class="forum-settings-actions button-group">
                         <button class="btn btn-primary" onclick="saveForumSettings()">
-                            💾 Guardar Configuración
+                            💾 Guardar configuración
                         </button>
                         <button class="btn btn-secondary" onclick="loadForumSettings()">
                             🔄 Recargar
                         </button>
                     </div>
 
-                    <div id="forumSettingsStatus" class="status-message"></div>
+                    <div id="forumSettingsStatus" class="status-message" style="margin-top: 1rem;"></div>
                 </div>
 
                 <!-- Top Content -->
-                <div id="forumTopContent" style="margin-top: 2rem; display: none;">
-                    <h3>⭐ Threads Más Populares</h3>
-                    <div id="popularThreadsContainer" style="margin-top: 1rem;"></div>
-
-                    <h3 style="margin-top: 2rem;">👥 Usuarios Más Activos</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-top: 1rem;">
-                        <div>
-                            <h4 style="margin-bottom: 0.5rem;">Por Threads</h4>
-                            <div id="topThreadAuthorsContainer"></div>
+                <div id="forumTopContent" class="forum-top-content" style="margin-top: 2rem; display: none;">
+                    <div class="forum-top-grid">
+                        <div class="forum-top-card span-2">
+                            <h3>⭐ Threads más populares</h3>
+                            <p class="forum-top-subtitle">Última semana de actividad destacada.</p>
+                            <div id="popularThreadsContainer" class="forum-top-list"></div>
                         </div>
-                        <div>
-                            <h4 style="margin-bottom: 0.5rem;">Por Comentarios</h4>
-                            <div id="topCommentAuthorsContainer"></div>
+                        <div class="forum-top-card">
+                            <h3>👥 Usuarios más activos</h3>
+                            <p class="forum-top-subtitle">Ranking de participación por tipo de aporte.</p>
+                            <div class="forum-top-users-grid">
+                                <div class="forum-top-subcard">
+                                    <h4>Por threads</h4>
+                                    <div id="topThreadAuthorsContainer" class="forum-top-list"></div>
+                                </div>
+                                <div class="forum-top-subcard">
+                                    <h4>Por comentarios</h4>
+                                    <div id="topCommentAuthorsContainer" class="forum-top-list"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

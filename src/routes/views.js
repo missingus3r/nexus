@@ -6,8 +6,16 @@ const router = express.Router();
 
 // Middleware to inject user and auth info into all views
 router.use((req, res, next) => {
-  res.locals.isAuthenticated = !!req.session?.user;
-  res.locals.user = req.session?.user || null;
+  const isOidcAuthenticated = typeof req.oidc?.isAuthenticated === 'function'
+    ? req.oidc.isAuthenticated()
+    : false;
+  const sessionUser = req.session?.user || null;
+  const hasSessionUser = !!sessionUser;
+  const oidcUser = isOidcAuthenticated ? (req.oidc?.user || null) : null;
+
+  res.locals.isAuthenticated = !!res.locals.isAuthenticated || isOidcAuthenticated || hasSessionUser;
+  res.locals.user = res.locals.user || oidcUser || sessionUser || null;
+
   next();
 });
 
@@ -170,7 +178,8 @@ router.get('/admin', async (req, res) => {
 
   res.render('admin', {
     title: 'Panel de Administración - Vortex',
-    page: 'admin'
+    page: 'admin',
+    user
   });
 });
 

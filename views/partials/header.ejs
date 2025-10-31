@@ -1,7 +1,12 @@
 <div class="header">
     <div class="container">
-        <a href="/" class="logo">
-            <span class="logo-text">VORTEX Surlink</span>
+        <% const isAdminUser = typeof user !== 'undefined' && user && user.role === 'admin'; %>
+        <% const isAdminPage = page === 'admin'; %>
+        <% const isDashboardPage = page === 'dashboard'; %>
+        <% const logoHref = isAdminPage ? '/admin' : (isDashboardPage ? '/dashboard' : '/'); %>
+        <% const logoText = isAdminPage ? 'VORTEX - Admin' : (isDashboardPage ? 'VORTEX - Dashboard' : 'VORTEX Surlink'); %>
+        <a href="<%= logoHref %>" class="logo">
+            <span class="logo-text"><%= logoText %></span>
         </a>
 
         <div class="header-controls">
@@ -13,26 +18,26 @@
         </div>
 
         <nav class="nav" id="nav">
-            <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
-                <!-- Admin Menu: All pages -->
-                <a href="/" class="nav-link <%= page === 'landing' ? 'active' : '' %>">Inicio</a>
-                <a href="/centinel" class="platform-btn <%= page === 'centinel' ? 'active' : '' %>">Centinel</a>
-                <a href="/news" class="nav-link <%= page === 'news' ? 'active' : '' %>">Noticias</a>
-                <a href="/forum" class="platform-btn <%= page === 'forum' ? 'active' : '' %>">Foro</a>
-                <a href="/links" class="nav-link <%= page === 'links' ? 'active' : '' %>">Enlaces MI</a>
-                <a href="/surlink" class="platform-btn <%= page === 'surlink' ? 'active' : '' %>" id="surlinkBtn">Surlink</a>
-                <a href="/pricing" class="nav-link <%= page === 'pricing' ? 'active' : '' %>">Planes</a>
-                <a href="/privacy" class="nav-link <%= page === 'privacy' ? 'active' : '' %>">Privacidad</a>
-                <a href="/terms" class="nav-link <%= page === 'terms' ? 'active' : '' %>">Términos</a>
-                <a href="/perfil" class="nav-link <%= page === 'perfil' ? 'active' : '' %>">Perfil</a>
-                <a href="/admin" class="nav-link <%= page === 'admin' ? 'active' : '' %>" style="color: var(--warning-color); font-weight: 600;">Admin</a>
-                <a href="/logout" class="btn btn-secondary">Salir</a>
+            <% if (isAdminUser) { %>
+                <!-- Admin Menu organised in groups -->
+                <div class="nav-group">
+                    <a href="/" class="nav-link <%= page === '' ? 'active' : '' %>">Inicio</a>
+                    <a href="/admin" class="nav-link <%= page === 'admin' ? 'active' : '' %>">Panel Admin</a>
+                    <a href="/dashboard" class="nav-link <%= page === 'dashboard' ? 'active' : '' %>">Dashboard</a>
+                </div>
+                <div class="nav-group">
+                    <a href="/centinel" class="platform-btn <%= page === 'centinel' ? 'active' : '' %>">Centinel</a>
+                    <a href="/forum" class="platform-btn <%= page === 'forum' ? 'active' : '' %>">Foro</a>
+                    <a href="/surlink" class="platform-btn <%= page === 'surlink' ? 'active' : '' %>" id="surlinkBtn">Surlink</a>
+                </div>
+                <div class="nav-group nav-group-actions">
+                    <a href="/perfil" class="nav-link <%= page === 'perfil' ? 'active' : '' %>">Perfil</a>
+                    <a href="/logout" class="btn btn-secondary">Salir</a>
+                </div>
             <% } else { %>
                 <!-- Normal User Menu: Original limited menu -->
-                <a href="/centinel" class="platform-btn <%= page === 'centinel' ? 'active' : '' %>">Mapa</a>
-                <a href="/news" class="nav-link <%= page === 'news' ? 'active' : '' %>">Noticias</a>
+                <a href="/centinel" class="platform-btn <%= page === 'centinel' ? 'active' : '' %>">Centinel</a>
                 <a href="/forum" class="platform-btn <%= page === 'forum' ? 'active' : '' %>">Foro</a>
-                <a href="/links" class="nav-link <%= page === 'links' ? 'active' : '' %>">Enlaces MI</a>
                 <a href="/surlink" class="platform-btn <%= page === 'surlink' ? 'active' : '' %>" id="surlinkBtn">Surlink</a>
                 <a href="/pricing" class="nav-link <%= page === 'pricing' ? 'active' : '' %>">Planes</a>
                 <a href="#" class="nav-link mobile-only" id="aboutLink">Acerca de</a>
