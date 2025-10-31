@@ -1,8 +1,15 @@
-<div class="header">
+<% const headerClasses = ['header'];
+   const publicPages = ['landing', 'pricing', 'plataforma'];
+   const isAdminPage = page === 'admin';
+   const isDashboardPage = page === 'dashboard';
+   const isPublicPage = publicPages.includes(page);
+   const isAdminUser = typeof user !== 'undefined' && user && user.role === 'admin';
+   if (!isPublicPage) headerClasses.push('header--internal');
+   if (isAdminPage) headerClasses.push('header--admin');
+   if (isDashboardPage) headerClasses.push('header--dashboard');
+%>
+<div class="<%= headerClasses.join(' ') %>">
     <div class="container">
-        <% const isAdminUser = typeof user !== 'undefined' && user && user.role === 'admin'; %>
-        <% const isAdminPage = page === 'admin'; %>
-        <% const isDashboardPage = page === 'dashboard'; %>
         <% const logoHref = isAdminPage ? '/admin' : (isDashboardPage ? '/dashboard' : '/'); %>
         <% const logoText = isAdminPage ? 'VORTEX - Admin' : (isDashboardPage ? 'VORTEX - Dashboard' : 'VORTEX Surlink'); %>
         <a href="<%= logoHref %>" class="logo">

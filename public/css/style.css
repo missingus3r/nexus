@@ -743,14 +743,35 @@ body.modal-open {
         padding: 1rem 1.5rem;
         border-radius: 0;
         width: 100%;
-        text-align: left;
+        text-align: center;
     }
 
     .nav-group .platform-btn,
-    .nav-group-actions .platform-btn {
+    .nav-group-actions .platform-btn,
+    .header--internal .nav .platform-btn {
         display: block;
-        width: calc(100% - 2rem);
-        margin: 0 1rem;
+        width: 100%;
+        margin: 0;
+        padding: 1rem 1.5rem;
+        border-radius: 0;
+        border: none;
+        background: transparent;
+        text-align: center;
+    }
+
+    .nav-group .platform-btn:hover,
+    .nav-group .platform-btn.active,
+    .nav-group-actions .platform-btn:hover,
+    .nav-group-actions .platform-btn.active,
+    .header--internal .nav .platform-btn:hover,
+    .header--internal .nav .platform-btn.active {
+        border: none;
+        background-color: var(--surface);
+    }
+
+    .nav.active .btn,
+    .nav.active .nav-link,
+    .nav.active .platform-btn {
         text-align: center;
     }
 
