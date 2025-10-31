@@ -121,6 +121,17 @@ function getAuth0Config() {
         if (req.session) {
           req.session.userId = user._id.toString();
           req.session.dbRole = user.role;
+          req.session.user = {
+            id: user._id.toString(),
+            uid: user.uid,
+            username: user.name || user.email,
+            email: user.email,
+            role: user.role,
+            picture: user.picture,
+            createdAt: user.createdAt
+          };
+          req.session.justLoggedIn = true;
+          req.session.redirectAfterLogin = isAdmin ? '/admin' : '/dashboard';
 
           // Force session save to ensure data persists
           return new Promise((resolve, reject) => {
@@ -258,21 +269,42 @@ export const handleLandingRedirect = async (req, res, next) => {
     return next();
   }
 
-  // If the user is authenticated, send them to the appropriate dashboard
+  const justLoggedIn = req.session?.justLoggedIn;
+  if (!justLoggedIn) {
+    return next();
+  }
+
+  // Clear the flag so the user can visit landing later
+  if (req.session) {
+    delete req.session.justLoggedIn;
+  }
+
+  // If the user is authenticated, redirect once after login
   if (req.oidc?.isAuthenticated && req.oidc.isAuthenticated()) {
-    const email = req.oidc.user?.email;
-    const adminEmailEnv = process.env.ADMIL_EMAIL || process.env.ADMIN_EMAIL;
-    const normalizedAdminEmail = adminEmailEnv ? adminEmailEnv.toLowerCase() : null;
+    let redirectTo = req.session?.redirectAfterLogin;
 
-    if (email) {
-      const redirectTo =
-        normalizedAdminEmail && email.toLowerCase() === normalizedAdminEmail
-          ? '/admin'
-          : '/dashboard';
+    if (!redirectTo) {
+      const email = req.oidc.user?.email;
+      const adminEmailEnv = process.env.ADMIL_EMAIL || process.env.ADMIN_EMAIL;
+      const normalizedAdminEmail = adminEmailEnv ? adminEmailEnv.toLowerCase() : null;
 
-      logger.info(`handleLandingRedirect - Redirecting authenticated user ${email} to ${redirectTo}`);
-      return res.redirect(redirectTo);
+      if (email && normalizedAdminEmail && email.toLowerCase() === normalizedAdminEmail) {
+        redirectTo = '/admin';
+      } else {
+        redirectTo = '/dashboard';
+      }
     }
+
+    if (req.session) {
+      delete req.session.redirectAfterLogin;
+    }
+
+    logger.info(`handleLandingRedirect - Redirecting post-login user to ${redirectTo}`);
+    return res.redirect(redirectTo);
+  }
+
+  if (req.session) {
+    delete req.session.redirectAfterLogin;
   }
 
   next();

@@ -27,7 +27,6 @@
 
             // Avatar emoji based on role
             const avatarEmoji = data.user.role === 'admin' ? '👨‍💼' : '👤';
-            document.getElementById('userAvatar').textContent = avatarEmoji;
 
             // Subscription info
             const subscription = data.subscription || { plan: 'free' };
@@ -61,6 +60,9 @@
             document.getElementById('commentsCount').textContent = data.surlink?.comments?.length || 0;
             document.getElementById('responsesCount').textContent = data.surlink?.responses?.length || 0;
 
+            // Forum stats and activity
+            updateForumSection(data.forum || {});
+
             // Settings (if provided)
             if (data.settings) {
                 document.getElementById('emailNotifications').checked = data.settings.emailNotifications || false;
@@ -69,7 +71,7 @@
             }
 
             // Check and display profile photo
-            checkProfilePhoto(data);
+            checkProfilePhoto(data, avatarEmoji);
         }
 
         function displayActivity(activities) {
@@ -107,6 +109,145 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        function updateForumSection(forumData = {}) {
+            const stats = forumData.stats || {};
+
+            const threadsCountEl = document.getElementById('forumThreadsCount');
+            if (threadsCountEl) {
+                threadsCountEl.textContent = stats.threadsCreated ?? stats.threads ?? 0;
+            }
+
+            const commentsCountEl = document.getElementById('forumCommentsCount');
+            if (commentsCountEl) {
+                commentsCountEl.textContent = stats.commentsMade ?? stats.comments ?? 0;
+            }
+
+            const repliesCountEl = document.getElementById('forumRepliesCount');
+            if (repliesCountEl) {
+                repliesCountEl.textContent = stats.repliesReceived ?? 0;
+            }
+
+            const likesCountEl = document.getElementById('forumLikesCount');
+            if (likesCountEl) {
+                likesCountEl.textContent = stats.likesReceived ?? stats.likes ?? 0;
+            }
+
+            renderForumThreads(forumData.recentThreads || []);
+            renderForumComments(forumData.recentComments || []);
+        }
+
+        function renderForumThreads(threads) {
+            const container = document.getElementById('forumThreadsList');
+            if (!container) {
+                return;
+            }
+
+            if (!threads || threads.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <p>Todavía no creaste hilos.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = threads.map(thread => {
+                const title = escapeHtml(thread.title || 'Hilo sin título');
+                const comments = thread.commentsCount || 0;
+                const likes = thread.likesCount || 0;
+                const createdAt = formatDateTime(thread.createdAt);
+
+                return `
+                    <div class="activity-item">
+                        <div class="type">Hilo</div>
+                        <div><a href="/forum-thread/${thread.id}" class="forum-thread-link">${title}</a></div>
+                        <div class="forum-meta">
+                            <span>💬 ${comments}</span>
+                            <span>👍 ${likes}</span>
+                        </div>
+                        <div class="date">${createdAt}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderForumComments(comments) {
+            const container = document.getElementById('forumCommentsList');
+            if (!container) {
+                return;
+            }
+
+            if (!comments || comments.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2"></path>
+                        </svg>
+                        <p>Todavía no comentaste en el foro.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = comments.map(comment => {
+                const snippet = truncateText(escapeHtml(comment.content || ''), 160) || 'Comentario sin contenido';
+                const createdAt = formatDateTime(comment.createdAt);
+                const hasThread = comment.thread && comment.thread.id;
+                const threadTitle = escapeHtml(comment.thread?.title || 'Hilo no disponible');
+                const threadLink = hasThread
+                    ? `<a href="/forum-thread/${comment.thread.id}" class="forum-thread-link">${threadTitle}</a>`
+                    : `<span class="forum-thread-link">${threadTitle}</span>`;
+
+                return `
+                    <div class="activity-item">
+                        <div class="type">Comentario</div>
+                        <div class="forum-comment-snippet">${snippet}</div>
+                        <div class="forum-meta">
+                            <span>🧵 ${threadLink}</span>
+                        </div>
+                        <div class="date">${createdAt}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(text) {
+            if (typeof text !== 'string') {
+                return '';
+            }
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            };
+            return text.replace(/[&<>"']/g, char => map[char]).trim();
+        }
+
+        function truncateText(text, limit = 150) {
+            if (!text) {
+                return '';
+            }
+            if (text.length <= limit) {
+                return text;
+            }
+            return text.slice(0, limit).trimEnd() + '...';
+        }
+
+        function formatDateTime(date) {
+            if (!date) {
+                return '';
+            }
+            return new Date(date).toLocaleString('es-UY', {
+                dateStyle: 'short',
+                timeStyle: 'short'
+            });
         }
 
         // Modal functions
@@ -651,12 +792,34 @@
         function updateAvatar(photoUrl, emoji = null) {
             const avatarContainer = document.getElementById('userAvatar');
 
+            if (!avatarContainer) {
+                return;
+            }
+
             if (photoUrl) {
                 // Show photo
-                avatarContainer.innerHTML = `<img src="${photoUrl}" alt="Profile Photo">`;
-            } else if (emoji) {
-                // Show emoji
-                avatarContainer.innerHTML = `<span class="profile-avatar-placeholder">${emoji}</span>`;
+                avatarContainer.classList.add('has-photo');
+                avatarContainer.innerHTML = '';
+
+                const img = document.createElement('img');
+                img.src = photoUrl;
+                img.alt = 'Foto de perfil';
+                img.loading = 'lazy';
+                img.decoding = 'async';
+                img.referrerPolicy = 'no-referrer';
+
+                avatarContainer.appendChild(img);
+            } else {
+                avatarContainer.classList.remove('has-photo');
+                avatarContainer.innerHTML = '';
+
+                if (emoji) {
+                    // Show emoji as placeholder
+                    const placeholder = document.createElement('span');
+                    placeholder.className = 'profile-avatar-placeholder';
+                    placeholder.textContent = emoji;
+                    avatarContainer.appendChild(placeholder);
+                }
             }
         }
 
@@ -668,11 +831,19 @@
         });
 
         // Initialize remove button visibility based on profile data
-        function checkProfilePhoto(profileData) {
-            if (profileData.user?.photoUrl) {
-                removePhotoBtn.style.display = 'inline-block';
-                updateAvatar(profileData.user.photoUrl);
-            } else {
-                removePhotoBtn.style.display = 'none';
+        function checkProfilePhoto(profileData, defaultEmoji) {
+            if (!profileData?.user) {
+                updateAvatar(null, defaultEmoji);
+                return;
             }
+
+            const uploadedPhoto = profileData.user.photoUrl || null;
+            const auth0Photo = profileData.user.picture || null;
+
+            if (removePhotoBtn) {
+                removePhotoBtn.style.display = uploadedPhoto ? 'inline-block' : 'none';
+            }
+
+            const photoToDisplay = uploadedPhoto || auth0Photo || null;
+            updateAvatar(photoToDisplay, defaultEmoji);
         }

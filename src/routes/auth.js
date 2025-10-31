@@ -1,8 +1,9 @@
 import express from 'express';
 import { generateGuestToken, generateUserToken } from '../middleware/auth.js';
-import { User, Incident, Validation, Subscription } from '../models/index.js';
+import { User, Incident, Validation, Subscription, ForumThread, ForumComment } from '../models/index.js';
 import logger from '../utils/logger.js';
 import { checkAuthMaintenance } from '../middleware/maintenanceCheck.js';
+import { getAuthenticatedUser } from '../config/auth0.js';
 
 const router = express.Router();
 
@@ -164,30 +165,84 @@ router.post('/auth0/callback', checkAuthMaintenance, async (req, res) => {
  */
 router.get('/profile', async (req, res) => {
   try {
-    if (!req.session.user) {
+    const sessionUser = await getAuthenticatedUser(req);
+
+    if (!sessionUser) {
       return res.status(401).json({ error: 'No autenticado' });
     }
 
     // Get user from database with real stats
-    const user = await User.findOne({ uid: req.session.user.uid });
+    const user = await User.findOne({ uid: sessionUser.uid });
     if (!user) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    // Get recent activity (last 10 actions)
-    const recentIncidents = await Incident.find({
-      reporterUid: user.uid
-    })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .select('type createdAt');
-
-    const recentValidations = await Validation.find({
-      uid: user.uid
-    })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .select('vote createdAt incidentId');
+    const [
+      recentIncidents,
+      recentValidations,
+      subscription,
+      forumThreadsCount,
+      forumCommentsCount,
+      forumThreadStats,
+      forumCommentLikes,
+      recentForumThreads,
+      recentForumComments
+    ] = await Promise.all([
+      Incident.find({
+        reporterUid: user.uid
+      })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .select('type createdAt'),
+      Validation.find({
+        uid: user.uid
+      })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .select('vote createdAt incidentId'),
+      Subscription.findOne({
+        userId: user._id,
+        status: 'active'
+      }).sort({ createdAt: -1 }),
+      ForumThread.countDocuments({ author: user._id, status: 'active' }),
+      ForumComment.countDocuments({ author: user._id, status: 'active' }),
+      ForumThread.aggregate([
+        { $match: { author: user._id, status: 'active' } },
+        {
+          $group: {
+            _id: null,
+            totalLikes: { $sum: '$likesCount' },
+            totalComments: { $sum: '$commentsCount' }
+          }
+        }
+      ]),
+      ForumComment.aggregate([
+        { $match: { author: user._id, status: 'active' } },
+        {
+          $group: {
+            _id: null,
+            totalLikes: { $sum: '$likesCount' }
+          }
+        }
+      ]),
+      ForumThread.find({
+        author: user._id,
+        status: 'active'
+      })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .select('title createdAt likesCount commentsCount status')
+        .lean(),
+      ForumComment.find({
+        author: user._id,
+        status: 'active'
+      })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate('threadId', 'title')
+        .select('content createdAt threadId')
+        .lean()
+    ]);
 
     // Combine and sort activities
     const activities = [
@@ -205,17 +260,44 @@ router.get('/profile', async (req, res) => {
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 10);
 
-    // Get user's subscription
-    const subscription = await Subscription.findOne({
-      userId: user._id,
-      status: 'active'
-    }).sort({ createdAt: -1 });
+    const threadStats = forumThreadStats?.[0] || { totalLikes: 0, totalComments: 0 };
+    const commentLikes = forumCommentLikes?.[0] || { totalLikes: 0 };
+
+    const forumData = {
+      stats: {
+        threadsCreated: forumThreadsCount || 0,
+        commentsMade: forumCommentsCount || 0,
+        repliesReceived: threadStats.totalComments || 0,
+        likesReceived: (threadStats.totalLikes || 0) + (commentLikes.totalLikes || 0)
+      },
+      recentThreads: (recentForumThreads || []).map(thread => ({
+        id: thread._id?.toString(),
+        title: thread.title,
+        createdAt: thread.createdAt,
+        commentsCount: thread.commentsCount || 0,
+        likesCount: thread.likesCount || 0,
+        status: thread.status
+      })),
+      recentComments: (recentForumComments || []).map(comment => ({
+        id: comment._id?.toString(),
+        content: comment.content,
+        createdAt: comment.createdAt,
+        thread: comment.threadId
+          ? {
+              id: comment.threadId._id?.toString(),
+              title: comment.threadId.title
+            }
+          : null
+      }))
+    };
 
     const profileData = {
       user: {
         id: user._id,
-        username: user.uid,
-        email: req.session.user.email || '',
+        uid: user.uid,
+        username: user.name || user.email,
+        email: user.email,
+        picture: user.picture,
         role: user.role,
         createdAt: user.createdAt
       },
@@ -236,7 +318,8 @@ router.get('/profile', async (req, res) => {
         emailNotifications: true,
         publicProfile: false,
         showLocation: true
-      }
+      },
+      forum: forumData
     };
 
     res.json(profileData);

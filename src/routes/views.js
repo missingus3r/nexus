@@ -122,13 +122,16 @@ router.get('/pricing', (req, res) => {
 /**
  * Profile page (requires auth)
  */
-router.get('/perfil', (req, res) => {
-  if (!req.session.user) {
+router.get('/perfil', async (req, res) => {
+  const user = await getAuthenticatedUser(req);
+
+  if (!user) {
     return res.redirect('/login');
   }
   res.render('perfil', {
     title: 'Mi Perfil - Vortex',
-    page: 'perfil'
+    page: 'perfil',
+    user
   });
 });
 
