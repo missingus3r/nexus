@@ -654,7 +654,7 @@
     const isAuthenticated = config.isAuthenticated === true || config.isAuthenticated === 'true';
 
     if (!isAuthenticated) {
-      alert('Iniciá sesión para guardar favoritos y comentar.');
+      toastWarning('Iniciá sesión para guardar favoritos y comentar.');
       return;
     }
 
@@ -664,7 +664,7 @@
       });
       updateLikeButtons(id, data.liked, data.likes);
     } catch (error) {
-      alert(error.message);
+      toastError(error.message);
     }
   };
 
@@ -705,7 +705,7 @@
 
       form.reset();
     } catch (error) {
-      alert(error.message);
+      toastError(error.message);
     }
   };
 
@@ -726,7 +726,7 @@
         list.innerHTML = '<div class="surlink-empty">El comentario fue eliminado.</div>';
       }
     } catch (error) {
-      alert(error.message);
+      toastError(error.message);
     }
   };
 

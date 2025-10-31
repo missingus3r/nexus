@@ -513,7 +513,7 @@
                 document.getElementById('favoritesCount').textContent = Math.max(0, currentCount - 1);
             } catch (error) {
                 console.error('Error removing favorite:', error);
-                alert('Error al eliminar el favorito');
+                toastError('Error al eliminar el favorito');
             }
         }
 
@@ -569,7 +569,7 @@
                 console.log('Settings saved successfully');
             } catch (error) {
                 console.error('Error saving settings:', error);
-                alert('Error al guardar la configuración');
+                toastError('Error al guardar la configuración');
             }
         }
 
@@ -621,11 +621,11 @@
                 }
 
                 // Account deleted successfully
-                alert('Tu cuenta ha sido eliminada exitosamente.');
+                toastSuccess('Tu cuenta ha sido eliminada exitosamente.');
                 window.location.href = '/';
             } catch (error) {
                 console.error('Error deleting account:', error);
-                alert('Error al eliminar la cuenta: ' + error.message);
+                toastError('Error al eliminar la cuenta: ' + error.message);
             }
         });
 
@@ -682,7 +682,7 @@
             // Validate file size (5MB max)
             const maxSize = 5 * 1024 * 1024;
             if (file.size > maxSize) {
-                alert('La foto debe ser menor a 5MB');
+                toastWarning('La foto debe ser menor a 5MB');
                 e.target.value = '';
                 photoPreviewContainer.style.display = 'none';
                 confirmUploadBtn.disabled = true;
@@ -693,7 +693,7 @@
             // Validate file type
             const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
             if (!validTypes.includes(file.type)) {
-                alert('Formato no válido. Usa JPG, PNG o WEBP');
+                toastWarning('Formato no válido. Usa JPG, PNG o WEBP');
                 e.target.value = '';
                 photoPreviewContainer.style.display = 'none';
                 confirmUploadBtn.disabled = true;
@@ -744,10 +744,10 @@
                 // Close modal
                 closePhotoModal();
 
-                alert('Foto de perfil actualizada exitosamente');
+                toastSuccess('Foto de perfil actualizada exitosamente');
             } catch (error) {
                 console.error('Error uploading photo:', error);
-                alert('Error al subir la foto: ' + error.message);
+                toastError('Error al subir la foto: ' + error.message);
             } finally {
                 confirmUploadBtn.disabled = false;
                 confirmUploadBtn.textContent = 'Guardar Foto';
@@ -781,10 +781,10 @@
                 // Hide remove button
                 removePhotoBtn.style.display = 'none';
 
-                alert('Foto de perfil eliminada exitosamente');
+                toastSuccess('Foto de perfil eliminada exitosamente');
             } catch (error) {
                 console.error('Error removing photo:', error);
-                alert('Error al eliminar la foto: ' + error.message);
+                toastError('Error al eliminar la foto: ' + error.message);
             }
         });
 

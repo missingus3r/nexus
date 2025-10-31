@@ -10,8 +10,7 @@
     "test": "echo 'No tests configured yet' && exit 0",
     "lint": "eslint .",
     "clean-fake-data": "node src/scripts/cleanFakeData.js",
-    "recalculate-counters": "node src/scripts/recalculateCounters.js",
-    "scrape-real-estate": "node src/scripts/scrapeRealEstate.js"
+    "recalculate-counters": "node src/scripts/recalculateCounters.js"
   },
   "keywords": [
     "security",
@@ -30,7 +29,6 @@
     "cheerio": "^1.0.0-rc.12",
     "compromise": "^14.11.0",
     "cors": "^2.8.5",
-    "crypto": "^1.0.1",
     "dotenv": "^16.3.1",
     "ejs": "^3.1.9",
     "exceljs": "^4.4.0",
@@ -46,7 +44,6 @@
     "ngeohash": "^0.6.3",
     "node-cron": "^3.0.3",
     "nodemailer": "^7.0.9",
-    "playwright": "^1.45.0",
     "sanitize-html": "^2.17.0",
     "sharp": "^0.33.1",
     "socket.io": "^4.6.1",
@@ -65,6 +62,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/missingus3r/nexus.git"
+    "url": "https://github.com/missingus3r/nexus.git" 
   }
 }

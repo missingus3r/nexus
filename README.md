@@ -38,7 +38,6 @@
 ### Configuración
 
 ```bash
-cd api
 npm install
 
 # Configurar variables de entorno
@@ -57,7 +56,6 @@ La aplicación estará disponible en `http://localhost:3000`
 ## 🏗️ Estructura del Proyecto
 
 ```
-api/
 ├── views/          # Templates EJS
 ├── public/         # Assets estáticos
 ├── src/

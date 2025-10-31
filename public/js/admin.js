@@ -188,120 +188,6 @@
             }
         }
 
-        function toggleSurlinkButtons(disabled) {
-            ['surlinkCasasBtn', 'surlinkAutosBtn', 'surlinkCleanupBtn'].forEach(id => {
-                const btn = document.getElementById(id);
-                if (btn) {
-                    btn.disabled = disabled;
-                }
-            });
-        }
-
-        function showSurlinkStatus(message, type = 'info') {
-            const statusEl = document.getElementById('surlinkStatus');
-            if (!statusEl) return;
-
-            statusEl.textContent = message;
-            statusEl.className = `status-message ${type}`;
-            statusEl.style.display = 'block';
-
-            if (type === 'success' || type === 'info') {
-                setTimeout(() => {
-                    statusEl.style.display = 'none';
-                }, 8000);
-            }
-        }
-
-        async function scheduleSurlinkIngest(category) {
-            const labels = {
-                casas: 'Surlink Casas',
-                autos: 'Surlink Autos'
-            };
-
-            const label = labels[category] || 'Surlink';
-            const confirmMsg = `¿Programar el scrapping automático para ${label}? Esta acción solicitará al backend preparar el proceso.`;
-
-            if (!confirm(confirmMsg)) return;
-
-            toggleSurlinkButtons(true);
-            showSurlinkStatus(`Programando scrapping para ${label}...`, 'info');
-
-            try {
-                const response = await fetch('/api/admin/surlink/schedule', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ category })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || 'Error al programar el scrapping');
-                }
-
-                let statusMessage = data.message || `Scrapping programado para ${label}.`;
-                const extra = [];
-
-                if (typeof data.processedSources === 'number') {
-                    extra.push(`Fuentes procesadas: ${data.processedSources}`);
-                }
-                if (typeof data.scrapedOffers === 'number') {
-                    extra.push(`Ofertas analizadas: ${data.scrapedOffers}`);
-                }
-                if (typeof data.inserted === 'number' || typeof data.updated === 'number') {
-                    extra.push(`Ingresadas: ${data.inserted ?? 0}, Actualizadas: ${data.updated ?? 0}`);
-                }
-                if (data.implemented === false) {
-                    extra.push('Funcionalidad en preparación');
-                }
-
-                if (extra.length) {
-                    statusMessage = `${statusMessage}\n${extra.join(' • ')}`;
-                }
-
-                showSurlinkStatus(statusMessage, 'success');
-            } catch (error) {
-                console.error('Error scheduling Surlink ingest:', error);
-                showSurlinkStatus(error.message, 'error');
-            } finally {
-                toggleSurlinkButtons(false);
-            }
-        }
-
-        async function cleanupSurlinkListings() {
-            const confirmMsg = '¿Depurar listados caducados o inactivos de Surlink?\n\nEsta acción archivará publicaciones vencidas.';
-
-            if (!confirm(confirmMsg)) return;
-
-            toggleSurlinkButtons(true);
-            showSurlinkStatus('Iniciando limpieza de listados caducados...', 'info');
-
-            try {
-                const response = await fetch('/api/admin/surlink/cleanup', {
-                    method: 'POST'
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || 'Error al depurar listados');
-                }
-
-                const archived = typeof data.archived === 'number'
-                    ? ` Listados archivados: ${data.archived}.`
-                    : '';
-
-                showSurlinkStatus((data.message || 'Limpieza completada.') + archived, 'success');
-            } catch (error) {
-                console.error('Error cleaning up Surlink listings:', error);
-                showSurlinkStatus(error.message, 'error');
-            } finally {
-                toggleSurlinkButtons(false);
-            }
-        }
-
         // User Management Functions
         const userManagementState = {
             loaded: false,
@@ -981,7 +867,7 @@
                 displayRecentSubscriptions(subscriptions);
             } catch (error) {
                 console.error('Error applying filters:', error);
-                alert('Error al aplicar filtros: ' + error.message);
+                toastError('Error al aplicar filtros: ' + error.message);
             }
         }
 
@@ -1024,10 +910,10 @@
                 window.URL.revokeObjectURL(downloadUrl);
                 document.body.removeChild(a);
 
-                alert(`Datos exportados exitosamente en formato ${format.toUpperCase()}`);
+                toastSuccess(`Datos exportados exitosamente en formato ${format.toUpperCase()}`);
             } catch (error) {
                 console.error('Error exporting subscriptions:', error);
-                alert('Error al exportar datos: ' + error.message);
+                toastError('Error al exportar datos: ' + error.message);
             }
         }
 
@@ -1052,11 +938,11 @@
                     throw new Error(result.error || 'Error al renovar suscripción');
                 }
 
-                alert('Suscripción renovada exitosamente hasta ' + new Date(result.subscription.endDate).toLocaleDateString('es-UY'));
+                toastSuccess('Suscripción renovada exitosamente hasta ' + new Date(result.subscription.endDate).toLocaleDateString('es-UY'));
                 loadSubscriptionStats();
             } catch (error) {
                 console.error('Error renewing subscription:', error);
-                alert('Error al renovar suscripción: ' + error.message);
+                toastError('Error al renovar suscripción: ' + error.message);
             }
         }
 
@@ -1079,11 +965,11 @@
                     throw new Error(result.error || 'Error al cancelar suscripción');
                 }
 
-                alert('Suscripción cancelada exitosamente');
+                toastSuccess('Suscripción cancelada exitosamente');
                 loadSubscriptionStats();
             } catch (error) {
                 console.error('Error cancelling subscription:', error);
-                alert('Error al cancelar suscripción: ' + error.message);
+                toastError('Error al cancelar suscripción: ' + error.message);
             }
         }
 
@@ -1105,7 +991,7 @@
                 modal.style.display = 'flex';
             } catch (error) {
                 console.error('Error loading payment history:', error);
-                alert('Error al cargar historial de pagos: ' + error.message);
+                toastError('Error al cargar historial de pagos: ' + error.message);
             }
         }
 
@@ -1572,6 +1458,112 @@
                 checkbox.checked = !isEnabled; // Revert checkbox
                 statusDiv.textContent = `❌ Error: ${error.message}`;
                 statusDiv.className = 'status-message error';
+            }
+        }
+
+        async function triggerScheduledCleanup() {
+            const statusDiv = document.getElementById('scheduledCleanupStatus');
+            const button = document.getElementById('runScheduledCleanupBtn');
+
+            if (!statusDiv || !button) return;
+
+            if (!confirm('¿Ejecutar ahora la limpieza programada del sistema? Este proceso eliminará incidentes pendientes antiguos y archivos huérfanos.')) {
+                return;
+            }
+
+            button.disabled = true;
+            statusDiv.textContent = 'Ejecutando limpieza programada...';
+            statusDiv.className = 'status-message';
+
+            try {
+                const response = await fetch('/api/admin/maintenance/run-cleanup', {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al ejecutar limpieza programada');
+                }
+
+                const summary = data.summary || {};
+                statusDiv.className = 'status-message success';
+                statusDiv.textContent = `✅ Limpieza completada. Incidentes pendientes eliminados: ${summary.removedPendingIncidents || 0}. Validaciones archivadas: ${summary.validationsArchived || 0}. Archivos huérfanos eliminados: ${summary.orphanedFilesDeleted || 0}.`;
+
+                // Refresh dashboard stats after cleanup
+                loadStats();
+            } catch (error) {
+                console.error('Error running scheduled cleanup:', error);
+                statusDiv.className = 'status-message error';
+                statusDiv.textContent = `❌ Error al ejecutar limpieza: ${error.message}`;
+            } finally {
+                button.disabled = false;
+                setTimeout(() => {
+                    statusDiv.textContent = '';
+                }, 8000);
+            }
+        }
+
+        async function purgeSurlinkListings() {
+            const categorySelect = document.getElementById('surlinkCleanupCategory');
+            const button = document.getElementById('surlinkCleanupBtn');
+            const statusDiv = document.getElementById('surlinkCleanupStatus');
+
+            if (!categorySelect || !button || !statusDiv) return;
+
+            const category = categorySelect.value;
+            const labels = {
+                casas: 'Casas',
+                autos: 'Autos',
+                academy: 'Academy',
+                financial: 'Financial',
+                all: 'todas las categorías'
+            };
+
+            const confirmationLabel = labels[category] || category;
+            const confirmMessage = category === 'all'
+                ? '⚠️ ¿Eliminar TODOS los listados de Surlink? Esta acción no se puede deshacer.'
+                : `¿Eliminar todos los listados de la categoría ${confirmationLabel}? Esta acción no se puede deshacer.`;
+
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+
+            button.disabled = true;
+            categorySelect.disabled = true;
+            statusDiv.textContent = 'Eliminando listados de Surlink...';
+            statusDiv.className = 'status-message';
+
+            try {
+                const response = await fetch('/api/admin/surlink/purge', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ category })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al limpiar Surlink');
+                }
+
+                statusDiv.className = 'status-message success';
+                statusDiv.textContent = `✅ Eliminados ${data.deleted || 0} listados de ${labels[data.category] || data.category}`;
+
+                // Refresh stats to reflect new totals
+                loadStats();
+            } catch (error) {
+                console.error('Error purging Surlink listings:', error);
+                statusDiv.className = 'status-message error';
+                statusDiv.textContent = `❌ Error al limpiar Surlink: ${error.message}`;
+            } finally {
+                button.disabled = false;
+                categorySelect.disabled = false;
+                setTimeout(() => {
+                    statusDiv.textContent = '';
+                }, 8000);
             }
         }
 

@@ -824,14 +824,14 @@ async function handleReportSubmit(e) {
 
     const token = localStorage.getItem('jwt');
     if (!token) {
-        alert('Debes iniciar sesión para reportar incidentes');
+        toastWarning('Debes iniciar sesión para reportar incidentes');
         window.location.href = '/login';
         return;
     }
 
     // Check if location was selected
     if (!selectedLocation) {
-        alert('Por favor selecciona una ubicación en el mapa');
+        toastWarning('Por favor selecciona una ubicación en el mapa');
         return;
     }
 
@@ -877,7 +877,7 @@ async function handleReportSubmit(e) {
         });
 
         if (response.ok) {
-            alert('Incidente reportado exitosamente. Aguardando validación.');
+            toastSuccess('Incidente reportado exitosamente. Aguardando validación.');
             document.getElementById('reportModal').classList.remove('active');
             document.getElementById('photoPreview').innerHTML = ''; // Clear photo preview
             form.reset();
@@ -885,11 +885,11 @@ async function handleReportSubmit(e) {
             loadMapData();
         } else {
             const error = await response.json();
-            alert('Error: ' + (error.error || 'No se pudo reportar el incidente'));
+            toastError('Error: ' + (error.error || 'No se pudo reportar el incidente'));
         }
     } catch (error) {
         console.error('Error reporting incident:', error);
-        alert('Error al reportar el incidente');
+        toastError('Error al reportar el incidente');
     }
 }
 

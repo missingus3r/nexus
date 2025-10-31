@@ -66,7 +66,7 @@
                     }
 
                     // Show success message
-                    alert(data.message || 'Autenticación exitosa');
+                    toastSuccess(data.message || 'Autenticación exitosa');
 
                     // Redirect based on role
                     if (data.user && data.user.role === 'admin') {
@@ -79,7 +79,7 @@
                 }
             } catch (error) {
                 console.error('Error in Auth0 callback:', error);
-                alert('Error al iniciar sesión: ' + error.message);
+                toastError('Error al iniciar sesión: ' + error.message);
                 // Clear URL parameters
                 window.history.replaceState({}, document.title, '/login');
             }

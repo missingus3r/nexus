@@ -113,7 +113,7 @@ document.getElementById('photos')?.addEventListener('change', (e) => {
 
     // Validate max 3 photos
     if (files.length > 3) {
-        alert('Máximo 3 fotos permitidas');
+        toastWarning('Máximo 3 fotos permitidas');
         e.target.value = '';
         preview.innerHTML = '';
         return;
@@ -123,7 +123,7 @@ document.getElementById('photos')?.addEventListener('change', (e) => {
     const maxSize = 5 * 1024 * 1024; // 5MB
     const invalidFiles = files.filter(f => f.size > maxSize);
     if (invalidFiles.length > 0) {
-        alert('Cada foto debe ser menor a 5MB');
+        toastWarning('Cada foto debe ser menor a 5MB');
         e.target.value = '';
         preview.innerHTML = '';
         return;

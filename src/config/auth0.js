@@ -65,7 +65,7 @@ function getAuth0Config() {
         logger.info(`Auth0 callback - User logged in: ${email}`);
 
         // Check if user is admin
-        const adminEmailEnv = process.env.ADMIL_EMAIL || process.env.ADMIN_EMAIL;
+        const adminEmailEnv = process.env.ADMIN_EMAIL;
         const normalizedAdminEmail = adminEmailEnv ? adminEmailEnv.toLowerCase() : null;
         const isAdmin = normalizedAdminEmail ? email.toLowerCase() === normalizedAdminEmail : false;
 
@@ -285,7 +285,7 @@ export const handleLandingRedirect = async (req, res, next) => {
 
     if (!redirectTo) {
       const email = req.oidc.user?.email;
-      const adminEmailEnv = process.env.ADMIL_EMAIL || process.env.ADMIN_EMAIL;
+      const adminEmailEnv = process.env.ADMIN_EMAIL;
       const normalizedAdminEmail = adminEmailEnv ? adminEmailEnv.toLowerCase() : null;
 
       if (email && normalizedAdminEmail && email.toLowerCase() === normalizedAdminEmail) {

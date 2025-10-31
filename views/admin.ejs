@@ -129,29 +129,6 @@
                 <div id="newsStatus" class="status-message"></div>
             </div>
 
-            <!-- Surlink Controls -->
-            <div class="surlink-controls">
-                <h2>🌐 Vortex Surlink</h2>
-                <p>
-                    Gestioná el agregador de inmuebles y autos. Estos controles preparan las automatizaciones futuras
-                    para el scrapping y la depuración de listados caducados.
-                </p>
-
-                <div class="button-group">
-                    <button class="btn btn-primary" id="surlinkCasasBtn" onclick="scheduleSurlinkIngest('casas')">
-                        🚀 Scraping Surlink Casas
-                    </button>
-                    <button class="btn btn-primary" id="surlinkAutosBtn" onclick="scheduleSurlinkIngest('autos')">
-                        🚗 Scraping Surlink Autos
-                    </button>
-                    <button class="btn btn-secondary" id="surlinkCleanupBtn" onclick="cleanupSurlinkListings()">
-                        🧹 Depurar Listados Caducados
-                    </button>
-                </div>
-
-                <div id="surlinkStatus" class="status-message info" style="display: none;"></div>
-            </div>
-
             <!-- Subscriptions Dashboard -->
             <div class="surlink-controls">
                 <h2>💳 Gestión de Suscripciones</h2>
@@ -428,6 +405,46 @@
                     </div>
 
                     <div id="maintenanceStatus" class="status-message" style="margin-top: 1rem;"></div>
+                </div>
+            </div>
+
+            <!-- Maintenance Utilities -->
+            <div class="surlink-controls">
+                <h2>🧼 Herramientas de Limpieza</h2>
+                <p>
+                    Ejecuta manualmente la limpieza programada del sistema o depura los listados de Surlink por categoría.
+                </p>
+
+                <div style="display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 1.5rem;">
+                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px;">
+                        <h3 style="margin-top: 0;">🧹 Limpieza Programada</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                            Ejecuta al instante el proceso nocturno: elimina incidentes pendientes antiguos, archiva validaciones y borra archivos huérfanos.
+                        </p>
+                        <button class="btn btn-primary btn-icon" id="runScheduledCleanupBtn" onclick="triggerScheduledCleanup()">
+                            ▶️ Ejecutar limpieza
+                        </button>
+                        <div id="scheduledCleanupStatus" class="status-message" style="margin-top: 1rem;"></div>
+                    </div>
+
+                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px;">
+                        <h3 style="margin-top: 0;">🗑️ Limpieza Surlink</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+                            Elimina definitivamente los listados de Surlink para una categoría específica o limpia toda la colección.
+                        </p>
+                        <label for="surlinkCleanupCategory" style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Categoría</label>
+                        <select id="surlinkCleanupCategory" style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--background); color: var(--text-primary); margin-bottom: 1rem;">
+                            <option value="all">Todas</option>
+                            <option value="casas">Casas</option>
+                            <option value="autos">Autos</option>
+                            <option value="academy">Academy</option>
+                            <option value="financial">Financial</option>
+                        </select>
+                        <button class="btn btn-danger btn-icon" id="surlinkCleanupBtn" onclick="purgeSurlinkListings()">
+                            🧽 Limpiar listados
+                        </button>
+                        <div id="surlinkCleanupStatus" class="status-message" style="margin-top: 1rem;"></div>
+                    </div>
                 </div>
             </div>
 

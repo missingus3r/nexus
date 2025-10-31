@@ -51,7 +51,7 @@ const commentSchema = new mongoose.Schema({
 const surlinkListingSchema = new mongoose.Schema({
   category: {
     type: String,
-    enum: ['casas', 'autos', 'academy'],
+    enum: ['casas', 'autos', 'academy', 'financial'],
     required: true,
     index: true
   },

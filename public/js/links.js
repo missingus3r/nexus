@@ -39,7 +39,7 @@ async function loadLinks() {
                            <a href="https://www.gub.uy/ministerio-interior/tramites-y-servicios/servicios/personas-ausentes" target="_blank" class="btn btn-secondary">
                             D.R.B.P.A.
                            </a>
-                           <button onclick="alert('Alerta Amber Uruguay\\n\\nFue creada por la Ley 20.381 (25/09/2024) y reglamentada por el Decreto 78/025 (12/03/2025). Es el protocolo nacional para activar la búsqueda inmediata de NNA desaparecidos.\\n\\nLa prensa oficial aclaró en septiembre de 2025 que aún faltaban convenios con telefónicas para el envío masivo de SMS/WhatsApp, pero el marco legal ya está vigente.\\n\\nMás información: https://www.impo.com.uy/bases/leyes/20381-2024');" class="btn btn-secondary">
+                           <button onclick="toastInfo('Alerta Amber Uruguay\\n\\nFue creada por la Ley 20.381 (25/09/2024) y reglamentada por el Decreto 78/025 (12/03/2025). Es el protocolo nacional para activar la búsqueda inmediata de NNA desaparecidos.\\n\\nLa prensa oficial aclaró en septiembre de 2025 que aún faltaban convenios con telefónicas para el envío masivo de SMS/WhatsApp, pero el marco legal ya está vigente.\\n\\nMás información: https://www.impo.com.uy/bases/leyes/20381-2024', 8000);" class="btn btn-secondary">
                             Alerta Amber Uruguay
                            </button>
                            <a href="https://www.argentina.gob.ar/seguridad/alertasofia" target="_blank" class="btn btn-secondary">

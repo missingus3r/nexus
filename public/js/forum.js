@@ -141,7 +141,7 @@ function toggleHashtag(tag) {
   } else {
     // Select (max 5)
     if (selectedHashtags.length >= 5) {
-      alert('Máximo 5 hashtags permitidos');
+      toastWarning('Máximo 5 hashtags permitidos');
       return;
     }
     selectedHashtags.push(tag);
@@ -330,7 +330,7 @@ async function handleNewThreadSubmit(e) {
 
   const token = localStorage.getItem('jwt');
   if (!token) {
-    alert('Debes iniciar sesión');
+    toastWarning('Debes iniciar sesión');
     window.location.href = '/login';
     return;
   }
@@ -341,18 +341,18 @@ async function handleNewThreadSubmit(e) {
   // Validate content
   const textContent = threadQuillEditor.getText().trim();
   if (textContent.length < 10) {
-    alert('El contenido debe tener al menos 10 caracteres');
+    toastWarning('El contenido debe tener al menos 10 caracteres');
     return;
   }
 
   if (textContent.length > 10000) {
-    alert('El contenido no puede exceder 10000 caracteres');
+    toastWarning('El contenido no puede exceder 10000 caracteres');
     return;
   }
 
   // Validate hashtags
   if (selectedHashtags.length === 0) {
-    alert('Debes seleccionar al menos un hashtag');
+    toastWarning('Debes seleccionar al menos un hashtag');
     return;
   }
 
@@ -377,18 +377,21 @@ async function handleNewThreadSubmit(e) {
 
     if (response.ok) {
       closeNewThreadModal();
-      window.location.href = `/forum-thread/${data.thread._id}`;
+      toastSuccess('Thread creado exitosamente');
+      setTimeout(() => {
+        window.location.href = `/forum-thread/${data.thread._id}`;
+      }, 600);
     } else {
       if (response.status === 429) {
         // Rate limit error
-        alert('⏱️ ' + data.error);
+        toastWarning('⏱️ ' + data.error);
       } else {
-        alert('Error: ' + (data.error || 'No se pudo crear el thread'));
+        toastError('Error: ' + (data.error || 'No se pudo crear el thread'));
       }
     }
   } catch (error) {
     console.error('Error creating thread:', error);
-    alert('Error al crear el thread');
+    toastError('Error al crear el thread');
   }
 }
 
@@ -653,7 +656,7 @@ async function handleNewCommentSubmit(e) {
 
   const token = localStorage.getItem('jwt');
   if (!token) {
-    alert('Debes iniciar sesión');
+    toastWarning('Debes iniciar sesión');
     return;
   }
 
@@ -674,25 +677,26 @@ async function handleNewCommentSubmit(e) {
       e.target.reset();
       document.getElementById('commentCharCount').textContent = '0';
       document.getElementById('commentImagePreview').innerHTML = '';
+      toastSuccess('Comentario publicado');
       loadThread(); // Reload to show new comment
     } else {
       if (response.status === 429) {
         // Rate limit error
-        alert('⏱️ ' + data.error);
+        toastWarning('⏱️ ' + data.error);
       } else {
-        alert('Error: ' + (data.error || 'No se pudo publicar el comentario'));
+        toastError('Error: ' + (data.error || 'No se pudo publicar el comentario'));
       }
     }
   } catch (error) {
     console.error('Error posting comment:', error);
-    alert('Error al publicar el comentario');
+    toastError('Error al publicar el comentario');
   }
 }
 
 function openReplyModal(commentId) {
   const token = localStorage.getItem('jwt');
   if (!token) {
-    alert('Debes iniciar sesión');
+    toastWarning('Debes iniciar sesión');
     window.location.href = '/login';
     return;
   }
@@ -717,7 +721,7 @@ async function handleReplySubmit(e) {
 
   const token = localStorage.getItem('jwt');
   if (!token) {
-    alert('Debes iniciar sesión');
+    toastWarning('Debes iniciar sesión');
     return;
   }
 
@@ -736,18 +740,19 @@ async function handleReplySubmit(e) {
 
     if (response.ok) {
       closeReplyModal();
+      toastSuccess('Respuesta publicada');
       loadThread(); // Reload to show new reply
     } else {
       if (response.status === 429) {
         // Rate limit error
-        alert('⏱️ ' + data.error);
+        toastWarning('⏱️ ' + data.error);
       } else {
-        alert('Error: ' + (data.error || 'No se pudo publicar la respuesta'));
+        toastError('Error: ' + (data.error || 'No se pudo publicar la respuesta'));
       }
     }
   } catch (error) {
     console.error('Error posting reply:', error);
-    alert('Error al publicar la respuesta');
+    toastError('Error al publicar la respuesta');
   }
 }
 
@@ -759,7 +764,7 @@ async function toggleThreadLike(threadId, event) {
 
   const token = localStorage.getItem('jwt');
   if (!token) {
-    alert('Debes iniciar sesión para dar like');
+    toastWarning('Debes iniciar sesión para dar like');
     window.location.href = '/login';
     return;
   }
@@ -805,7 +810,7 @@ async function toggleCommentLike(commentId, event) {
 
   const token = localStorage.getItem('jwt');
   if (!token) {
-    alert('Debes iniciar sesión para dar like');
+    toastWarning('Debes iniciar sesión para dar like');
     return;
   }
 
@@ -854,7 +859,7 @@ function handleImagePreview(e, previewId = 'imagePreview') {
   const preview = document.getElementById(previewId);
 
   if (files.length > 5) {
-    alert('Máximo 5 imágenes permitidas');
+    toastWarning('Máximo 5 imágenes permitidas');
     e.target.value = '';
     preview.innerHTML = '';
     return;
@@ -863,7 +868,7 @@ function handleImagePreview(e, previewId = 'imagePreview') {
   const maxSize = 5 * 1024 * 1024; // 5MB
   const invalidFiles = files.filter(f => f.size > maxSize);
   if (invalidFiles.length > 0) {
-    alert('Cada imagen debe ser menor a 5MB');
+    toastWarning('Cada imagen debe ser menor a 5MB');
     e.target.value = '';
     preview.innerHTML = '';
     return;
@@ -962,7 +967,7 @@ function isUserAdmin(token) {
 async function openEditThreadModal(threadId) {
   const token = localStorage.getItem('jwt');
   if (!token) {
-    alert('Debes iniciar sesión');
+    toastWarning('Debes iniciar sesión');
     return;
   }
 
@@ -1006,7 +1011,7 @@ async function openEditThreadModal(threadId) {
     document.getElementById('editThreadForm').onsubmit = handleEditThreadSubmit;
   } catch (error) {
     console.error('Error loading thread:', error);
-    alert('Error al cargar el thread');
+    toastError('Error al cargar el thread');
   }
 }
 
@@ -1026,7 +1031,7 @@ async function handleEditThreadSubmit(e) {
 
   const token = localStorage.getItem('jwt');
   if (!token) {
-    alert('Debes iniciar sesión');
+    toastWarning('Debes iniciar sesión');
     return;
   }
 
@@ -1051,14 +1056,14 @@ async function handleEditThreadSubmit(e) {
 
     if (response.ok) {
       closeEditThreadModal();
+      toastSuccess('Thread actualizado exitosamente');
       loadThread(); // Reload thread
-      alert('Thread actualizado exitosamente');
     } else {
-      alert('Error: ' + (data.error || 'No se pudo actualizar el thread'));
+      toastError('Error: ' + (data.error || 'No se pudo actualizar el thread'));
     }
   } catch (error) {
     console.error('Error updating thread:', error);
-    alert('Error al actualizar el thread');
+    toastError('Error al actualizar el thread');
   }
 }
 
@@ -1066,7 +1071,7 @@ async function handleEditThreadSubmit(e) {
 async function deleteThread(threadId) {
   const token = localStorage.getItem('jwt');
   if (!token) {
-    alert('Debes iniciar sesión');
+    toastWarning('Debes iniciar sesión');
     return;
   }
 
@@ -1094,19 +1099,21 @@ async function deleteThread(threadId) {
     if (response.ok) {
       if (data.type === 'hard') {
         // Completely deleted - redirect to forum
-        alert(isAdmin ? 'Thread y todos sus comentarios eliminados permanentemente por admin' : 'Thread eliminado completamente');
-        window.location.href = '/forum-vortex';
+        toastSuccess(isAdmin ? 'Thread y todos sus comentarios eliminados permanentemente por admin' : 'Thread eliminado completamente');
+        setTimeout(() => {
+          window.location.href = '/forum-vortex';
+        }, 600);
       } else {
         // Soft deleted - reload to show [ELIMINADO]
-        alert('Contenido del thread eliminado');
+        toastSuccess('Contenido del thread eliminado');
         loadThread();
       }
     } else {
-      alert('Error: ' + (data.error || 'No se pudo eliminar el thread'));
+      toastError('Error: ' + (data.error || 'No se pudo eliminar el thread'));
     }
   } catch (error) {
     console.error('Error deleting thread:', error);
-    alert('Error al eliminar el thread');
+    toastError('Error al eliminar el thread');
   }
 }
 
@@ -1116,7 +1123,7 @@ window.deleteThread = deleteThread;
 async function openEditCommentModal(commentId) {
   const token = localStorage.getItem('jwt');
   if (!token) {
-    alert('Debes iniciar sesión');
+    toastWarning('Debes iniciar sesión');
     return;
   }
 
@@ -1141,7 +1148,7 @@ async function openEditCommentModal(commentId) {
     const comment = findComment(data.comments);
 
     if (!comment) {
-      alert('Comentario no encontrado');
+      toastWarning('Comentario no encontrado');
       return;
     }
 
@@ -1163,7 +1170,7 @@ async function openEditCommentModal(commentId) {
     document.getElementById('editCommentForm').onsubmit = handleEditCommentSubmit;
   } catch (error) {
     console.error('Error loading comment:', error);
-    alert('Error al cargar el comentario');
+    toastError('Error al cargar el comentario');
   }
 }
 
@@ -1181,7 +1188,7 @@ async function handleEditCommentSubmit(e) {
 
   const token = localStorage.getItem('jwt');
   if (!token) {
-    alert('Debes iniciar sesión');
+    toastWarning('Debes iniciar sesión');
     return;
   }
 
@@ -1204,14 +1211,14 @@ async function handleEditCommentSubmit(e) {
 
     if (response.ok) {
       closeEditCommentModal();
+      toastSuccess('Comentario actualizado exitosamente');
       loadThread(); // Reload thread
-      alert('Comentario actualizado exitosamente');
     } else {
-      alert('Error: ' + (data.error || 'No se pudo actualizar el comentario'));
+      toastError('Error: ' + (data.error || 'No se pudo actualizar el comentario'));
     }
   } catch (error) {
     console.error('Error updating comment:', error);
-    alert('Error al actualizar el comentario');
+    toastError('Error al actualizar el comentario');
   }
 }
 
@@ -1219,7 +1226,7 @@ async function handleEditCommentSubmit(e) {
 async function deleteComment(commentId) {
   const token = localStorage.getItem('jwt');
   if (!token) {
-    alert('Debes iniciar sesión');
+    toastWarning('Debes iniciar sesión');
     return;
   }
 
@@ -1249,14 +1256,14 @@ async function deleteComment(commentId) {
         ? (data.type === 'hard' ? 'Comentario y todas sus respuestas eliminados permanentemente por admin' : 'Contenido del comentario eliminado')
         : (data.type === 'hard' ? 'Comentario eliminado completamente' : 'Contenido del comentario eliminado');
 
-      alert(message);
+      toastSuccess(message);
       loadThread(); // Reload to show changes
     } else {
-      alert('Error: ' + (data.error || 'No se pudo eliminar el comentario'));
+      toastError('Error: ' + (data.error || 'No se pudo eliminar el comentario'));
     }
   } catch (error) {
     console.error('Error deleting comment:', error);
-    alert('Error al eliminar el comentario');
+    toastError('Error al eliminar el comentario');
   }
 }
 

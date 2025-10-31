@@ -4,13 +4,12 @@ import Incident from '../models/Incident.js';
 import NewsEvent from '../models/NewsEvent.js';
 import { AdminPost, Notification, User, SurlinkListing, Subscription, PaymentHistory, ForumThread, ForumComment, ForumSettings, PricingSettings, PageVisit, SystemSettings } from '../models/index.js';
 import { runNewsIngestion } from '../jobs/newsIngestion.js';
+import { runScheduledCleanup } from '../jobs/index.js';
 import logger from '../utils/logger.js';
 import { Parser } from 'json2csv';
 import ExcelJS from 'exceljs';
 import { getMaintenanceStatus } from '../middleware/maintenanceCheck.js';
 import { getAuthenticatedUser } from '../config/auth0.js';
-import { scrapeRealEstateSources } from '../scripts/scrapeRealEstate.js';
-import { ingestRealEstateOffers } from '../services/realEstateIngestService.js';
 
 const router = express.Router();
 
@@ -750,110 +749,35 @@ router.get('/news/stats', requireAdmin, async (req, res) => {
 });
 
 /**
- * POST /admin/surlink/schedule
- * Schedule (placeholder) scraping jobs for Surlink categories
+ * POST /admin/surlink/purge
+ * Delete Surlink listings by category or all listings
  */
-router.post('/surlink/schedule', requireAdmin, async (req, res) => {
+router.post('/surlink/purge', requireAdmin, async (req, res) => {
   try {
-    const { category } = req.body || {};
-    const allowed = ['casas', 'autos'];
+    const allowedCategories = ['casas', 'autos', 'academy', 'financial', 'all'];
+    const rawCategory = (req.body?.category || 'all').toString().toLowerCase();
 
-    if (!category || !allowed.includes(category)) {
-      return res.status(400).json({ error: 'Categoría inválida para scrapping' });
+    if (!allowedCategories.includes(rawCategory)) {
+      return res.status(400).json({ error: 'Categoría inválida. Usa casas, autos, academy, financial o all.' });
     }
 
-    if (category === 'autos') {
-      const scheduledAt = new Date();
+    const filter = rawCategory === 'all' ? {} : { category: rawCategory };
+    const result = await SurlinkListing.deleteMany(filter);
 
-      logger.info('Surlink autos scraping requested (pending implementation)', {
-        category,
-        scheduledAt,
-        requestedBy: req.user?.uid || req.user?._id
-      });
-
-      return res.json({
-        message: 'La automatización para autos todavía no está disponible. Tu solicitud fue registrada.',
-        scheduledAt,
-        implemented: false
-      });
-    }
-
-    const maxOffersPerSource =
-      req.body?.maxOffersPerSource != null ? Number(req.body.maxOffersPerSource) : undefined;
-    const limitSources =
-      req.body?.limitSources != null ? Number(req.body.limitSources) : undefined;
-    const allowedDomains = Array.isArray(req.body?.domains) ? req.body.domains : undefined;
-
-    const scraperOptions = {
-      maxOffersPerSource,
-      limitSources,
-      allowedDomains,
-      allowedOperations: ['rent', 'sale']
-    };
-
-    const startedAt = Date.now();
-
-    const scrapeResult = await scrapeRealEstateSources({
-      ...scraperOptions,
-      onSourceStart: (source) => {
-        logger.info('Iniciando scraping de inmueble', {
-          source: source.url,
-          domain: source.domain,
-          operation: source.operation
-        });
-      },
-      onSourceComplete: ({ source, offers, error, durationMs }) => {
-        if (error) {
-          logger.warn('Scraping de fuente finalizado con errores', {
-            source: source.url,
-            error,
-            durationMs
-          });
-        } else {
-          logger.info('Scraping de fuente finalizado', {
-            source: source.url,
-            offers: offers.length,
-            durationMs
-          });
-        }
-      }
-    });
-
-    const ingestResult = await ingestRealEstateOffers({
-      offers: scrapeResult.offers,
-      category: 'casas',
-      requestedBy: req.user?.uid || req.user?._id || 'admin',
-      logger
-    });
-
-    const durationMs = Date.now() - startedAt;
-    const scheduledAt = new Date();
-
-    logger.info('Surlink Casas scraping completed', {
-      requestedBy: req.user?.uid || req.user?._id,
-      processedSources: scrapeResult.sourcesProcessed,
-      scrapedOffers: scrapeResult.totalOffers,
-      inserted: ingestResult.inserted,
-      updated: ingestResult.updated,
-      skipped: ingestResult.skipped,
-      durationMs
+    logger.warn('Surlink purge executed', {
+      deleted: result.deletedCount || 0,
+      category: rawCategory,
+      requestedBy: req.user?.uid
     });
 
     res.json({
-      message: `Scraping completado: ${ingestResult.inserted} nuevas ofertas y ${ingestResult.updated} actualizadas (fuentes: ${scrapeResult.sourcesProcessed}).`,
-      scheduledAt,
-      durationMs,
-      processedSources: scrapeResult.sourcesProcessed,
-      scrapedOffers: scrapeResult.totalOffers,
-      inserted: ingestResult.inserted,
-      updated: ingestResult.updated,
-      skipped: ingestResult.skipped,
-      limitSources: scraperOptions.limitSources ?? null,
-      maxOffersPerSource: scraperOptions.maxOffersPerSource ?? null
+      message: 'Colección de Surlink depurada correctamente',
+      deleted: result.deletedCount || 0,
+      category: rawCategory
     });
   } catch (error) {
-    logger.error('Error scheduling Surlink scraping', { error });
-    res.status(500).json({ error: 'No se pudo programar el scrapping' });
+    logger.error('Error purging Surlink listings', { error: error.message });
+    res.status(500).json({ error: 'No se pudo limpiar la colección de Surlink' });
   }
 });
 
@@ -2061,6 +1985,31 @@ router.put('/system/settings', requireAdmin, async (req, res) => {
     logger.error('Error updating system settings:', error);
     res.status(500).json({
       error: 'Error al actualizar configuración del sistema',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * POST /admin/maintenance/run-cleanup
+ * Manually trigger the scheduled cleanup sequence
+ */
+router.post('/maintenance/run-cleanup', requireAdmin, async (req, res) => {
+  try {
+    logger.info('Manual scheduled cleanup requested', {
+      requestedBy: req.user.uid
+    });
+
+    const summary = await runScheduledCleanup();
+
+    res.json({
+      message: 'Limpieza programada ejecutada correctamente',
+      summary
+    });
+  } catch (error) {
+    logger.error('Error running manual scheduled cleanup', { error: error.message });
+    res.status(500).json({
+      error: 'No se pudo ejecutar la limpieza programada',
       details: error.message
     });
   }

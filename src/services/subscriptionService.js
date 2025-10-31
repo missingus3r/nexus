@@ -1,5 +1,5 @@
 import Subscription from '../models/Subscription.js';
-import { User } from '../models/index.js';
+import { User, Incident } from '../models/index.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -197,9 +197,46 @@ class SubscriptionService {
         return { allowed: true, remaining: -1 };
       }
 
-      // TODO: Implement usage tracking
-      // For now, just return the limit
-      return { allowed: true, remaining: limit };
+      // Guard against non-numeric limits (should not happen for usage tracking)
+      if (typeof limit !== 'number') {
+        logger.warn('Usage limit requested for non-numeric feature', { featureName, plan });
+        return { allowed: true, remaining: -1 };
+      }
+
+      // Zero (or negative) limit means no usage allowed
+      if (limit <= 0) {
+        return { allowed: false, remaining: 0 };
+      }
+
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+      let usageCount = 0;
+
+      switch (featureName) {
+        case 'incidentReportsPerMonth': {
+          const user = await User.findById(userId).select('uid');
+
+          if (!user || !user.uid) {
+            logger.warn('Unable to resolve user UID for usage tracking', { userId, featureName });
+            break;
+          }
+
+          usageCount = await Incident.countDocuments({
+            reporterUid: user.uid,
+            createdAt: { $gte: monthStart, $lt: nextMonthStart }
+          });
+          break;
+        }
+        default:
+          logger.warn('Usage tracking not implemented for feature', { featureName, plan });
+      }
+
+      const remaining = Math.max(0, limit - usageCount);
+      const allowed = usageCount < limit;
+
+      return { allowed, remaining };
     } catch (error) {
       logger.error('Error checking usage limit:', error);
       return { allowed: false, remaining: 0 };
