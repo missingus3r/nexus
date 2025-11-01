@@ -13,6 +13,80 @@
     gap: 1rem;
 }
 
+.dashboard-insights {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.insight-card {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.insight-card header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
+}
+
+.insight-card header .icon {
+    font-size: 1.6rem;
+}
+
+.insight-card h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.insight-value {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.insight-meta {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.insight-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 0.4rem;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.insight-list strong {
+    font-weight: 600;
+    margin-left: 0.35rem;
+}
+
+.positive {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.negative {
+    color: #dc2626;
+    font-weight: 600;
+}
+
 .dashboard-header h1 {
     color: var(--text-primary);
     font-size: 2rem;
@@ -365,6 +439,10 @@
 @media (max-width: 768px) {
     .dashboard-container {
         padding: 1rem;
+    }
+
+    .dashboard-insights {
+        grid-template-columns: 1fr;
     }
 
     .dashboard-grid {

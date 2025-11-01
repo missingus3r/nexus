@@ -26,11 +26,50 @@
                     <p id="userEmail">usuario@ejemplo.com</p>
                 </div>
                 <button class="notifications-btn" onclick="openNotificationsModal()">
-                    🔔 Notificaciones
+                    🔔
                     <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
                 </button>
             </div>
         </div>
+
+        <section class="dashboard-insights">
+            <div class="insight-card">
+                <header>
+                    <span class="icon">🕒</span>
+                    <h3>Fecha y Hora</h3>
+                </header>
+                <p class="insight-value">Martes, 04 de febrero · 14:37</p>
+                <p class="insight-meta">Montevideo (UTC-3)</p>
+            </div>
+            <div class="insight-card">
+                <header>
+                    <span class="icon">🌦️</span>
+                    <h3>Clima Actual</h3>
+                </header>
+                <p class="insight-value">26°C · Parcialmente nublado</p>
+                <p class="insight-meta">Sensación térmica 27°C · Viento 12 km/h</p>
+            </div>
+            <div class="insight-card">
+                <header>
+                    <span class="icon">💱</span>
+                    <h3>Divisas</h3>
+                </header>
+                <ul class="insight-list">
+                    <li>USD / UYU <strong>↑ 42,80</strong></li>
+                    <li>EUR / UYU <strong>↓ 46,10</strong></li>
+                    <li>BRL / UYU <strong>↑ 8,25</strong></li>
+                </ul>
+                <p class="insight-meta">Variación diaria respecto al cierre anterior</p>
+            </div>
+            <div class="insight-card">
+                <header>
+                    <span class="icon">₿</span>
+                    <h3>Bitcoin</h3>
+                </header>
+                <p class="insight-value">USD 42.580</p>
+                <p class="insight-meta">Cambio 24h: <span class="positive">+2.6%</span></p>
+            </div>
+        </section>
 
         <div class="dashboard-grid">
             <!-- Centinel Alerts Card -->

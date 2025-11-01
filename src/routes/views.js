@@ -40,6 +40,16 @@ router.get('/plataforma', (req, res) => {
 });
 
 /**
+ * Social y crowdfunding
+ */
+router.get('/social', (req, res) => {
+  res.render('social', {
+    title: 'Social Comunitario - Vortex',
+    page: 'social'
+  });
+});
+
+/**
  * Centinel page (map + security features)
  */
 router.get('/centinel', checkMaintenance('centinel'), (req, res) => {

@@ -1376,6 +1376,121 @@
             document.getElementById('recentVisitsContainer').style.display = 'block';
         }
 
+        async function loadAllVisits(limit = 500) {
+            const status = document.getElementById('allVisitsStatus');
+            if (status) {
+                status.className = 'status-message';
+                status.textContent = 'Cargando historial de visitas...';
+            }
+
+            try {
+                const response = await fetch(`/api/admin/visits/recent?limit=${limit}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al cargar historial de visitas');
+                }
+
+                const tbody = document.getElementById('allVisitsTableBody');
+                if (!tbody) return;
+
+                if (!data.visits || data.visits.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="padding: 1.5rem; text-align: center; color: var(--text-secondary);">Sin visitas registradas</td></tr>';
+                } else {
+                    tbody.innerHTML = data.visits.map(visit => {
+                        const userInfo = visit.user
+                            ? `<span style="color: var(--success-color);">👤 ${visit.user.email || visit.user.name}</span>`
+                            : `<span style="color: var(--text-secondary);">🌐 ${visit.ipAddress}</span>`;
+
+                        const timestamp = new Date(visit.timestamp).toLocaleString('es-UY');
+
+                        return `
+                            <tr style="border-bottom: 1px solid var(--border-color);">
+                                <td style="padding: 0.8rem 1rem; font-family: monospace; font-size: 0.85rem;">${visit.page}</td>
+                                <td style="padding: 0.8rem 1rem;">${userInfo}</td>
+                                <td style="padding: 0.8rem 1rem; color: var(--text-secondary); font-size: 0.85rem;">${timestamp}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+
+                if (status) {
+                    status.className = 'status-message success';
+                    status.textContent = `Historial actualizado. Total: ${data.visits?.length || 0} visitas.`;
+                }
+            } catch (error) {
+                console.error('Error loading all visits:', error);
+                if (status) {
+                    status.className = 'status-message error';
+                    status.textContent = `Error al cargar visitas: ${error.message}`;
+                }
+            }
+        }
+
+        function openAllVisitsModal() {
+            const modal = document.getElementById('allVisitsModal');
+            if (!modal) return;
+            modal.classList.add('active');
+            loadAllVisits();
+        }
+
+        function closeAllVisitsModal() {
+            const modal = document.getElementById('allVisitsModal');
+            if (!modal) return;
+            modal.classList.remove('active');
+        }
+
+        async function deleteVisits(scope) {
+            const status = document.getElementById('allVisitsStatus');
+            const confirmMessage = scope === 'all'
+                ? '⚠️ Esto eliminará TODAS las visitas registradas. ¿Continuar?'
+                : '¿Eliminar las últimas 50 visitas registradas?';
+
+            if (!confirm(confirmMessage)) return;
+
+            if (status) {
+                status.className = 'status-message';
+                status.textContent = 'Eliminando visitas...';
+            }
+
+            try {
+                const response = await fetch('/api/admin/visits/purge', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ scope })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'No se pudieron eliminar las visitas');
+                }
+
+                if (status) {
+                    status.className = 'status-message success';
+                    status.textContent = data.message || 'Visitas eliminadas correctamente.';
+                }
+
+                await loadAllVisits();
+                await loadRecentVisits();
+                await loadVisitStats();
+                await loadTopPages();
+            } catch (error) {
+                console.error('Error deleting visits:', error);
+                if (status) {
+                    status.className = 'status-message error';
+                    status.textContent = `Error al eliminar visitas: ${error.message}`;
+                }
+            }
+        }
+
+        window.openAllVisitsModal = openAllVisitsModal;
+        window.closeAllVisitsModal = closeAllVisitsModal;
+        window.loadAllVisits = loadAllVisits;
+        window.deleteVisits = deleteVisits;
+
         // Maintenance Mode Functions
         async function loadMaintenanceSettings() {
             try {

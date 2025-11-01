@@ -153,6 +153,12 @@
     return points.length ? points.join(' • ') : 'Ubicación a confirmar';
   };
 
+  const formatPillText = value => {
+    if (value === undefined || value === null) return '';
+    const trimmed = value.toString().trim();
+    return trimmed.length > 10 ? `${trimmed.slice(0, 10)}…` : trimmed;
+  };
+
   const formatDate = value => {
     if (!value) return '';
     const date = new Date(value);
@@ -201,7 +207,10 @@
 
     (listing.tags || []).forEach(tag => tag && tags.add(tag));
 
-    return Array.from(tags).slice(0, 4);
+    return Array.from(tags)
+      .map(formatPillText)
+      .filter(Boolean)
+      .slice(0, 4);
   };
 
   const hydrateFiltersFromForm = (category, form) => {
@@ -346,10 +355,10 @@
         </div>
         <p class="surlink-card-summary">${escapeHtml(truncated)}</p>
         <div class="surlink-card-tags">
-          ${tags.map(tag => `<span class="surlink-pill">${escapeHtml(tag)}</span>`).join('')}
+          ${tags.map(tag => `<span class="surlink-pill">${escapeHtml(formatPillText(tag))}</span>`).join('')}
         </div>
         <div class="surlink-card-footer">
-          <span class="surlink-pill">${escapeHtml(formatLocation(listing))}</span>
+          <span class="surlink-pill">${escapeHtml(formatPillText(formatLocation(listing)))}</span>
           <button type="button" class="btn btn-primary" data-action="detail" data-id="${listing.id}">Ver detalles</button>
         </div>
       </article>
@@ -506,6 +515,7 @@
               <label for="surlinkCommentInput">Tu comentario</label>
               <textarea id="surlinkCommentInput" name="body" rows="3" placeholder="Compartí tu experiencia o dejá una pregunta" required maxlength="1000"></textarea>
             </div>
+            <br>
             <button type="submit" class="btn btn-primary">Publicar comentario</button>
           </form>
         ` : footerMessage}
@@ -537,7 +547,7 @@
         </div>
         <p>${escapeHtml(listing.description || listing.summary || '')}</p>
         <div class="surlink-card-tags">
-          ${tags.map(tag => `<span class="surlink-pill">${escapeHtml(tag)}</span>`).join('')}
+          ${tags.map(tag => `<span class="surlink-pill">${escapeHtml(formatPillText(tag))}</span>`).join('')}
         </div>
       </div>
 

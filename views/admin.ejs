@@ -496,6 +496,11 @@
                             </tbody>
                         </table>
                     </div>
+                    <div style="margin-top: 1rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <button class="btn btn-secondary" onclick="openAllVisitsModal()">
+                            📋 Ver todas las visitas
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -591,6 +596,36 @@
     </div>
 
     <%- include('partials/footer') %>
+
+    <!-- All Visits Modal -->
+    <div id="allVisitsModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2>📋 Historial completo de visitas</h2>
+                <button class="modal-close" onclick="closeAllVisitsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <button class="btn btn-secondary" onclick="loadAllVisits()">🔄 Actualizar listado</button>
+                    <button class="btn btn-danger" onclick="deleteVisits(50)">🗑️ Eliminar últimas 50</button>
+                    <button class="btn btn-danger" onclick="deleteVisits('all')">💥 Eliminar todas</button>
+                </div>
+                <div style="max-height: 60vh; overflow: auto; border: 1px solid var(--border-color); border-radius: 8px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead style="position: sticky; top: 0; background: var(--surface); box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                            <tr>
+                                <th style="padding: 0.75rem 1rem; text-align: left;">Página</th>
+                                <th style="padding: 0.75rem 1rem; text-align: left;">Usuario / IP</th>
+                                <th style="padding: 0.75rem 1rem; text-align: left;">Fecha y Hora</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allVisitsTableBody"></tbody>
+                    </table>
+                </div>
+                <div id="allVisitsStatus" class="status-message" style="margin-top: 1rem;"></div>
+            </div>
+        </div>
+    </div>
 
     <script src="/js/admin.js"></script>
 </body>

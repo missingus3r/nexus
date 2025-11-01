@@ -1932,6 +1932,48 @@ router.get('/visits/recent', requireAdmin, async (req, res) => {
 });
 
 /**
+ * DELETE /admin/visits/purge
+ * Delete recent or all visits
+ */
+router.delete('/visits/purge', requireAdmin, async (req, res) => {
+  try {
+    const { scope } = req.body || {};
+
+    if (scope !== 'all' && scope !== 50) {
+      return res.status(400).json({ error: 'Parámetro scope inválido. Usa "all" o 50.' });
+    }
+
+    let deletedCount = 0;
+
+    if (scope === 'all') {
+      const result = await PageVisit.deleteMany({});
+      deletedCount = result.deletedCount || 0;
+    } else {
+      const visits = await PageVisit.find({}).sort({ timestamp: -1 }).limit(50).select('_id');
+      if (visits.length > 0) {
+        const ids = visits.map(v => v._id);
+        const result = await PageVisit.deleteMany({ _id: { $in: ids } });
+        deletedCount = result.deletedCount || 0;
+      }
+    }
+
+    logger.warn('Admin purged page visits', {
+      scope,
+      deletedCount,
+      requestedBy: req.user?.uid || req.user?.email
+    });
+
+    res.json({
+      message: `Se eliminaron ${deletedCount} visitas`,
+      deleted: deletedCount
+    });
+  } catch (error) {
+    logger.error('Error purging page visits:', error);
+    res.status(500).json({ error: 'Error al eliminar visitas' });
+  }
+});
+
+/**
  * GET /admin/system/maintenance-status (PUBLIC)
  * Get current maintenance status for all platforms
  */

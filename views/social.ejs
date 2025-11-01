@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <meta name="description" content="Canal solidario de Vortex: conecta adopciones responsables y campañas solidarias de la comunidad.">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <%- include('partials/theme-init') %>
+    <link rel="stylesheet" href="/css/social.css">
+</head>
+<body>
+    <div class="page">
+        <div class="glow one"></div>
+        <div class="glow two"></div>
+
+        <header>
+            <div class="brand">VORTEX</div>
+            <div class="platform-nav">
+                <button class="hamburger" aria-label="Abrir menú de navegación">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <nav aria-label="Navegación principal">
+                    <a href="/">Inicio</a>
+                    <a href="/plataforma">Plataforma</a>
+                    <a href="/centinel">Centinel</a>
+                    <a href="/forum">Foro</a>
+                    <a href="/surlink">Surlink</a>
+                    <a href="/social" aria-current="page" class="active">Social</a>
+                    <% if (isAuthenticated) { %>
+                        <a href="/logout">Cerrar sesión</a>
+                    <% } else { %>
+                        <a href="/login">Iniciar sesión</a>
+                    <% } %>
+                </nav>
+            </div>
+        </header>
+
+        <main>
+            <section class="hero">
+                <div class="hero-copy">
+                    <span class="hero-eyebrow">Solidaridad en red</span>
+                    <h1 class="hero-title">Social comunitario y crowdfunding</h1>
+                    <p class="hero-text">
+                        Conectamos necesidades urgentes con personas dispuestas a ayudar. Aquí encontrás recursos para adopción responsable,
+                        rescates y campañas solidarias en Uruguay.
+                    </p>
+                    <p class="hero-text">
+                        Pronto vas a poder publicar tus propias iniciativas directamente desde Vortex.
+                    </p>
+                </div>
+                <div class="hero-actions">
+                    <a class="cta primary" href="#adopcion">Ver adopciones</a>
+                    <a class="cta secondary" href="#campanas">Explorar campañas</a>
+                </div>
+            </section>
+
+            <section id="adopcion" class="section">
+                <div class="section-heading">
+                    <h2>Adopción y rescate animal</h2>
+                    <p>
+                        Impacto directo en la vida de animales rescatados. Explorá organizaciones que hoy difunden adopciones responsables
+                        y descubrí cómo colaborar.
+                    </p>
+                </div>
+                <div class="resource-grid">
+                    <article class="resource-card">
+                        <h3>Liga Bichera Montevideo</h3>
+                        <p>
+                            Rescate, rehabilitación y adopción responsable con enfoque en Montevideo y área metropolitana.
+                        </p>
+                        <a class="resource-link" href="https://www.instagram.com/ligabicheramontevideo/?hl=es" target="_blank" rel="noopener noreferrer">
+                            Visitar Instagram
+                        </a>
+                    </article>
+                    <article class="resource-card">
+                        <h3>Animales Sin Hogar</h3>
+                        <p>
+                            Equipo con más de 15 años de trabajo en rescates y castraciones. Calendario de adopciones cada semana.
+                        </p>
+                        <a class="resource-link" href="https://www.animalessinhogar.com.uy/" target="_blank" rel="noopener noreferrer">
+                            Ir al sitio
+                        </a>
+                    </article>
+                    <article class="resource-card">
+                        <h3>Espacio Animal</h3>
+                        <p>
+                            Asociación civil dedicada a la adopción responsable y programas de educación en bienestar animal.
+                        </p>
+                        <a class="resource-link" href="https://espacioanimal.uy/" target="_blank" rel="noopener noreferrer">
+                            Conocer más
+                        </a>
+                    </article>
+                </div>
+
+                <div class="action-panel">
+                    <div class="action-copy">
+                        <h3>¿Querés publicar un anuncio en Vortex?</h3>
+                        <p>
+                            Estamos trabajando para que puedas difundir adopciones y rescates directamente desde la plataforma con
+                            informes geolocalizados y alertas a la comunidad.
+                        </p>
+                    </div>
+                    <button id="open-adoption-modal" class="cta primary">Realizar anuncio</button>
+                </div>
+            </section>
+
+            <section id="campanas" class="section">
+                <div class="section-heading">
+                    <h2>Colectas y campañas solidarias</h2>
+                    <p>
+                        Medicación, tratamientos, traslados o sangre: centralizá las necesidades urgentes para que la comunidad pueda apoyar
+                        con confianza y trazabilidad.
+                    </p>
+                </div>
+
+                <div class="campaign-grid">
+                    <article class="campaign-card">
+                        <h3>Medicación y tratamientos</h3>
+                        <p>
+                            Difusión de tratamientos crónicos, cirugías y terapias que necesitan financiamiento inmediato.
+                        </p>
+                        <ul>
+                            <li>Quimioterapias y medicamentos importados</li>
+                            <li>Tratamientos prolongados o paliativos</li>
+                            <li>Compras urgentes de insumos médicos</li>
+                        </ul>
+                    </article>
+                    <article class="campaign-card">
+                        <h3>Banco de sangre y donantes</h3>
+                        <p>
+                            Coordinación de donantes para urgencias hospitalarias y bancos de sangre veterinarios y humanos.
+                        </p>
+                        <ul>
+                            <li>Requerimientos por tipo de sangre</li>
+                            <li>Donaciones para cirugías programadas</li>
+                            <li>Alertas para trasplantes y emergencias</li>
+                        </ul>
+                    </article>
+                    <article class="campaign-card">
+                        <h3>Traslados y viajes médicos</h3>
+                        <p>
+                            Fondos colaborativos para cubrir traslados, pasajes y estadías durante tratamientos en el país o exterior.
+                        </p>
+                        <ul>
+                            <li>Traslados interdepartamentales y ambulancias</li>
+                            <li>Apoyo logístico para acompañantes</li>
+                            <li>Gastos asociados a estudios especializados</li>
+                        </ul>
+                    </article>
+                    <article class="campaign-card">
+                        <h3>Equipamiento comunitario</h3>
+                        <p>
+                            Campañas para adquirir equipamiento médico, alimentos o materiales de asistencia para organizaciones sociales.
+                        </p>
+                        <ul>
+                            <li>Recolección de insumos para refugios</li>
+                            <li>Equipamiento hospitalario y comunitario</li>
+                            <li>Fondos para obras de infraestructura</li>
+                        </ul>
+                    </article>
+                </div>
+
+                <div class="campaign-note">
+                    Muy pronto vas a poder iniciar campañas transparentes con seguimiento y reportes dentro de Vortex.
+                    Mantenete atento a las novedades en tu correo o en el foro comunitario.
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <span>© <%= new Date().getFullYear() %> Vortex. Diseñado en Uruguay con <span aria-hidden="true">💙</span>.</span>
+            <nav aria-label="Enlaces legales">
+                <a href="/privacy">Privacidad</a>
+                <a href="/terms">Términos</a>
+            </nav>
+        </footer>
+    </div>
+
+    <div class="modal-backdrop" id="adoption-modal" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <button id="close-adoption-modal" class="modal-close" aria-label="Cerrar anuncio Próximamente">&times;</button>
+            <h2 id="modal-title">Próximamente</h2>
+            <p>
+                Estamos ultimando los detalles para que puedas publicar anuncios de adopción y campañas solidarias directamente en Vortex.
+                Queremos ofrecerte herramientas con seguimiento y moderación comunitaria.
+            </p>
+            <p class="modal-note">
+                Mientras tanto podés sumarte al foro para enterarte primero y compartir tus iniciativas con la comunidad.
+            </p>
+            <a class="cta primary" href="/forum">Ir al foro</a>
+        </div>
+    </div>
+
+    <script src="/js/social.js"></script>
+</body>
+</html>
