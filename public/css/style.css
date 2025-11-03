@@ -585,6 +585,14 @@ body.modal-open {
     text-decoration: underline;
 }
 
+.news-item img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin: 0.5rem 0;
+    display: block;
+}
+
 #newsMap {
     border-radius: 8px;
     box-shadow: 0 2px 8px var(--shadow-elevation);
