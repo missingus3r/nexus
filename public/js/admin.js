@@ -192,39 +192,58 @@
         const userManagementState = {
             loaded: false,
             loading: false,
-            search: ''
+            search: '',
+            page: 1,
+            limit: 20,
+            totalPages: 1,
+            totalCount: 0
         };
 
         function setupUserManagementHandlers() {
-            const manageBtn = document.getElementById('manageUsersBtn');
             const refreshBtn = document.getElementById('refreshUserListBtn');
             const searchBtn = document.getElementById('userSearchBtn');
             const searchInput = document.getElementById('userSearchInput');
             const tableBody = document.getElementById('userManagementTableBody');
-
-            if (manageBtn) {
-                manageBtn.addEventListener('click', () => {
-                    toggleUserManagement();
-                });
-            }
+            const prevPageBtn = document.getElementById('userPrevPageBtn');
+            const nextPageBtn = document.getElementById('userNextPageBtn');
 
             if (refreshBtn) {
                 refreshBtn.addEventListener('click', () => {
-                    loadUserList(userManagementState.search);
+                    loadUserList();
                 });
             }
 
             if (searchBtn && searchInput) {
                 searchBtn.addEventListener('click', () => {
                     userManagementState.search = searchInput.value.trim();
-                    loadUserList(userManagementState.search);
+                    userManagementState.page = 1; // Reset to first page on new search
+                    loadUserList();
                 });
 
                 searchInput.addEventListener('keypress', (event) => {
                     if (event.key === 'Enter') {
                         event.preventDefault();
                         userManagementState.search = searchInput.value.trim();
-                        loadUserList(userManagementState.search);
+                        userManagementState.page = 1; // Reset to first page on new search
+                        loadUserList();
+                    }
+                });
+            }
+
+            if (prevPageBtn) {
+                prevPageBtn.addEventListener('click', () => {
+                    if (userManagementState.page > 1) {
+                        userManagementState.page--;
+                        loadUserList();
+                    }
+                });
+            }
+
+            if (nextPageBtn) {
+                nextPageBtn.addEventListener('click', () => {
+                    if (userManagementState.page < userManagementState.totalPages) {
+                        userManagementState.page++;
+                        loadUserList();
                     }
                 });
             }
@@ -232,32 +251,11 @@
             if (tableBody) {
                 tableBody.addEventListener('click', handleUserManagementAction);
             }
+
+            // Load users on page load
+            loadUserList();
         }
 
-        function toggleUserManagement() {
-            const container = document.getElementById('userManagementContainer');
-            const manageBtn = document.getElementById('manageUsersBtn');
-
-            if (!container || !manageBtn) {
-                return;
-            }
-
-            const isHidden = container.dataset.visible !== 'true';
-
-            if (isHidden) {
-                container.style.display = 'block';
-                container.dataset.visible = 'true';
-                manageBtn.textContent = 'Ocultar gestión de usuarios';
-
-                if (!userManagementState.loaded && !userManagementState.loading) {
-                    loadUserList(userManagementState.search);
-                }
-            } else {
-                container.style.display = 'none';
-                container.dataset.visible = 'false';
-                manageBtn.textContent = 'Gestionar usuarios';
-            }
-        }
 
         function showUserManagementStatus(message, type = 'info', autoHide = false) {
             const statusEl = document.getElementById('userManagementStatus');
@@ -277,7 +275,7 @@
             }
         }
 
-        async function loadUserList(searchTerm = '') {
+        async function loadUserList() {
             const tableBody = document.getElementById('userManagementTableBody');
 
             if (!tableBody) {
@@ -288,8 +286,16 @@
             showUserManagementStatus('Cargando usuarios...', 'info');
 
             try {
-                const query = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : '';
-                const response = await fetch(`/api/admin/users/list${query}`);
+                const params = new URLSearchParams({
+                    page: userManagementState.page,
+                    limit: userManagementState.limit
+                });
+
+                if (userManagementState.search) {
+                    params.append('search', userManagementState.search);
+                }
+
+                const response = await fetch(`/api/admin/users/list?${params.toString()}`);
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -297,9 +303,12 @@
                 }
 
                 userManagementState.loaded = true;
+                userManagementState.totalPages = data.totalPages || 1;
+                userManagementState.totalCount = data.totalCount || 0;
 
                 renderUserList(data.users || []);
-                showUserManagementStatus(`Usuarios cargados (${data.count || 0})`, 'success', true);
+                updatePaginationControls(data);
+                showUserManagementStatus(`Usuarios cargados (${data.count || 0} de ${data.totalCount || 0})`, 'success', true);
             } catch (error) {
                 console.error('Error loading user list:', error);
                 renderUserList([]);
@@ -381,6 +390,31 @@
             tableBody.innerHTML = rows;
         }
 
+        function updatePaginationControls(data) {
+            const paginationInfo = document.getElementById('userPaginationInfo');
+            const currentPageSpan = document.getElementById('userCurrentPage');
+            const prevPageBtn = document.getElementById('userPrevPageBtn');
+            const nextPageBtn = document.getElementById('userNextPageBtn');
+
+            if (paginationInfo) {
+                const start = (data.page - 1) * data.limit + 1;
+                const end = Math.min(start + data.count - 1, data.totalCount);
+                paginationInfo.textContent = `Mostrando ${start}-${end} de ${data.totalCount} usuarios`;
+            }
+
+            if (currentPageSpan) {
+                currentPageSpan.textContent = `Página ${data.page} de ${data.totalPages}`;
+            }
+
+            if (prevPageBtn) {
+                prevPageBtn.disabled = data.page <= 1;
+            }
+
+            if (nextPageBtn) {
+                nextPageBtn.disabled = data.page >= data.totalPages;
+            }
+        }
+
         async function updateUserStatus(userId, banned) {
             const response = await fetch(`/api/admin/users/${userId}/status`, {
                 method: 'PATCH',
@@ -445,7 +479,7 @@
                     const result = await updateUserStatus(userId, nextStatus);
 
                     showUserManagementStatus(result.message || 'Estado actualizado correctamente', 'success', true);
-                    await loadUserList(userManagementState.search);
+                    await loadUserList();
                     await loadUserStats();
                 } else if (action === 'delete') {
                     if (!confirm('⚠️ ¿Seguro que querés eliminar este usuario? Esta acción es permanente.')) {
@@ -458,7 +492,7 @@
                     const result = await deleteUser(userId);
 
                     showUserManagementStatus(result.message || 'Usuario eliminado correctamente', 'success', true);
-                    await loadUserList(userManagementState.search);
+                    await loadUserList();
                     await loadUserStats();
                 }
             } catch (error) {
@@ -1335,7 +1369,7 @@
 
         async function loadRecentVisits() {
             try {
-                const response = await fetch('/api/admin/visits/recent?limit=50');
+                const response = await fetch('/api/admin/visits/recent?limit=5');
                 const data = await response.json();
 
                 if (!response.ok) {

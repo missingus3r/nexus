@@ -138,9 +138,9 @@ const academySites = {
     {
       id: 'upe',
       name: 'Instituto Universitario Punta del Este (UPE)',
-      url: 'https://www.upe.edu.uy',
-      domain: 'upe.edu.uy',
-      logo: 'https://www.google.com/s2/favicons?domain=upe.edu.uy&sz=128',
+      url: 'https://www.altillo.com/universidades/uruguay/Instituto_Universitario_Punta_del_Este.asp',
+      domain: 'altillo.com',
+      logo: 'https://www.google.com/s2/favicons?domain=altillo.com&sz=128',
       description: 'Instituto Politécnico con sedes en varios departamentos del interior (Maldonado, Durazno, Treinta y Tres, Melo, Rivera). Ofrece carreras técnicas y terciarias orientadas al desarrollo regional.',
       phone: '+598 42 48 26 48',
       address: 'Br. Artigas y E. Sader, Maldonado',

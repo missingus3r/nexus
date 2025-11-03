@@ -93,6 +93,19 @@ const financialSites = {
       category: 'bancos',
       serviceType: 'Corporativo, Tesorería',
       featured: false
+    },
+    {
+      id: 'bhu',
+      name: 'Banco Hipotecario del Uruguay (BHU)',
+      url: 'https://www.bhu.com.uy',
+      domain: 'bhu.com.uy',
+      logo: 'https://www.google.com/s2/favicons?domain=bhu.com.uy&sz=128',
+      description: 'Banco público especializado en créditos hipotecarios. Programa Yo Ahorro en UI para compra, reforma o construcción con tasas preferenciales.',
+      phone: '1911',
+      address: 'Av. 18 de Julio 1452, Montevideo',
+      category: 'bancos',
+      serviceType: 'Crédito Hipotecario, Ahorro',
+      featured: true
     }
   ],
   cooperativas: [
@@ -453,6 +466,19 @@ const financialSites = {
       address: 'Dr. Luis Bonavita 1294, Of. 2401, Montevideo (WTC)',
       category: 'inversion',
       serviceType: 'Intermediario de Valores',
+      featured: false
+    },
+    {
+      id: 'campiglia-pilay',
+      name: 'Campiglia Pilay',
+      url: 'https://www.campigliapilay.com.uy',
+      domain: 'campigliapilay.com.uy',
+      logo: 'https://www.google.com/s2/favicons?domain=campigliapilay.com.uy&sz=128',
+      description: 'Fideicomiso financiero para ahorro e inversión en proyectos inmobiliarios. Cuotas mensuales en pesos con respaldo en ladrillos y libertad de retiro.',
+      phone: '2628 0049',
+      address: 'José Leguizamón 3552, Montevideo',
+      category: 'inversion',
+      serviceType: 'Fideicomiso Inmobiliario',
       featured: false
     }
   ],

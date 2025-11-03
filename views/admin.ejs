@@ -35,12 +35,6 @@
                     Estadísticas y lista de usuarios registrados en la plataforma.
                 </p>
 
-                <div class="button-group" style="margin-top: 1rem;">
-                    <button class="btn btn-secondary" id="manageUsersBtn">
-                        👤 Gestionar usuarios
-                    </button>
-                </div>
-
                 <div id="userStatsContainer" class="loading" style="margin-top: 1rem;">
                     <p>Cargando estadísticas de usuarios...</p>
                 </div>
@@ -64,7 +58,7 @@
                     </div>
                 </div>
 
-                <div id="userManagementContainer" data-visible="false" style="display: none; margin-top: 2rem;">
+                <div id="userManagementContainer" data-visible="true" style="display: block; margin-top: 2rem;">
                     <div class="user-management-header" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;">
                         <h3 style="margin: 0;">Gestión de Usuarios</h3>
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
@@ -95,11 +89,29 @@
                             <tbody id="userManagementTableBody">
                                 <tr>
                                     <td colspan="7" style="padding: 2rem; text-align: center; color: var(--text-secondary);">
-                                        Usá el botón "Gestionar usuarios" para cargar la lista completa
+                                        Cargando usuarios...
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Pagination Controls -->
+                    <div id="userPaginationContainer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap; gap: 1rem;">
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                            <span id="userPaginationInfo">Mostrando 0 de 0 usuarios</span>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <button class="btn btn-secondary" id="userPrevPageBtn" disabled>
+                                ← Anterior
+                            </button>
+                            <span id="userCurrentPage" style="padding: 0 1rem; color: var(--text-primary);">
+                                Página 1 de 1
+                            </span>
+                            <button class="btn btn-secondary" id="userNextPageBtn" disabled>
+                                Siguiente →
+                            </button>
+                        </div>
                     </div>
 
                     <div id="userManagementStatus" class="status-message" style="display: none; margin-top: 1rem;"></div>
@@ -482,7 +494,7 @@
 
                 <!-- Recent Visits -->
                 <div id="recentVisitsContainer" style="margin-top: 2rem; display: none;">
-                    <h3 style="margin-bottom: 1rem;">🕐 Visitas Recientes (Últimas 50)</h3>
+                    <h3 style="margin-bottom: 1rem;">🕐 Visitas Recientes (Últimas 5)</h3>
                     <div style="overflow-x: auto;">
                         <table style="width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 8px;">
                             <thead>

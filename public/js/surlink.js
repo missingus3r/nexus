@@ -1465,6 +1465,24 @@
             </div>
           </div>
         ` : ''}
+
+        ${['universidades', 'institutos', 'idiomas', 'tecnologia'].includes(site.category) ? `
+          <div class="surlink-detail-card">
+            <h4>Carreras y Planes de Estudio</h4>
+            <div class="surlink-detail-list">
+              <span style="color: #999; font-style: italic;">Próximamente</span>
+            </div>
+          </div>
+        ` : ''}
+
+        ${['universidades', 'institutos', 'idiomas', 'tecnologia'].includes(site.category) ? `
+          <div class="surlink-detail-card">
+            <h4>Costo Promedio por Curso</h4>
+            <div class="surlink-detail-list">
+              <span style="color: #999; font-style: italic;">Próximamente</span>
+            </div>
+          </div>
+        ` : ''}
       </div>
 
       ${site.address && site.address !== 'Ver sitio web' ? `

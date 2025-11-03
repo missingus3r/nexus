@@ -169,10 +169,10 @@ router.get('/users', requireAdmin, async (req, res) => {
       User.countDocuments({ role: { $ne: 'admin' } })
     ]);
 
-    // Recent users (last 20)
+    // Recent users (last 5)
     const recentUsers = await User.find()
       .sort({ createdAt: -1 })
-      .limit(20)
+      .limit(5)
       .select('email name role createdAt lastLogin')
       .lean();
 
@@ -225,6 +225,10 @@ router.get('/users', requireAdmin, async (req, res) => {
 router.get('/users/list', requireAdmin, async (req, res) => {
   try {
     const search = (req.query.search || '').trim();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
     const filter = {};
 
     if (search) {
@@ -235,15 +239,23 @@ router.get('/users/list', requireAdmin, async (req, res) => {
       ];
     }
 
-    const users = await User.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(200)
-      .select('email name role banned bannedUntil createdAt updatedAt lastLogin reportCount validationCount strikes subscription')
-      .lean();
+    const [users, totalCount] = await Promise.all([
+      User.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select('email name role banned bannedUntil createdAt updatedAt lastLogin reportCount validationCount strikes subscription')
+        .lean(),
+      User.countDocuments(filter)
+    ]);
 
     res.json({
       success: true,
       count: users.length,
+      totalCount: totalCount,
+      page: page,
+      totalPages: Math.ceil(totalCount / limit),
+      limit: limit,
       users: users.map(sanitizeUser)
     });
   } catch (error) {
@@ -648,7 +660,7 @@ router.get('/news/stats', requireAdmin, async (req, res) => {
     // Get latest news
     const latestNews = await NewsEvent.find({ ...dateFilter, hidden: false })
       .sort({ 'metadata.fetchedAt': -1 })
-      .limit(10)
+      .limit(5)
       .select('title source category date metadata.fetchedAt confidence');
 
     // Get average confidence
@@ -915,7 +927,7 @@ router.get('/subscriptions/stats', requireAdmin, async (req, res) => {
     // Recent subscriptions
     const recentSubscriptions = await Subscription.find()
       .sort({ createdAt: -1 })
-      .limit(10)
+      .limit(5)
       .populate('userId', 'email name')
       .select('plan planType status price startDate endDate userId');
 
