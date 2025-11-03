@@ -26,6 +26,7 @@
 - **Autenticación**: Auth0
 - **Real-time**: Socket.IO
 - **Mapas**: MapLibre GL
+- **Icons/Logos**: Google Favicons API
 
 ## 📦 Instalación
 
@@ -63,8 +64,55 @@ La aplicación estará disponible en `http://localhost:3000`
 │   ├── models/     # Modelos MongoDB
 │   ├── services/   # Lógica de negocio
 │   ├── middleware/ # Auth y validación
+│   ├── data/       # Datos estáticos (Surlink)
 │   └── jobs/       # Tareas programadas
 └── server.js       # Punto de entrada
+```
+
+## 🌐 Surlink - Servicios Externos
+
+### Google Favicons API
+
+Surlink utiliza el servicio de Google Favicons para obtener los iconos de sitios web automáticamente. Este servicio es público y gratuito.
+
+**Formato de URL:**
+```
+https://www.google.com/s2/favicons?domain=DOMINIO&sz=TAMAÑO
+```
+
+**Parámetros:**
+- `domain`: El dominio del sitio web (ej: `google.com`, `facebook.com`)
+- `sz`: Tamaño del ícono en píxeles (soporta: 16, 32, 64, 128, 256)
+
+**Ejemplos de uso:**
+```javascript
+// Logo de 128x128 píxeles
+https://www.google.com/s2/favicons?domain=ort.edu.uy&sz=128
+
+// Logo de 64x64 píxeles
+https://www.google.com/s2/favicons?domain=brou.com.uy&sz=64
+```
+
+**Ventajas:**
+- Servicio gratuito y confiable de Google
+- No requiere API key ni autenticación
+- Cache automático del lado del servidor
+- Fallback automático si no hay favicon disponible
+- Alta disponibilidad y velocidad
+
+**Uso en Vortex:**
+Los sitios estáticos de Surlink (Construcción, Academy, Financial) utilizan este servicio para mostrar los logos de las instituciones de forma automática, sin necesidad de almacenar imágenes localmente.
+
+**Implementación:**
+```javascript
+// En los archivos de datos (src/data/*.js)
+{
+  id: 'sitio-ejemplo',
+  name: 'Sitio Ejemplo',
+  domain: 'ejemplo.com',
+  logo: 'https://www.google.com/s2/favicons?domain=ejemplo.com&sz=128',
+  // ... otros campos
+}
 ```
 
 ## 🛡️ Seguridad

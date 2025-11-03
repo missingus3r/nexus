@@ -1,11 +1,15 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import { SurlinkListing } from '../models/index.js';
+import SiteComment from '../models/SiteComment.js';
 import logger from '../utils/logger.js';
+import construccionSites, { getSitesByCategory as getConstruccionSitesByCategory, getAllSites as getAllConstruccionSites, getSiteById as getConstruccionSiteById } from '../data/construccion-sites.js';
+import academySites, { getSitesByCategory as getAcademySitesByCategory, getAllSites as getAllAcademySites, getSiteById as getAcademySiteById } from '../data/academy-sites.js';
+import financialSites, { getSitesByCategory as getFinancialSitesByCategory, getAllSites as getAllFinancialSites, getSiteById as getFinancialSiteById } from '../data/financial-sites.js';
 
 const router = express.Router();
 
-const VALID_CATEGORIES = ['casas', 'autos', 'academy', 'financial'];
+const VALID_CATEGORIES = ['casas', 'autos', 'academy', 'financial', 'construccion'];
 const HOUSE_TYPES = ['Casa', 'Apartamento', 'Terreno', 'Proyecto en Pozo', 'Container', 'Steel Framing'];
 const VEHICLE_TYPES = ['Auto', 'Camioneta', 'Moto', 'SUV', 'Utilitario', 'Otro'];
 const FINANCIAL_TYPES = ['Crédito Hipotecario', 'Crédito Personal', 'Préstamo', 'Inversión', 'Seguro', 'Tarjeta de Crédito', 'Otro'];
@@ -731,6 +735,277 @@ router.get('/responses', requireLogin, async (req, res) => {
   } catch (error) {
     logger.error('Error fetching user responses', { error });
     res.status(500).json({ error: 'Error al obtener respuestas' });
+  }
+});
+
+// Construccion - Static sites endpoints
+router.get('/construccion/sites', async (req, res) => {
+  try {
+    const { subcategory } = req.query;
+
+    let sites = [];
+
+    if (subcategory && construccionSites[subcategory]) {
+      sites = getConstruccionSitesByCategory(subcategory);
+    } else {
+      sites = getAllConstruccionSites();
+    }
+
+    res.json({
+      sites,
+      subcategories: {
+        proyectos: construccionSites.proyectos.length,
+        contenedores: construccionSites.contenedores.length,
+        remates: construccionSites.remates.length
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching construccion sites', { error });
+    res.status(500).json({ error: 'Error al obtener sitios de construcción' });
+  }
+});
+
+router.get('/construccion/sites/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const site = getConstruccionSiteById(id);
+
+    if (!site) {
+      return res.status(404).json({ error: 'Sitio no encontrado' });
+    }
+
+    res.json(site);
+  } catch (error) {
+    logger.error('Error fetching construccion site', { error });
+    res.status(500).json({ error: 'Error al obtener sitio' });
+  }
+});
+
+// Academy - Static sites endpoints
+router.get('/academy/sites', async (req, res) => {
+  try {
+    const { subcategory } = req.query;
+
+    let sites = [];
+
+    if (subcategory && academySites[subcategory]) {
+      sites = getAcademySitesByCategory(subcategory);
+    } else {
+      sites = getAllAcademySites();
+    }
+
+    res.json({
+      sites,
+      subcategories: {
+        universidades: academySites.universidades.length,
+        institutos: academySites.institutos.length,
+        idiomas: academySites.idiomas.length,
+        tecnologia: academySites.tecnologia.length
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching academy sites', { error });
+    res.status(500).json({ error: 'Error al obtener sitios de academy' });
+  }
+});
+
+router.get('/academy/sites/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const site = getAcademySiteById(id);
+
+    if (!site) {
+      return res.status(404).json({ error: 'Sitio no encontrado' });
+    }
+
+    res.json(site);
+  } catch (error) {
+    logger.error('Error fetching academy site', { error });
+    res.status(500).json({ error: 'Error al obtener sitio' });
+  }
+});
+
+// Financial - Static sites endpoints
+router.get('/financial/sites', async (req, res) => {
+  try {
+    const { subcategory } = req.query;
+
+    let sites = [];
+
+    if (subcategory && financialSites[subcategory]) {
+      sites = getFinancialSitesByCategory(subcategory);
+    } else {
+      sites = getAllFinancialSites();
+    }
+
+    res.json({
+      sites,
+      subcategories: {
+        bancos: financialSites.bancos.length,
+        cooperativas: financialSites.cooperativas.length,
+        seguros: financialSites.seguros.length,
+        financieras: financialSites.financieras.length,
+        inversion: financialSites.inversion.length
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching financial sites', { error });
+    res.status(500).json({ error: 'Error al obtener sitios financieros' });
+  }
+});
+
+router.get('/financial/sites/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const site = getFinancialSiteById(id);
+
+    if (!site) {
+      return res.status(404).json({ error: 'Sitio no encontrado' });
+    }
+
+    res.json(site);
+  } catch (error) {
+    logger.error('Error fetching financial site', { error });
+    res.status(500).json({ error: 'Error al obtener sitio' });
+  }
+});
+
+// ==========================================
+// SITE COMMENTS ROUTES
+// ==========================================
+
+// Get comments for a site
+router.get('/sites/:siteId/comments', async (req, res) => {
+  try {
+    const { siteId } = req.params;
+
+    const comments = await SiteComment.find({ siteId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Format comments for response
+    const formattedComments = comments.map(comment => ({
+      id: comment._id.toString(),
+      siteId: comment.siteId,
+      username: comment.username,
+      userId: comment.userId,
+      content: comment.content,
+      createdAt: comment.createdAt,
+      replies: (comment.replies || []).map(reply => ({
+        id: reply._id.toString(),
+        username: reply.username,
+        userId: reply.userId,
+        content: reply.content,
+        createdAt: reply.createdAt
+      }))
+    }));
+
+    res.json(formattedComments);
+  } catch (error) {
+    logger.error('Error fetching site comments', { error });
+    res.status(500).json({ error: 'Error al obtener comentarios' });
+  }
+});
+
+// Create a comment on a site
+router.post('/sites/:siteId/comments', requireLogin, async (req, res) => {
+  try {
+    const { siteId } = req.params;
+    const { content } = req.body;
+    const user = req.session.user;
+
+    if (!content || content.trim().length === 0) {
+      return res.status(400).json({ error: 'El comentario no puede estar vacío' });
+    }
+
+    if (content.length > 1000) {
+      return res.status(400).json({ error: 'El comentario es demasiado largo (máximo 1000 caracteres)' });
+    }
+
+    // Determine site type based on siteId pattern or from query
+    let siteType = req.query.type || 'academy'; // Default to academy if not specified
+
+    // Try to determine from the site data
+    if (getAcademySiteById(siteId)) {
+      siteType = 'academy';
+    } else if (getFinancialSiteById(siteId)) {
+      siteType = 'financial';
+    } else if (getConstruccionSiteById(siteId)) {
+      siteType = 'construccion';
+    }
+
+    const comment = new SiteComment({
+      siteId,
+      siteType,
+      username: user.username,
+      userId: user.uid,
+      content: content.trim(),
+      replies: []
+    });
+
+    await comment.save();
+
+    res.status(201).json({
+      id: comment._id.toString(),
+      siteId: comment.siteId,
+      username: comment.username,
+      userId: comment.userId,
+      content: comment.content,
+      createdAt: comment.createdAt,
+      replies: []
+    });
+  } catch (error) {
+    logger.error('Error creating site comment', { error });
+    res.status(500).json({ error: 'Error al crear comentario' });
+  }
+});
+
+// Reply to a comment
+router.post('/sites/:siteId/comments/:commentId/replies', requireLogin, async (req, res) => {
+  try {
+    const { siteId, commentId } = req.params;
+    const { content } = req.body;
+    const user = req.session.user;
+
+    if (!content || content.trim().length === 0) {
+      return res.status(400).json({ error: 'La respuesta no puede estar vacía' });
+    }
+
+    if (content.length > 1000) {
+      return res.status(400).json({ error: 'La respuesta es demasiado larga (máximo 1000 caracteres)' });
+    }
+
+    const comment = await SiteComment.findOne({
+      _id: commentId,
+      siteId
+    });
+
+    if (!comment) {
+      return res.status(404).json({ error: 'Comentario no encontrado' });
+    }
+
+    const reply = {
+      username: user.username,
+      userId: user.uid,
+      content: content.trim(),
+      createdAt: new Date()
+    };
+
+    comment.replies.push(reply);
+    await comment.save();
+
+    const savedReply = comment.replies[comment.replies.length - 1];
+
+    res.status(201).json({
+      id: savedReply._id.toString(),
+      username: savedReply.username,
+      userId: savedReply.userId,
+      content: savedReply.content,
+      createdAt: savedReply.createdAt
+    });
+  } catch (error) {
+    logger.error('Error creating reply', { error });
+    res.status(500).json({ error: 'Error al crear respuesta' });
   }
 });
 

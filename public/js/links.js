@@ -6,10 +6,30 @@ async function loadLinks() {
         const data = await response.json();
 
         const linksList = document.getElementById('linksList');
-        linksList.innerHTML = data.links.map(link => `
+        linksList.innerHTML = data.links.map(link => {
+            // Extract domain from URL for favicon
+            let domain = '';
+            try {
+                const url = new URL(link.url);
+                domain = url.hostname;
+            } catch (e) {
+                domain = 'gub.uy';
+            }
+
+            return `
             <div class="link-item">
-                <h3>${link.name}</h3>
-                <p>${link.description}</p>
+                <div style="display: flex; align-items: start; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="link-favicon" style="flex-shrink: 0;">
+                        <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64"
+                             alt="${link.name}"
+                             style="width: 48px; height: 48px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23667eea%22 stroke-width=%222%22%3E%3Cpath d=%22M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71%22%3E%3C/path%3E%3Cpath d=%22M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71%22%3E%3C/path%3E%3C/svg%3E'">
+                    </div>
+                    <div style="flex: 1;">
+                        <h3 style="margin-top: 0;">${link.name}</h3>
+                        <p>${link.description}</p>
+                    </div>
+                </div>
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     ${link.name === 'Personas Condenadas'
                         ? `<button onclick="openLinksModal('${link.url}', '${link.name}')" class="btn btn-primary">
@@ -52,7 +72,8 @@ async function loadLinks() {
                     }
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
 
         linksList.innerHTML += `
             <div class="mt-4">

@@ -134,6 +134,12 @@ html[data-theme="dark"] {
     gap: 0.75rem;
 }
 
+@media (min-width: 480px) {
+    .surlink-quick-links {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 .surlink-quick-link {
     background: var(--surlink-quicklink-bg);
     border: 1px solid var(--surlink-quicklink-border);
@@ -563,7 +569,7 @@ html[data-theme="dark"] {
     }
 
     .surlink-quick-links {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .surlink-filter-grid {
@@ -572,6 +578,154 @@ html[data-theme="dark"] {
 
     .surlink-results {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Construccion Section Styles */
+.construccion-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.construccion-tab {
+    flex: 1 1 auto;
+    min-width: fit-content;
+    padding: 0.75rem 1.25rem;
+    border: 2px solid var(--surlink-input-border);
+    background: var(--surlink-input-bg);
+    color: var(--text-primary);
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-align: center;
+}
+
+.construccion-tab:hover {
+    border-color: var(--surlink-accent);
+    background: var(--surface-elevated);
+    transform: translateY(-2px);
+}
+
+.construccion-tab.active {
+    background: var(--surlink-accent);
+    border-color: var(--surlink-accent);
+    color: white;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+.construccion-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+}
+
+.construccion-site-card {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    border: 1px solid var(--border-color);
+}
+
+.construccion-site-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.construccion-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.construccion-card-logo {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--background);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+}
+
+.construccion-card-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 4px;
+}
+
+.construccion-like-btn {
+    flex-shrink: 0;
+}
+
+.construccion-card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.construccion-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.construccion-card-description {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.construccion-card-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.construccion-visit-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.construccion-visit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+@media (min-width: 640px) {
+    .construccion-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .construccion-tabs {
+        flex-wrap: nowrap;
+    }
+
+    .construccion-tab {
+        flex: 1 1 0;
     }
 }
 
@@ -585,6 +739,10 @@ html[data-theme="dark"] {
         margin: 0;
     }
 
+    .surlink-quick-links {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
     .surlink-filter-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
@@ -596,4 +754,64 @@ html[data-theme="dark"] {
     .surlink-modal-subgrid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .construccion-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1200px) {
+    .construccion-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+/* Minimap styles for site modals */
+.site-minimap {
+    position: relative;
+    z-index: 0;
+    border: 1px solid var(--surlink-input-border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Override Leaflet popup styles to match theme */
+.leaflet-popup-content-wrapper {
+    background: var(--surlink-hero-bg);
+    color: var(--surlink-hero-text);
+    border-radius: 8px;
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.2);
+}
+
+.leaflet-popup-content {
+    margin: 13px 15px;
+    line-height: 1.5;
+}
+
+.leaflet-popup-tip {
+    background: var(--surlink-hero-bg);
+}
+
+/* Ensure map container has proper sizing */
+.site-minimap .leaflet-container {
+    border-radius: 8px;
+}
+
+/* Dark theme adjustments for map controls */
+html[data-theme="dark"] .leaflet-control-zoom a {
+    background-color: rgba(15, 23, 42, 0.9);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+html[data-theme="dark"] .leaflet-control-zoom a:hover {
+    background-color: rgba(30, 41, 59, 0.95);
+}
+
+html[data-theme="dark"] .leaflet-control-attribution {
+    background-color: rgba(15, 23, 42, 0.8);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+html[data-theme="dark"] .leaflet-control-attribution a {
+    color: #38bdf8;
 }

@@ -85,6 +85,24 @@
     border: none;
 }
 
+/* Link item styles */
+.link-item {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.link-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.link-favicon img {
+    transition: transform 0.2s;
+}
+
+.link-item:hover .link-favicon img {
+    transform: scale(1.05);
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
     .links-modal-content {
@@ -98,5 +116,11 @@
 
     .links-modal-header h3 {
         font-size: 1.1rem;
+    }
+
+    /* Smaller favicon on mobile */
+    .link-favicon img {
+        width: 40px !important;
+        height: 40px !important;
     }
 }

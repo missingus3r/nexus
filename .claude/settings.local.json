@@ -21,7 +21,10 @@
       "Bash(for file in forum maintenance privacy terms news links centinel login perfil admin)",
       "Bash(do echo \"=== $file.ejs ===\")",
       "Bash(wc:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "WebFetch(domain:stiler.com.uy)",
+      "WebFetch(domain:nebimol.com)",
+      "WebFetch(domain:www.anv.gub.uy)"
     ],
     "deny": [],
     "ask": []
