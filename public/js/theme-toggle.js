@@ -5,6 +5,11 @@
     const safeStorage = {
         get() {
             try {
+                // Try PreferencesService first (for authenticated users)
+                if (window.PreferencesService) {
+                    return window.PreferencesService.getTheme();
+                }
+                // Fallback to localStorage for guests or if service not ready
                 return localStorage.getItem(STORAGE_KEY);
             } catch (error) {
                 return null;
@@ -12,7 +17,13 @@
         },
         set(value) {
             try {
-                localStorage.setItem(STORAGE_KEY, value);
+                // Save to PreferencesService if available
+                if (window.PreferencesService) {
+                    window.PreferencesService.setTheme(value);
+                } else {
+                    // Fallback to localStorage for guests
+                    localStorage.setItem(STORAGE_KEY, value);
+                }
             } catch (error) {
                 // Ignore write errors (e.g., private mode)
             }
@@ -23,7 +34,7 @@
 
     const getInitialTheme = () => {
         const stored = safeStorage.get();
-        if (stored) {
+        if (stored && stored !== 'auto') {
             return normalizeTheme(stored);
         }
         return prefersDarkScheme.matches ? 'dark' : 'light';

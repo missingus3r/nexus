@@ -378,12 +378,22 @@ document.getElementById('incidentsListModal')?.addEventListener('click', (e) => 
 function closeWelcomeModal() {
     const modal = document.getElementById('welcomeModal');
     modal.classList.remove('active');
-    // Save to localStorage so it doesn't show again
-    localStorage.setItem('centinelWelcomeShown', 'true');
+
+    // Save to preferences
+    if (window.PreferencesService) {
+        window.PreferencesService.setWelcomeModal('centinelWelcomeShown', true);
+    }
 }
 
-function checkAndShowWelcomeModal() {
-    const hasSeenWelcome = localStorage.getItem('centinelWelcomeShown');
+async function checkAndShowWelcomeModal() {
+    // Wait for PreferencesService to be available
+    while (!window.PreferencesService) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    // Initialize service and get modal status
+    const hasSeenWelcome = await window.PreferencesService.getWelcomeModal('centinelWelcomeShown');
+
     if (!hasSeenWelcome) {
         const modal = document.getElementById('welcomeModal');
         // Show modal after a short delay to ensure page is loaded

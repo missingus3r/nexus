@@ -277,24 +277,36 @@ html[data-theme="dark"] {
     gap: 0.35rem;
     cursor: pointer;
     font-size: 0.9rem;
-    color: var(--primary-color);
+    color: var(--text-secondary);
     transition: background 0.2s ease, transform 0.2s ease, color 0.2s ease;
 }
 
 .surlink-like-btn:hover {
     transform: translateY(-2px);
     background: var(--surface-elevated);
+    color: var(--text-primary);
 }
 
 .surlink-like-btn[data-liked="true"] {
     background: var(--surface-elevated);
-    color: var(--primary-color);
+    color: #ef4444;
     font-weight: 600;
+}
+
+.surlink-like-btn[data-liked="true"] .surlink-like-icon {
+    color: #ef4444;
 }
 
 .surlink-like-icon {
     font-size: 1rem;
-    color: #ef4444;
+    color: #9ca3af;
+    transition: color 0.2s ease;
+}
+
+.surlink-like-count {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: inherit;
 }
 
 .surlink-card-price {

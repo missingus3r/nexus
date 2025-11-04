@@ -23,10 +23,12 @@
                 </button>
                 <nav>
                     <a href="/">Inicio</a>
+                    <a href="/plataforma" aria-current="page" class="active">Plataforma</a>
                     <a href="/centinel">Centinel</a>
                     <a href="/forum">Foro</a>
                     <a href="/surlink">Surlink</a>
                     <a href="/social">Social</a>
+                    <a href="/pricing">Pricing</a>
                     <% if (isAuthenticated) { %>
                         <a href="/logout">Cerrar sesión</a>
                     <% } else { %>
@@ -307,23 +309,32 @@
                     </ul>
                 </div>
                 <div class="panel" style="background: rgba(16, 198, 255, 0.08); border: 1px solid rgba(16, 198, 255, 0.2);">
-                    <h3>💎 Planes premium para más funcionalidades</h3>
+                    <h3>💎 Plan Premium para el máximo potencial</h3>
                     <p style="color: var(--text-muted); margin-bottom: 1rem; line-height: 1.6;">
-                        El plan gratuito es suficiente para la mayoría de usuarios. Si necesitas funcionalidades avanzadas, tenemos planes desde $2 USD/mes.
+                        El plan gratuito es suficiente para la mayoría de usuarios. Si necesitas funcionalidades avanzadas y herramientas profesionales, tenemos el plan Premium por $5 USD/mes.
                     </p>
                     <p style="color: var(--text-primary); font-weight: 600; margin-bottom: 0.75rem;">
-                        Beneficios de los planes de pago:
+                        Beneficios del plan Premium:
                     </p>
                     <ul style="margin-top: 0; margin-bottom: 1.5rem;">
                         <li>Reportes ilimitados de incidentes (vs. 5 por mes en plan gratuito)</li>
-                        <li>Alertas personalizadas para zonas específicas de tu interés</li>
-                        <li>Acceso a datos históricos y análisis de tendencias</li>
-                        <li>Publicaciones destacadas en Surlink</li>
-                        <li>API para integraciones (plan Pro)</li>
+                        <li>Publicaciones en Surlink (casas o autos)</li>
+                        <li>Acceso completo a la API REST para integraciones</li>
+                        <li>Exportación de datos en PDF y Excel</li>
+                        <li>Chatbot IA con GPT-5 para búsqueda inteligente</li>
+                        <li>Soporte prioritario vía email</li>
+                        <li>Acceso anticipado a nuevas funcionalidades</li>
+                        <li>Aparición en el <a href="/donadores" style="color: rgba(16, 198, 255, 0.9); text-decoration: underline;">muro de donadores</a></li>
+                        <li>Todo lo del plan Free incluido</li>
                     </ul>
-                    <a class="cta primary" href="/pricing" style="margin: 0 auto; display: inline-flex;">
-                        Ver Planes y Precios
-                    </a>
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <a class="cta primary" href="/pricing" style="margin: 0; display: inline-flex;">
+                            Ver Planes y Precios
+                        </a>
+                        <a class="cta secondary" href="/donadores" style="margin: 0; display: inline-flex;">
+                            Apoyar con Donación
+                        </a>
+                    </div>
                 </div>
             </section>
 
@@ -352,5 +363,25 @@
     </div>
 
     <script src="/js/plataforma.js"></script>
+    <script>
+        // Logout handler - clear EVERYTHING before logging out
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutLinks = document.querySelectorAll('a[href="/logout"]');
+            logoutLinks.forEach(link => {
+                link.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    try {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        await fetch('/api/auth/clear-session', { method: 'GET', credentials: 'same-origin' });
+                        console.log('All data cleared successfully');
+                    } catch (error) {
+                        console.error('Error clearing data:', error);
+                    }
+                    window.location.href = '/logout';
+                });
+            });
+        });
+    </script>
 </body>
 </html>

@@ -1271,9 +1271,14 @@ window.deleteComment = deleteComment;
 
 // ===== WELCOME MODAL =====
 
-function checkForumWelcomeModal() {
-  // Check if user has already seen the welcome modal
-  const hasSeenWelcome = localStorage.getItem('forumWelcomeSeen');
+async function checkForumWelcomeModal() {
+  // Wait for PreferencesService to be available
+  while (!window.PreferencesService) {
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  // Initialize service and get modal status
+  const hasSeenWelcome = await window.PreferencesService.getWelcomeModal('forumWelcomeShown');
 
   if (!hasSeenWelcome) {
     // Show welcome modal after a short delay
@@ -1285,8 +1290,11 @@ function checkForumWelcomeModal() {
 
 function closeWelcomeForumModal() {
   document.getElementById('welcomeForumModal').classList.remove('active');
-  // Mark as seen in localStorage
-  localStorage.setItem('forumWelcomeSeen', 'true');
+
+  // Save to preferences
+  if (window.PreferencesService) {
+    window.PreferencesService.setWelcomeModal('forumWelcomeShown', true);
+  }
 }
 
 window.closeWelcomeForumModal = closeWelcomeForumModal;

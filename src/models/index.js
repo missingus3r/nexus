@@ -15,3 +15,5 @@ export { default as ForumSettings } from './ForumSettings.js';
 export { default as PricingSettings } from './PricingSettings.js';
 export { default as PageVisit } from './PageVisit.js';
 export { default as SystemSettings } from './SystemSettings.js';
+export { default as UserPreferences } from './UserPreferences.js';
+export { default as SiteLike } from './SiteLike.js';

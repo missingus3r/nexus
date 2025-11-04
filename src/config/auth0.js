@@ -135,12 +135,24 @@ function getAuth0Config() {
 
           // Force session save to ensure data persists
           return new Promise((resolve, reject) => {
+            logger.info('Before session save:', {
+              sessionExists: !!req.session,
+              sessionID: req.sessionID,
+              userData: { uid: user.uid, email: user.email, role: user.role }
+            });
+
             req.session.save((err) => {
               if (err) {
                 logger.error('Error saving session in afterCallback:', err);
+                console.error('Session save error details:', err);
                 reject(err);
               } else {
                 logger.info(`Session data stored for user ${email} with role ${user.role}`);
+                logger.info('Session saved successfully:', {
+                  sessionID: req.sessionID,
+                  hasUser: !!req.session.user,
+                  userEmail: req.session.user?.email
+                });
                 resolve(session);
               }
             });

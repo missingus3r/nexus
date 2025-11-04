@@ -130,6 +130,16 @@ router.get('/pricing', (req, res) => {
 });
 
 /**
+ * Donors page
+ */
+router.get('/donadores', (req, res) => {
+  res.render('donadores', {
+    title: 'Muro de Donadores - Vortex',
+    page: 'donadores'
+  });
+});
+
+/**
  * Profile page (requires auth)
  */
 router.get('/perfil', async (req, res) => {

@@ -1,6 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import { SurlinkListing } from '../models/index.js';
+import { SurlinkListing, SiteLike } from '../models/index.js';
 import SiteComment from '../models/SiteComment.js';
 import logger from '../utils/logger.js';
 import construccionSites, { getSitesByCategory as getConstruccionSitesByCategory, getAllSites as getAllConstruccionSites, getSiteById as getConstruccionSiteById } from '../data/construccion-sites.js';
@@ -15,8 +15,30 @@ const VEHICLE_TYPES = ['Auto', 'Camioneta', 'Moto', 'SUV', 'Utilitario', 'Otro']
 const FINANCIAL_TYPES = ['Crédito Hipotecario', 'Crédito Personal', 'Préstamo', 'Inversión', 'Seguro', 'Tarjeta de Crédito', 'Otro'];
 
 const requireLogin = (req, res, next) => {
+  // Debug logging
+  logger.info('requireLogin check:', {
+    hasSession: !!req.session,
+    hasUser: !!req.session?.user,
+    sessionID: req.sessionID,
+    path: req.path,
+    method: req.method
+  });
+
   if (!req.session.user) {
-    return res.status(401).json({ error: 'Debes iniciar sesión para realizar esta acción' });
+    logger.warn('Authentication required - no session user', {
+      path: req.path,
+      method: req.method,
+      sessionID: req.sessionID,
+      hasSession: !!req.session
+    });
+    return res.status(401).json({
+      error: 'Debes iniciar sesión para realizar esta acción',
+      debug: process.env.NODE_ENV === 'development' ? {
+        sessionExists: !!req.session,
+        sessionID: req.sessionID,
+        hasCookies: !!req.headers.cookie
+      } : undefined
+    });
   }
   return next();
 };
@@ -751,8 +773,17 @@ router.get('/construccion/sites', async (req, res) => {
       sites = getAllConstruccionSites();
     }
 
+    // Get likes count for all sites
+    const likesCountMap = await SiteLike.getMultipleCounts(sites, 'construccion');
+
+    // Add likesCount to each site
+    const sitesWithLikes = sites.map(site => ({
+      ...site,
+      likesCount: likesCountMap[site.id] || 0
+    }));
+
     res.json({
-      sites,
+      sites: sitesWithLikes,
       subcategories: {
         proyectos: construccionSites.proyectos.length,
         contenedores: construccionSites.contenedores.length,
@@ -794,8 +825,17 @@ router.get('/academy/sites', async (req, res) => {
       sites = getAllAcademySites();
     }
 
+    // Get likes count for all sites
+    const likesCountMap = await SiteLike.getMultipleCounts(sites, 'academy');
+
+    // Add likesCount to each site
+    const sitesWithLikes = sites.map(site => ({
+      ...site,
+      likesCount: likesCountMap[site.id] || 0
+    }));
+
     res.json({
-      sites,
+      sites: sitesWithLikes,
       subcategories: {
         universidades: academySites.universidades.length,
         institutos: academySites.institutos.length,
@@ -838,8 +878,17 @@ router.get('/financial/sites', async (req, res) => {
       sites = getAllFinancialSites();
     }
 
+    // Get likes count for all sites
+    const likesCountMap = await SiteLike.getMultipleCounts(sites, 'financial');
+
+    // Add likesCount to each site
+    const sitesWithLikes = sites.map(site => ({
+      ...site,
+      likesCount: likesCountMap[site.id] || 0
+    }));
+
     res.json({
-      sites,
+      sites: sitesWithLikes,
       subcategories: {
         bancos: financialSites.bancos.length,
         cooperativas: financialSites.cooperativas.length,
@@ -867,6 +916,35 @@ router.get('/financial/sites/:id', async (req, res) => {
   } catch (error) {
     logger.error('Error fetching financial site', { error });
     res.status(500).json({ error: 'Error al obtener sitio' });
+  }
+});
+
+// ==========================================
+// SITE LIKES ROUTES
+// ==========================================
+
+// Toggle like for a site (construccion, academy, financial)
+router.post('/:siteType/sites/:siteId/like', requireLogin, async (req, res) => {
+  try {
+    const { siteType, siteId } = req.params;
+    const userId = req.session.user.uid;
+
+    // Validate siteType
+    if (!['construccion', 'academy', 'financial'].includes(siteType)) {
+      return res.status(400).json({ error: 'Tipo de sitio inválido' });
+    }
+
+    // Toggle the like
+    const result = await SiteLike.toggleLike(siteId, siteType, userId);
+
+    res.json({
+      success: true,
+      liked: result.liked,
+      likesCount: result.likesCount
+    });
+  } catch (error) {
+    logger.error('Error toggling site like', { error, siteId: req.params.siteId });
+    res.status(500).json({ error: 'Error al procesar el like' });
   }
 });
 

@@ -401,4 +401,37 @@ router.delete('/delete-account', (req, res) => {
   }
 });
 
+/**
+ * GET /auth/clear-session
+ * Clear session and all cookies - use before logout
+ */
+router.get('/clear-session', (req, res) => {
+  try {
+    logger.info('Clear session requested');
+
+    // Destroy the session completely
+    if (req.session) {
+      req.session.destroy((err) => {
+        if (err) {
+          logger.error('Error destroying session:', err);
+        } else {
+          logger.info('Session destroyed successfully');
+        }
+      });
+    }
+
+    // Clear all cookies
+    res.clearCookie('vortex.sid', { path: '/' });
+    res.clearCookie('connect.sid', { path: '/' });
+
+    res.json({
+      success: true,
+      message: 'Sesión limpiada exitosamente'
+    });
+  } catch (error) {
+    logger.error('Error clearing session:', error);
+    res.status(500).json({ error: 'Error al limpiar sesión' });
+  }
+});
+
 export default router;

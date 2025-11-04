@@ -512,25 +512,26 @@ footer nav a:focus-visible {
     }
 
     header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 18px;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
     }
 
     .platform-nav {
-        width: 100%;
-        justify-content: space-between;
+        display: flex;
+        justify-content: flex-end;
     }
 
     .hamburger {
         display: flex;
+        z-index: 101;
     }
 
     .platform-nav nav {
-        position: absolute;
-        top: 90px;
-        right: 40px;
-        background: rgba(8, 9, 20, 0.95);
+        position: fixed;
+        top: 80px;
+        right: 24px;
+        background: rgba(8, 9, 20, 0.98);
         border: 1px solid rgba(124, 92, 255, 0.35);
         border-radius: 20px;
         padding: 20px;
@@ -543,6 +544,8 @@ footer nav a:focus-visible {
         transform: translateY(-10px);
         transition: opacity 0.2s ease, transform 0.2s ease;
         z-index: 100;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(20px);
     }
 
     .platform-nav nav.active {

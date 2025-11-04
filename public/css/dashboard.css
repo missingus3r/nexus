@@ -420,6 +420,60 @@
     color: var(--text-secondary);
 }
 
+/* Donation Card Styling */
+.donation-insight-card {
+    background: linear-gradient(135deg, rgba(16, 198, 255, 0.08), rgba(124, 92, 255, 0.08));
+    border-color: rgba(16, 198, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.donation-insight-card:hover {
+    border-color: rgba(16, 198, 255, 0.5);
+    box-shadow: 0 20px 40px rgba(16, 198, 255, 0.2);
+    transform: translateY(-4px);
+}
+
+.donation-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.25rem;
+    background: linear-gradient(135deg, #10c6ff, #7c5cff);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    box-shadow: 0 8px 20px rgba(16, 198, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.donation-btn:hover {
+    box-shadow: 0 12px 30px rgba(16, 198, 255, 0.45);
+    transform: translateY(-2px);
+}
+
+.donation-btn:active {
+    transform: translateY(0);
+}
+
+.donors-link {
+    display: inline-block;
+    text-align: center;
+    color: rgba(16, 198, 255, 0.9);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.donors-link:hover {
+    color: #10c6ff;
+    transform: translateX(3px);
+}
+
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }

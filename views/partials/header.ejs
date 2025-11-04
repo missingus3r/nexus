@@ -8,6 +8,8 @@
    if (isAdminPage) headerClasses.push('header--admin');
    if (isDashboardPage) headerClasses.push('header--dashboard');
 %>
+<div class="nav-overlay" id="navOverlay"></div>
+
 <div class="<%= headerClasses.join(' ') %>">
     <div class="container">
         <% const logoHref = isAdminPage ? '/admin' : (isDashboardPage ? '/dashboard' : '/'); %>
@@ -42,8 +44,14 @@
                     <a href="/perfil" class="nav-link <%= page === 'perfil' ? 'active' : '' %>">Perfil</a>
                     <a href="/logout" class="btn btn-secondary">Salir</a>
                 </div>
+
+                <!-- Theme Toggle -->
+                <div class="nav-theme-toggle">
+                    <%- include('theme-toggle') %>
+                </div>
             <% } else { %>
                 <!-- Normal User Menu: Original limited menu -->
+                <a href="/" class="nav-link <%= page === 'landing' ? 'active' : '' %>">Inicio</a>
                 <a href="/centinel" class="platform-btn <%= page === 'centinel' ? 'active' : '' %>">Centinel</a>
                 <a href="/forum" class="platform-btn <%= page === 'forum' ? 'active' : '' %>">Foro</a>
                 <a href="/social" class="platform-btn <%= page === 'social' ? 'active' : '' %>">Social</a>
@@ -57,6 +65,11 @@
                 <% } else { %>
                     <a href="/login" class="btn btn-primary">Iniciar Sesión</a>
                 <% } %>
+
+                <!-- Theme Toggle -->
+                <div class="nav-theme-toggle">
+                    <%- include('theme-toggle') %>
+                </div>
             <% } %>
         </nav>
     </div>
@@ -67,20 +80,32 @@
     document.addEventListener('DOMContentLoaded', function() {
         const hamburger = document.getElementById('hamburger');
         const nav = document.getElementById('nav');
+        const navOverlay = document.getElementById('navOverlay');
+
+        function toggleMenu() {
+            hamburger.classList.toggle('active');
+            nav.classList.toggle('active');
+            navOverlay.classList.toggle('active');
+            document.body.style.overflow = nav.classList.contains('active') ? 'hidden' : '';
+        }
+
+        function closeMenu() {
+            hamburger.classList.remove('active');
+            nav.classList.remove('active');
+            navOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
 
         if (hamburger) {
-            hamburger.addEventListener('click', function() {
-                hamburger.classList.toggle('active');
-                nav.classList.toggle('active');
-            });
+            hamburger.addEventListener('click', toggleMenu);
 
-            // Close menu when clicking on a link (except "Acerca de")
+            // Close menu when clicking on overlay
+            navOverlay.addEventListener('click', closeMenu);
+
+            // Close menu when clicking on a link (except "Acerca de" and theme toggle)
             const navLinks = nav.querySelectorAll('a:not(#aboutLink)');
             navLinks.forEach(link => {
-                link.addEventListener('click', function() {
-                    hamburger.classList.remove('active');
-                    nav.classList.remove('active');
-                });
+                link.addEventListener('click', closeMenu);
             });
 
             // About link handler
@@ -88,8 +113,7 @@
             if (aboutLink) {
                 aboutLink.addEventListener('click', function(e) {
                     e.preventDefault();
-                    hamburger.classList.remove('active');
-                    nav.classList.remove('active');
+                    closeMenu();
 
                     // Open about modal if it exists (only on map page)
                     const aboutModal = document.getElementById('aboutModal');
@@ -98,6 +122,43 @@
                     }
                 });
             }
+
+            // Prevent menu from closing when clicking on theme toggle
+            const themeToggle = nav.querySelector('.theme-toggle-container');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
         }
+
+        // Logout handler - clear EVERYTHING before logging out
+        const logoutLinks = document.querySelectorAll('a[href="/logout"]');
+        logoutLinks.forEach(link => {
+            link.addEventListener('click', async function(e) {
+                e.preventDefault();
+
+                try {
+                    // 1. Clear localStorage
+                    localStorage.clear();
+
+                    // 2. Clear sessionStorage
+                    sessionStorage.clear();
+
+                    // 3. Call backend to clear session and cookies
+                    await fetch('/api/auth/clear-session', {
+                        method: 'GET',
+                        credentials: 'same-origin'
+                    });
+
+                    console.log('All data cleared successfully');
+                } catch (error) {
+                    console.error('Error clearing data:', error);
+                }
+
+                // 4. Redirect to Auth0 logout
+                window.location.href = '/logout';
+            });
+        });
     });
 </script>

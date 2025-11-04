@@ -84,7 +84,7 @@
   };
 
   const state = {
-    activeCategory: 'casas',
+    activeCategory: 'construccion',
     activeConstruccionTab: 'proyectos',
     activeAcademyTab: 'universidades',
     activeFinancialTab: 'bancos',
@@ -298,11 +298,9 @@
   const setActiveCategory = category => {
     state.activeCategory = category;
 
-    // Save to localStorage
-    try {
-      localStorage.setItem('surlinkActiveCategory', category);
-    } catch (e) {
-      console.error('Error saving category to localStorage:', e);
+    // Save to preferences
+    if (window.PreferencesService) {
+      window.PreferencesService.setNavigation('surlinkActiveCategory', category);
     }
 
     elements.tabs.forEach(tab => {
@@ -646,6 +644,7 @@
       headers: {
         'Content-Type': 'application/json'
       },
+      credentials: 'same-origin',
       ...options
     });
 
@@ -776,41 +775,35 @@
     }
   };
 
-  // Construccion - LocalStorage helpers for favorites
+  // Construccion - Preferences Service for favorites
   const getConstruccionFavorites = () => {
-    try {
-      const favorites = localStorage.getItem('construccionFavorites');
-      return favorites ? JSON.parse(favorites) : [];
-    } catch {
-      return [];
-    }
+    return window.PreferencesService?.getFavorites('construccion') || [];
   };
 
-  const saveConstruccionFavorite = (siteId) => {
-    const favorites = getConstruccionFavorites();
-    if (!favorites.includes(siteId)) {
-      favorites.push(siteId);
-      localStorage.setItem('construccionFavorites', JSON.stringify(favorites));
+  const saveConstruccionFavorite = async (siteId) => {
+    if (window.PreferencesService) {
+      return await window.PreferencesService.addFavorite('construccion', siteId);
     }
-    return favorites;
+    return [];
   };
 
-  const removeConstruccionFavorite = (siteId) => {
-    let favorites = getConstruccionFavorites();
-    favorites = favorites.filter(id => id !== siteId);
-    localStorage.setItem('construccionFavorites', JSON.stringify(favorites));
-    return favorites;
+  const removeConstruccionFavorite = async (siteId) => {
+    if (window.PreferencesService) {
+      return await window.PreferencesService.removeFavorite('construccion', siteId);
+    }
+    return [];
   };
 
   const isConstruccionFavorite = (siteId) => {
-    const favorites = getConstruccionFavorites();
-    return favorites.includes(siteId);
+    return window.PreferencesService?.isFavorite('construccion', siteId) || false;
   };
 
   // Build card for construccion site
   const buildConstruccionCard = site => {
-    const isLiked = isConstruccionFavorite(site.id);
+    const isAuthenticated = config.isAuthenticated === true || config.isAuthenticated === 'true';
+    const isLiked = isAuthenticated ? isConstruccionFavorite(site.id) : false;
     const likeLabel = isLiked ? 'Quitar de favoritos' : 'Guardar en favoritos';
+    const likesCount = site.likesCount || 0;
 
     return `
       <article class="construccion-site-card" data-site-id="${site.id}">
@@ -820,6 +813,7 @@
           </div>
           <button type="button" class="surlink-like-btn construccion-like-btn" data-action="like-construccion" data-site-id="${site.id}" data-liked="${isLiked ? 'true' : 'false'}" title="${escapeHtml(likeLabel)}">
             <span class="surlink-like-icon">♥</span>
+            <span class="surlink-like-count">${likesCount}</span>
           </button>
         </div>
         <div class="construccion-card-content">
@@ -880,11 +874,9 @@
   const setActiveConstruccionTab = (subcategory) => {
     state.activeConstruccionTab = subcategory;
 
-    // Save to localStorage
-    try {
-      localStorage.setItem('surlinkActiveConstruccionTab', subcategory);
-    } catch (e) {
-      console.error('Error saving construccion tab to localStorage:', e);
+    // Save to preferences
+    if (window.PreferencesService) {
+      window.PreferencesService.setNavigation('surlinkActiveConstruccionTab', subcategory);
     }
 
     elements.construccionTabs.forEach(tab => {
@@ -896,58 +888,73 @@
   };
 
   // Toggle construccion like
-  const toggleConstruccionLike = (siteId) => {
-    const isLiked = isConstruccionFavorite(siteId);
+  const toggleConstruccionLike = async (siteId) => {
+    const isAuthenticated = config.isAuthenticated === true || config.isAuthenticated === 'true';
 
-    if (isLiked) {
-      removeConstruccionFavorite(siteId);
-    } else {
-      saveConstruccionFavorite(siteId);
+    if (!isAuthenticated) {
+      toastWarning('Necesitas estar logeado para dar like');
+      return;
     }
 
-    // Update UI
-    document.querySelectorAll(`[data-action="like-construccion"][data-site-id="${siteId}"]`).forEach(btn => {
-      const nowLiked = !isLiked;
-      btn.dataset.liked = nowLiked ? 'true' : 'false';
-      btn.title = nowLiked ? 'Quitar de favoritos' : 'Guardar en favoritos';
-    });
-  };
-
-  // Academy - LocalStorage helpers for favorites
-  const getAcademyFavorites = () => {
     try {
-      const favorites = localStorage.getItem('academyFavorites');
-      return favorites ? JSON.parse(favorites) : [];
-    } catch {
-      return [];
+      // Call API to toggle like
+      const data = await request(`${API_BASE}/construccion/sites/${siteId}/like`, {
+        method: 'POST'
+      });
+
+      // Update preferences (sync with PreferencesService)
+      if (data.liked) {
+        await saveConstruccionFavorite(siteId);
+      } else {
+        await removeConstruccionFavorite(siteId);
+      }
+
+      // Update UI - both button state and counter
+      document.querySelectorAll(`[data-action="like-construccion"][data-site-id="${siteId}"]`).forEach(btn => {
+        btn.dataset.liked = data.liked ? 'true' : 'false';
+        btn.title = data.liked ? 'Quitar de favoritos' : 'Guardar en favoritos';
+
+        // Update counter
+        const counter = btn.querySelector('.surlink-like-count');
+        if (counter) {
+          counter.textContent = data.likesCount;
+        }
+      });
+    } catch (error) {
+      toastError('Error al procesar el like');
+      console.error('Error toggling like:', error);
     }
   };
 
-  const saveAcademyFavorite = (siteId) => {
-    const favorites = getAcademyFavorites();
-    if (!favorites.includes(siteId)) {
-      favorites.push(siteId);
-      localStorage.setItem('academyFavorites', JSON.stringify(favorites));
-    }
-    return favorites;
+  // Academy - Preferences Service for favorites
+  const getAcademyFavorites = () => {
+    return window.PreferencesService?.getFavorites('academy') || [];
   };
 
-  const removeAcademyFavorite = (siteId) => {
-    let favorites = getAcademyFavorites();
-    favorites = favorites.filter(id => id !== siteId);
-    localStorage.setItem('academyFavorites', JSON.stringify(favorites));
-    return favorites;
+  const saveAcademyFavorite = async (siteId) => {
+    if (window.PreferencesService) {
+      return await window.PreferencesService.addFavorite('academy', siteId);
+    }
+    return [];
+  };
+
+  const removeAcademyFavorite = async (siteId) => {
+    if (window.PreferencesService) {
+      return await window.PreferencesService.removeFavorite('academy', siteId);
+    }
+    return [];
   };
 
   const isAcademyFavorite = (siteId) => {
-    const favorites = getAcademyFavorites();
-    return favorites.includes(siteId);
+    return window.PreferencesService?.isFavorite('academy', siteId) || false;
   };
 
   // Build card for academy site
   const buildAcademyCard = site => {
-    const isLiked = isAcademyFavorite(site.id);
+    const isAuthenticated = config.isAuthenticated === true || config.isAuthenticated === 'true';
+    const isLiked = isAuthenticated ? isAcademyFavorite(site.id) : false;
     const likeLabel = isLiked ? 'Quitar de favoritos' : 'Guardar en favoritos';
+    const likesCount = site.likesCount || 0;
 
     return `
       <article class="construccion-site-card" data-site-id="${site.id}">
@@ -957,6 +964,7 @@
           </div>
           <button type="button" class="surlink-like-btn construccion-like-btn" data-action="like-academy" data-site-id="${site.id}" data-liked="${isLiked ? 'true' : 'false'}" title="${escapeHtml(likeLabel)}">
             <span class="surlink-like-icon">♥</span>
+            <span class="surlink-like-count">${likesCount}</span>
           </button>
         </div>
         <div class="construccion-card-content">
@@ -1018,11 +1026,9 @@
   const setActiveAcademyTab = (subcategory) => {
     state.activeAcademyTab = subcategory;
 
-    // Save to localStorage
-    try {
-      localStorage.setItem('surlinkActiveAcademyTab', subcategory);
-    } catch (e) {
-      console.error('Error saving academy tab to localStorage:', e);
+    // Save to preferences
+    if (window.PreferencesService) {
+      window.PreferencesService.setNavigation('surlinkActiveAcademyTab', subcategory);
     }
 
     elements.academyTabs.forEach(tab => {
@@ -1034,58 +1040,73 @@
   };
 
   // Toggle academy like
-  const toggleAcademyLike = (siteId) => {
-    const isLiked = isAcademyFavorite(siteId);
+  const toggleAcademyLike = async (siteId) => {
+    const isAuthenticated = config.isAuthenticated === true || config.isAuthenticated === 'true';
 
-    if (isLiked) {
-      removeAcademyFavorite(siteId);
-    } else {
-      saveAcademyFavorite(siteId);
+    if (!isAuthenticated) {
+      toastWarning('Necesitas estar logeado para dar like');
+      return;
     }
 
-    // Update UI
-    document.querySelectorAll(`[data-action="like-academy"][data-site-id="${siteId}"]`).forEach(btn => {
-      const nowLiked = !isLiked;
-      btn.dataset.liked = nowLiked ? 'true' : 'false';
-      btn.title = nowLiked ? 'Quitar de favoritos' : 'Guardar en favoritos';
-    });
-  };
-
-  // Financial - LocalStorage helpers for favorites
-  const getFinancialFavorites = () => {
     try {
-      const favorites = localStorage.getItem('financialFavorites');
-      return favorites ? JSON.parse(favorites) : [];
-    } catch {
-      return [];
+      // Call API to toggle like
+      const data = await request(`${API_BASE}/academy/sites/${siteId}/like`, {
+        method: 'POST'
+      });
+
+      // Update preferences (sync with PreferencesService)
+      if (data.liked) {
+        await saveAcademyFavorite(siteId);
+      } else {
+        await removeAcademyFavorite(siteId);
+      }
+
+      // Update UI - both button state and counter
+      document.querySelectorAll(`[data-action="like-academy"][data-site-id="${siteId}"]`).forEach(btn => {
+        btn.dataset.liked = data.liked ? 'true' : 'false';
+        btn.title = data.liked ? 'Quitar de favoritos' : 'Guardar en favoritos';
+
+        // Update counter
+        const counter = btn.querySelector('.surlink-like-count');
+        if (counter) {
+          counter.textContent = data.likesCount;
+        }
+      });
+    } catch (error) {
+      toastError('Error al procesar el like');
+      console.error('Error toggling like:', error);
     }
   };
 
-  const saveFinancialFavorite = (siteId) => {
-    const favorites = getFinancialFavorites();
-    if (!favorites.includes(siteId)) {
-      favorites.push(siteId);
-      localStorage.setItem('financialFavorites', JSON.stringify(favorites));
-    }
-    return favorites;
+  // Financial - Preferences Service for favorites
+  const getFinancialFavorites = () => {
+    return window.PreferencesService?.getFavorites('financial') || [];
   };
 
-  const removeFinancialFavorite = (siteId) => {
-    let favorites = getFinancialFavorites();
-    favorites = favorites.filter(id => id !== siteId);
-    localStorage.setItem('financialFavorites', JSON.stringify(favorites));
-    return favorites;
+  const saveFinancialFavorite = async (siteId) => {
+    if (window.PreferencesService) {
+      return await window.PreferencesService.addFavorite('financial', siteId);
+    }
+    return [];
+  };
+
+  const removeFinancialFavorite = async (siteId) => {
+    if (window.PreferencesService) {
+      return await window.PreferencesService.removeFavorite('financial', siteId);
+    }
+    return [];
   };
 
   const isFinancialFavorite = (siteId) => {
-    const favorites = getFinancialFavorites();
-    return favorites.includes(siteId);
+    return window.PreferencesService?.isFavorite('financial', siteId) || false;
   };
 
   // Build card for financial site
   const buildFinancialCard = site => {
-    const isLiked = isFinancialFavorite(site.id);
+    const isAuthenticated = config.isAuthenticated === true || config.isAuthenticated === 'true';
+    const isLiked = isAuthenticated ? isFinancialFavorite(site.id) : false;
     const likeLabel = isLiked ? 'Quitar de favoritos' : 'Guardar en favoritos';
+    const likesCount = site.likesCount || 0;
 
     return `
       <article class="construccion-site-card" data-site-id="${site.id}">
@@ -1095,6 +1116,7 @@
           </div>
           <button type="button" class="surlink-like-btn construccion-like-btn" data-action="like-financial" data-site-id="${site.id}" data-liked="${isLiked ? 'true' : 'false'}" title="${escapeHtml(likeLabel)}">
             <span class="surlink-like-icon">♥</span>
+            <span class="surlink-like-count">${likesCount}</span>
           </button>
         </div>
         <div class="construccion-card-content">
@@ -1156,11 +1178,9 @@
   const setActiveFinancialTab = (subcategory) => {
     state.activeFinancialTab = subcategory;
 
-    // Save to localStorage
-    try {
-      localStorage.setItem('surlinkActiveFinancialTab', subcategory);
-    } catch (e) {
-      console.error('Error saving financial tab to localStorage:', e);
+    // Save to preferences
+    if (window.PreferencesService) {
+      window.PreferencesService.setNavigation('surlinkActiveFinancialTab', subcategory);
     }
 
     elements.financialTabs.forEach(tab => {
@@ -1172,21 +1192,42 @@
   };
 
   // Toggle financial like
-  const toggleFinancialLike = (siteId) => {
-    const isLiked = isFinancialFavorite(siteId);
+  const toggleFinancialLike = async (siteId) => {
+    const isAuthenticated = config.isAuthenticated === true || config.isAuthenticated === 'true';
 
-    if (isLiked) {
-      removeFinancialFavorite(siteId);
-    } else {
-      saveFinancialFavorite(siteId);
+    if (!isAuthenticated) {
+      toastWarning('Necesitas estar logeado para dar like');
+      return;
     }
 
-    // Update UI
-    document.querySelectorAll(`[data-action="like-financial"][data-site-id="${siteId}"]`).forEach(btn => {
-      const nowLiked = !isLiked;
-      btn.dataset.liked = nowLiked ? 'true' : 'false';
-      btn.title = nowLiked ? 'Quitar de favoritos' : 'Guardar en favoritos';
-    });
+    try {
+      // Call API to toggle like
+      const data = await request(`${API_BASE}/financial/sites/${siteId}/like`, {
+        method: 'POST'
+      });
+
+      // Update preferences (sync with PreferencesService)
+      if (data.liked) {
+        await saveFinancialFavorite(siteId);
+      } else {
+        await removeFinancialFavorite(siteId);
+      }
+
+      // Update UI - both button state and counter
+      document.querySelectorAll(`[data-action="like-financial"][data-site-id="${siteId}"]`).forEach(btn => {
+        btn.dataset.liked = data.liked ? 'true' : 'false';
+        btn.title = data.liked ? 'Quitar de favoritos' : 'Guardar en favoritos';
+
+        // Update counter
+        const counter = btn.querySelector('.surlink-like-count');
+        if (counter) {
+          counter.textContent = data.likesCount;
+        }
+      });
+    } catch (error) {
+      toastError('Error al procesar el like');
+      console.error('Error toggling like:', error);
+    }
   };
 
   // Open modal for static site details
@@ -1369,7 +1410,7 @@
 
     const content = input.value.trim();
     if (!content) {
-      alert('Por favor escribe un comentario');
+      toastWarning('Por favor escribe un comentario');
       return;
     }
 
@@ -1386,7 +1427,7 @@
       input.value = '';
       loadSiteComments(state.currentSite.id);
     } catch (error) {
-      alert(`Error al publicar comentario: ${error.message}`);
+      toastError(`Error al publicar comentario: ${error.message}`);
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Publicar comentario';
@@ -1400,7 +1441,7 @@
 
     const content = input.value.trim();
     if (!content) {
-      alert('Por favor escribe una respuesta');
+      toastWarning('Por favor escribe una respuesta');
       return;
     }
 
@@ -1414,7 +1455,7 @@
       input.value = '';
       loadSiteComments(state.currentSite.id);
     } catch (error) {
-      alert(`Error al publicar respuesta: ${error.message}`);
+      toastError(`Error al publicar respuesta: ${error.message}`);
     }
   };
 
@@ -1792,7 +1833,7 @@
     if (!elements.modal) return;
 
     // Restore saved state from localStorage
-    let savedCategory = 'casas';
+    let savedCategory = 'construccion';
     let savedConstruccionTab = 'proyectos';
     let savedAcademyTab = 'universidades';
     let savedFinancialTab = 'bancos';

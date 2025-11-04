@@ -29,6 +29,7 @@
                     <a href="/forum">Foro</a>
                     <a href="/surlink">Surlink</a>
                     <a href="/social" aria-current="page" class="active">Social</a>
+                    <a href="/pricing">Pricing</a>
                     <% if (isAuthenticated) { %>
                         <a href="/logout">Cerrar sesión</a>
                     <% } else { %>
@@ -195,5 +196,25 @@
     </div>
 
     <script src="/js/social.js"></script>
+    <script>
+        // Logout handler - clear EVERYTHING before logging out
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutLinks = document.querySelectorAll('a[href="/logout"]');
+            logoutLinks.forEach(link => {
+                link.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    try {
+                        localStorage.clear();
+                        sessionStorage.clear();
+                        await fetch('/api/auth/clear-session', { method: 'GET', credentials: 'same-origin' });
+                        console.log('All data cleared successfully');
+                    } catch (error) {
+                        console.error('Error clearing data:', error);
+                    }
+                    window.location.href = '/logout';
+                });
+            });
+        });
+    </script>
 </body>
 </html>

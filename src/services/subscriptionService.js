@@ -26,10 +26,7 @@ class SubscriptionService {
             'Navegación de Surlink (solo búsqueda)',
             'Acceso al foro comunitario'
           ],
-          limitations: [
-            'Sin alertas personalizadas',
-            'Sin datos históricos'
-          ],
+          limitations: [],
           popular: false
         },
         {
@@ -46,9 +43,7 @@ class SubscriptionService {
             'Estadísticas de tu actividad',
             'Todo lo del plan Free'
           ],
-          limitations: [
-            'Sin acceso a la API'
-          ],
+          limitations: [],
           popular: true
         },
         {

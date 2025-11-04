@@ -1,16 +1,11 @@
 <div class="footer">
     <div class="container">
         <div class="footer-content">
-            <div class="footer-left">
-                <p>&copy; 2025 Vortex - Plataforma integral de información</p>
-                <p>
-                    <a href="/privacy">Privacidad</a> |
-                    <a href="/terms">Términos</a>
-                </p>
-            </div>
-            <div class="footer-right">
-                <%- include('theme-toggle') %>
-            </div>
+            <p>&copy; 2025 Vortex - Plataforma integral de información</p>
+            <p>
+                <a href="/privacy">Privacidad</a> |
+                <a href="/terms">Términos</a>
+            </p>
         </div>
     </div>
 </div>
@@ -18,24 +13,9 @@
 <style>
     .footer-content {
         display: flex;
-        justify-content: space-between;
+        flex-direction: column;
         align-items: center;
-        gap: 20px;
-    }
-
-    .footer-left {
-        flex: 1;
-    }
-
-    .footer-right {
-        display: flex;
-        align-items: center;
-    }
-
-    @media (max-width: 768px) {
-        .footer-content {
-            flex-direction: column;
-            text-align: center;
-        }
+        text-align: center;
+        gap: 10px;
     }
 </style>

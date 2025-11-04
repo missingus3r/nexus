@@ -29,6 +29,7 @@ import surlinkRoutes from './src/routes/surlink.js';
 import pricingRoutes from './src/routes/pricing.js';
 import forumRoutes from './src/routes/forum.js';
 import dashboardRoutes from './src/routes/dashboard.js';
+import preferencesRoutes from './src/routes/preferences.js';
 
 // View Routes
 import viewRoutes from './src/routes/views.js';
@@ -72,11 +73,15 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  name: 'vortex.sid', // Custom cookie name
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
-  }
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: 'lax', // CSRF protection while allowing navigation
+    path: '/' // Ensure cookie is sent for all paths
+  },
+  rolling: true // Reset expiration on every request
 }));
 
 // Auth0 middleware - attaches /login, /logout, and /callback routes
@@ -137,6 +142,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/surlink', surlinkRoutes);
 app.use('/api/pricing', pricingRoutes);
 app.use('/api/forum', forumRoutes);
+app.use('/api/preferences', preferencesRoutes);
 
 // Dashboard routes (includes both view and API routes)
 app.use('/', dashboardRoutes);

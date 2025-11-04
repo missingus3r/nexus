@@ -15,17 +15,20 @@
 
         <header>
             <div class="brand">VORTEX</div>
-            <div class="page-nav">
+            <div class="platform-nav">
                 <button class="hamburger" aria-label="Toggle menu">
                     <span></span>
                     <span></span>
                     <span></span>
                 </button>
-                <nav class="nav-links">
+                <nav>
                     <a href="/">Inicio</a>
-                    <a href="/centinel" class="platform-btn">Centinel</a>
-                    <a href="/forum-vortex" class="platform-btn">Forums</a>
-                    <a href="/surlink" class="platform-btn">Surlink</a>
+                    <a href="/plataforma">Plataforma</a>
+                    <a href="/centinel">Centinel</a>
+                    <a href="/forum">Foro</a>
+                    <a href="/surlink">Surlink</a>
+                    <a href="/social">Social</a>
+                    <a href="/pricing" aria-current="page" class="active">Pricing</a>
                     <% if (isAuthenticated) { %>
                         <a href="/logout">Cerrar sesión</a>
                     <% } else { %>
@@ -76,8 +79,6 @@
                             <li class="feature-item">✓ Visualización de noticias geolocalizadas</li>
                             <li class="feature-item">✓ Navegación de Surlink (solo búsqueda)</li>
                             <li class="feature-item">✓ Acceso al foro comunitario</li>
-                            <li class="feature-item limitation">✗ Sin alertas personalizadas</li>
-                            <li class="feature-item limitation">✗ Sin datos históricos</li>
                         </ul>
                         <a href="/login" class="btn-plan">Comenzar Gratis</a>
                     </div>
@@ -87,32 +88,7 @@
                         <div class="popular-badge">MÁS POPULAR</div>
                         <div class="plan-header">
                             <h3>Premium</h3>
-                            <p class="plan-description">Para usuarios que quieren más control</p>
-                        </div>
-                        <div class="plan-price">
-                            <div class="price-wrapper">
-                                <span class="currency">$</span>
-                                <span class="amount" data-monthly="2" data-yearly="22">2</span>
-                                <span class="period">/mes</span>
-                            </div>
-                            <div class="price-secondary" data-monthly="$88 UYU" data-yearly="$968 UYU">$88 UYU</div>
-                        </div>
-                        <ul class="plan-features">
-                            <li class="feature-item">✓ Reportes ilimitados de incidentes</li>
-                            <li class="feature-item">✓ Alertas personalizadas por zona</li>
-                            <li class="feature-item">✓ Acceso a datos históricos</li>
-                            <li class="feature-item">✓ Guardar favoritos en Surlink</li>
-                            <li class="feature-item">✓ Estadísticas de tu actividad</li>
-                            <li class="feature-item">✓ Todo lo del plan Free</li>
-                        </ul>
-                        <a href="mailto:info.vortexlabs@protonmail.com?subject=Consulta%20Plan%20Premium&body=Hola,%0A%0AMe%20gustar%C3%ADa%20contratar%20el%20plan%20Premium%20($8%20USD%20%2F%20$350%20UYU%20al%20mes).%0A%0ANombre:%20%0AEmail:%20%0ATel%C3%A9fono:%20%0A%0AGracias." class="btn-plan btn-primary">Contactar</a>
-                    </div>
-
-                    <!-- Pro Plan -->
-                    <div class="plan-card">
-                        <div class="plan-header">
-                            <h3>Pro</h3>
-                            <p class="plan-description">Para usuarios avanzados</p>
+                            <p class="plan-description">Para usuarios que quieren el máximo potencial</p>
                         </div>
                         <div class="plan-price">
                             <div class="price-wrapper">
@@ -123,12 +99,45 @@
                             <div class="price-secondary" data-monthly="$220 UYU" data-yearly="$2,376 UYU">$220 UYU</div>
                         </div>
                         <ul class="plan-features">
+                            <li class="feature-item">✓ Reportes ilimitados de incidentes</li>
+                            <li class="feature-item">✓ Publicaciones en Surlink (casas o autos)</li>
                             <li class="feature-item">✓ Acceso a la API REST</li>
                             <li class="feature-item">✓ Exportación de datos (PDF/Excel)</li>
-                            <li class="feature-item">✓ Soporte prioritario vía email</li>
-                            <li class="feature-item">✓ Todo lo del plan Premium</li>
+                            <li class="feature-item">✓ Chatbot IA con GPT-5 para búsqueda inteligente</li>
+                            <li class="feature-item">✓ Soporte prioritario</li>
+                            <li class="feature-item">✓ Acceso anticipado a nuevas funcionalidades</li>
+                            <li class="feature-item">✓ Aparición en el <a href="/donadores" style="color: #10c6ff; text-decoration: underline;">muro de donadores</a></li>
+                            <li class="feature-item">✓ Todo lo del plan Free</li>
                         </ul>
-                        <a href="mailto:info.vortexlabs@protonmail.com?subject=Consulta%20Plan%20Pro&body=Hola,%0A%0AMe%20gustar%C3%ADa%20contratar%20el%20plan%20Pro%20($25%20USD%20%2F%20$1,100%20UYU%20al%20mes).%0A%0ANombre:%20%0AEmail:%20%0ATel%C3%A9fono:%20%0A%0AGracias." class="btn-plan">Contactar</a>
+                        <a href="mailto:info.vortexlabs@protonmail.com?subject=Consulta%20Plan%20Premium&body=Hola,%0A%0AMe%20gustar%C3%ADa%20contratar%20el%20plan%20Premium%20($5%20USD%20%2F%20$220%20UYU%20al%20mes).%0A%0ANombre:%20%0AEmail:%20%0ATel%C3%A9fono:%20%0A%0AGracias." class="btn-plan btn-primary">Contactar</a>
+                    </div>
+
+                    <!-- Donation Card -->
+                    <div class="plan-card donation-card">
+                        <div class="plan-header">
+                            <h3>Donar al Proyecto</h3>
+                            <p class="plan-description">Apoya el desarrollo de Vortex</p>
+                        </div>
+                        <div class="donation-content">
+                            <p style="color: var(--text-muted); line-height: 1.7; margin-bottom: 1.5rem;">
+                                ¿Prefieres hacer una donación única? Si no quieres pagar de forma mensual, puedes realizar una donación anónima o bajo tu usuario.
+                                <strong style="color: var(--text-primary);">Aparecerás en nuestro <a href="/donadores">muro de donadores</a></strong> (actualizado semanalmente).
+                            </p>
+                        </div>
+                        <ul class="plan-features">
+                            <li class="feature-item">✓ Donación única sin compromisos</li>
+                            <li class="feature-item">✓ Aparición en el <a href="/donadores">muro de donadores</a></li>
+                            <li class="feature-item">✓ Puedes donar de forma anónima</li>
+                            <li class="feature-item">✓ Apoyas el proyecto open-source</li>
+                        </ul>
+                        <a href="https://paypal.me/xplice?locale.x=es_XC&country.x=UY" target="_blank" rel="noopener noreferrer" class="btn-plan btn-donation">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                <path d="M2 17l10 5 10-5"></path>
+                                <path d="M2 12l10 5 10-5"></path>
+                            </svg>
+                            Donar con PayPal
+                        </a>
                     </div>
                 </div>
             </section>
@@ -159,7 +168,7 @@
                     </div>
                     <div class="faq-item">
                         <h3>¿Los planes incluyen soporte?</h3>
-                        <p>El plan Pro incluye soporte prioritario vía email. Todos los usuarios pueden contactarnos para consultas generales.</p>
+                        <p>El plan Premium incluye soporte prioritario vía email. Todos los usuarios pueden contactarnos para consultas generales.</p>
                     </div>
                 </div>
             </section>
@@ -206,11 +215,8 @@
         const usdToUyu = pricingData.usdToUyu;
         const isYearly = document.getElementById('billingToggle').checked;
 
-        // Premium
-        updatePlanPrice('premium', pricingData.plans.premium, usdToUyu, isYearly);
-
-        // Pro
-        updatePlanPrice('pro', pricingData.plans.pro, usdToUyu, isYearly);
+        // Premium (now $5 plan - using 'pro' data from API for backward compatibility)
+        updatePlanPrice('premium', pricingData.plans.pro, usdToUyu, isYearly);
     }
 
     function updatePlanPrice(planClass, planData, usdToUyu, isYearly) {
@@ -218,8 +224,7 @@
 
         // Map plan classes to their initial monthly values for identification
         const planIdentifiers = {
-            'premium': '2',
-            'pro': '5'
+            'premium': '5'  // Now Premium is the $5 plan
         };
 
         // Find the plan card
@@ -284,31 +289,48 @@
 
     // Hamburger menu functionality
     const hamburger = document.querySelector('.hamburger');
-    const navLinks = document.querySelector('.page-nav .nav-links');
+    const nav = document.querySelector('.platform-nav nav');
 
-    if (hamburger && navLinks) {
+    if (hamburger && nav) {
         hamburger.addEventListener('click', () => {
             hamburger.classList.toggle('active');
-            navLinks.classList.toggle('active');
+            nav.classList.toggle('active');
         });
 
         // Close menu when clicking on a link
-        const links = document.querySelectorAll('.page-nav .nav-links a');
-        links.forEach(link => {
+        const navLinks = document.querySelectorAll('.platform-nav nav a');
+        navLinks.forEach(link => {
             link.addEventListener('click', () => {
                 hamburger.classList.remove('active');
-                navLinks.classList.remove('active');
+                nav.classList.remove('active');
             });
         });
 
         // Close menu when clicking outside
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.page-nav') && navLinks.classList.contains('active')) {
+            if (!e.target.closest('.platform-nav') && nav.classList.contains('active')) {
                 hamburger.classList.remove('active');
-                navLinks.classList.remove('active');
+                nav.classList.remove('active');
             }
         });
     }
+
+    // Logout handler - clear EVERYTHING before logging out
+    const logoutLinks = document.querySelectorAll('a[href="/logout"]');
+    logoutLinks.forEach(link => {
+        link.addEventListener('click', async function(e) {
+            e.preventDefault();
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+                await fetch('/api/auth/clear-session', { method: 'GET', credentials: 'same-origin' });
+                console.log('All data cleared successfully');
+            } catch (error) {
+                console.error('Error clearing data:', error);
+            }
+            window.location.href = '/logout';
+        });
+    });
     </script>
 </body>
 </html>
