@@ -3,24 +3,33 @@ import User from '../models/User.js';
 import logger from '../utils/logger.js';
 
 /**
- * Get Auth0 Configuration
- * This function creates the config at runtime to ensure env vars are loaded
+ * Get Auth0 Configuration - Simplificado
  *
- * This configuration uses express-openid-connect to integrate Auth0
- * Automatically creates routes:
- * - /login - Redirects to Auth0 login
- * - /logout - Logs out and redirects
- * - /callback - Auth0 callback handler
+ * Configuración simple y unificada para local y producción.
+ * No hay diferencias entre ambientes - solo usa AUTH0_BASE_URL del .env
+ *
+ * Rutas automáticas:
+ * - /login - Redirige a Auth0
+ * - /logout - Cierra sesión
+ * - /callback - Maneja callback de Auth0
  */
 function getAuth0Config() {
+  const baseURL = process.env.AUTH0_BASE_URL;
+
+  if (!baseURL) {
+    logger.error('AUTH0_BASE_URL no está configurado en .env');
+    throw new Error('AUTH0_BASE_URL es requerido');
+  }
+
+  logger.info(`Auth0 Config - baseURL: ${baseURL}`);
+
   return {
     authRequired: false,
     auth0Logout: true,
     secret: process.env.AUTH0_SECRET,
-    baseURL: process.env.AUTH0_BASE_URL || 'http://localhost:3000',
+    baseURL: baseURL,
     clientID: process.env.AUTH0_CLIENT_ID,
     issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
-    // Additional useful settings
     routes: {
       callback: '/callback',
       login: '/login',
@@ -28,58 +37,47 @@ function getAuth0Config() {
       postLogoutRedirect: '/'
     },
     authorizationParams: {
-      // Force reauthentication so Google shows the account picker
       prompt: 'login'
     },
-    // After successful callback, handle user creation/update
+    // Después del login exitoso: crear/actualizar usuario y redirigir según rol
     afterCallback: async (req, res, session) => {
       try {
-        // Decode the id_token to get user claims
-        // In express-openid-connect, the claims are in the id_token JWT
-        if (!session || !session.id_token) {
-          logger.error('Auth0 afterCallback: session or id_token is undefined', { session });
+        if (!session?.id_token) {
+          logger.error('Auth0 afterCallback: session o id_token no disponible');
           return session;
         }
 
-        // Decode JWT token (it's already validated by Auth0 middleware)
-        // The token has 3 parts: header.payload.signature
+        // Decodificar JWT para obtener datos del usuario
         const tokenParts = session.id_token.split('.');
         if (tokenParts.length !== 3) {
-          logger.error('Auth0 afterCallback: Invalid JWT format');
+          logger.error('Auth0 afterCallback: Formato JWT inválido');
           return session;
         }
 
-        // Decode the payload (base64url encoded)
         const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64url').toString());
-
-        const email = payload.email;
-        const auth0Sub = payload.sub;
-        const name = payload.name || payload.nickname || email.split('@')[0];
-        const picture = payload.picture || '';
+        const { email, sub: auth0Sub, name, picture } = payload;
 
         if (!email || !auth0Sub) {
-          logger.error('Auth0 afterCallback: Missing email or sub', { payload });
+          logger.error('Auth0 afterCallback: Faltan email o sub');
           return session;
         }
 
-        logger.info(`Auth0 callback - User logged in: ${email}`);
+        // Verificar si es admin
+        const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase();
+        const isAdmin = adminEmail && email.toLowerCase() === adminEmail;
 
-        // Check if user is admin
-        const adminEmailEnv = process.env.ADMIN_EMAIL;
-        const normalizedAdminEmail = adminEmailEnv ? adminEmailEnv.toLowerCase() : null;
-        const isAdmin = normalizedAdminEmail ? email.toLowerCase() === normalizedAdminEmail : false;
+        logger.info(`Login exitoso: ${email} - ${isAdmin ? 'ADMIN' : 'USER'}`);
 
-        // Find or create user in database
+        // Buscar o crear usuario
         let user = await User.findOne({ email });
 
         if (!user) {
-          // Create new user
           user = new User({
             uid: auth0Sub,
             auth0Sub: auth0Sub,
             email: email,
-            name: name,
-            picture: picture,
+            name: name || email.split('@')[0],
+            picture: picture || '',
             role: isAdmin ? 'admin' : 'user',
             reputacion: 50,
             reportCount: 0,
@@ -88,82 +86,54 @@ function getAuth0Config() {
             banned: false,
             lastLogin: new Date()
           });
-
           await user.save();
-          logger.info(`New user created: ${email} with role: ${user.role}`);
+          logger.info(`Usuario creado: ${email} - rol: ${user.role}`);
         } else {
-          // Update existing user
+          // Actualizar usuario existente
           user.lastLogin = new Date();
           user.lastActivity = new Date();
-
-          // Update Auth0 info if changed
-          if (user.auth0Sub !== auth0Sub) {
-            user.auth0Sub = auth0Sub;
-          }
-          if (user.picture !== picture && picture) {
-            user.picture = picture;
-          }
-          if (user.name !== name && name) {
-            user.name = name;
-          }
-
-          // Update role if admin
+          user.auth0Sub = auth0Sub;
+          if (picture) user.picture = picture;
+          if (name) user.name = name;
           if (isAdmin && user.role !== 'admin') {
             user.role = 'admin';
-            logger.info(`User ${email} promoted to admin`);
+            logger.info(`Usuario promovido a admin: ${email}`);
           }
-
           await user.save();
-          logger.info(`User updated: ${email}`);
+          logger.info(`Usuario actualizado: ${email}`);
         }
 
-        // Store user metadata in Express session when available
-        if (req.session) {
-          req.session.userId = user._id.toString();
-          req.session.dbRole = user.role;
-          req.session.user = {
-            id: user._id.toString(),
-            uid: user.uid,
-            username: user.name || user.email,
-            email: user.email,
-            role: user.role,
-            picture: user.picture,
-            createdAt: user.createdAt
-          };
-          req.session.justLoggedIn = true;
-          req.session.redirectAfterLogin = isAdmin ? '/admin' : '/dashboard';
-
-          // Force session save to ensure data persists
-          return new Promise((resolve, reject) => {
-            logger.info('Before session save:', {
-              sessionExists: !!req.session,
-              sessionID: req.sessionID,
-              userData: { uid: user.uid, email: user.email, role: user.role }
-            });
-
-            req.session.save((err) => {
-              if (err) {
-                logger.error('Error saving session in afterCallback:', err);
-                console.error('Session save error details:', err);
-                reject(err);
-              } else {
-                logger.info(`Session data stored for user ${email} with role ${user.role}`);
-                logger.info('Session saved successfully:', {
-                  sessionID: req.sessionID,
-                  hasUser: !!req.session.user,
-                  userEmail: req.session.user?.email
-                });
-                resolve(session);
-              }
-            });
-          });
-        } else {
-          logger.error('Express session not available in afterCallback');
+        // Guardar en sesión y configurar redirección
+        if (!req.session) {
+          logger.error('Sesión no disponible en afterCallback');
           return session;
         }
+
+        req.session.user = {
+          id: user._id.toString(),
+          uid: user.uid,
+          email: user.email,
+          role: user.role,
+          picture: user.picture,
+          name: user.name
+        };
+
+        // Redirigir según rol: admin -> /admin, user -> /dashboard
+        const redirectTo = isAdmin ? '/admin' : '/dashboard';
+
+        return new Promise((resolve, reject) => {
+          req.session.save((err) => {
+            if (err) {
+              logger.error('Error guardando sesión:', err);
+              reject(err);
+            } else {
+              logger.info(`Sesión guardada. Redirección a: ${redirectTo}`);
+              return res.redirect(redirectTo);
+            }
+          });
+        });
       } catch (error) {
-        logger.error('Error in Auth0 afterCallback:', error);
-        // Continue with default behavior even if there's an error
+        logger.error('Error en afterCallback:', error);
         return session;
       }
     }
@@ -189,67 +159,44 @@ export const auth0Middleware = (req, res, next) => {
 };
 
 /**
- * Middleware to check if user is authenticated
- * Use this to protect routes that require authentication
+ * Middleware simplificado para proteger rutas
+ * Verifica si el usuario está autenticado vía OIDC o sesión Express
  */
 export const requireAuth = (req, res, next) => {
-  try {
-    // Check if oidc is available
-    if (!req.oidc) {
-      logger.error('OIDC context not available in requireAuth middleware');
-      return res.status(500).json({
-        error: 'Authentication system not properly initialized',
-        details: 'OIDC context missing'
-      });
-    }
+  // Verificar autenticación OIDC
+  const isOidcAuth = req.oidc?.isAuthenticated?.();
 
-    // Check if user is authenticated
-    if (!req.oidc.isAuthenticated || !req.oidc.isAuthenticated()) {
-      // If this is an API request, return JSON error
-      if (req.path.startsWith('/api/')) {
-        return res.status(401).json({ error: 'No autenticado' });
-      }
-      // Otherwise redirect to login
-      return res.redirect('/login');
-    }
-
-    next();
-  } catch (error) {
-    logger.error('Error in requireAuth middleware:', error);
-    // If this is an API request, return JSON error
-    if (req.path.startsWith('/api/')) {
-      return res.status(500).json({
-        error: 'Error de autenticación',
-        message: error.message
-      });
-    }
-    // Otherwise redirect to login
-    return res.redirect('/login');
+  // Si está autenticado en OIDC, permitir acceso
+  if (isOidcAuth) {
+    return next();
   }
+
+  // Si no está autenticado en OIDC, verificar sesión Express como fallback
+  // Esto permite que usuarios con sesión válida accedan mientras OIDC se refresca
+  if (req.session?.user?.email) {
+    logger.info(`Usuario ${req.session.user.email} accediendo con sesión Express (OIDC no disponible)`);
+    return next();
+  }
+
+  // No autenticado: redirigir según tipo de ruta
+  if (req.path.startsWith('/api/')) {
+    return res.status(401).json({ error: 'No autenticado' });
+  }
+
+  logger.info(`Acceso no autorizado a ${req.path}, redirigiendo a login`);
+  return res.redirect('/login');
 };
 
 /**
- * Middleware to make OIDC context available in views
- * This makes req.oidc available in all EJS templates
- */
-export const setupOidcLocals = (req, res, next) => {
-  res.locals.isAuthenticated = req.oidc.isAuthenticated();
-  res.locals.user = req.oidc.user || null;
-  next();
-};
-
-/**
- * Helper function to get user from either Auth0 or session
- * Returns user object with email and role, or null if not authenticated
+ * Helper simplificado para obtener usuario autenticado
+ * Primero intenta Auth0, luego sesión
  */
 export const getAuthenticatedUser = async (req) => {
-  // Check Auth0 first
-  if (req.oidc && req.oidc.isAuthenticated && req.oidc.isAuthenticated()) {
-    const oidcUser = req.oidc.user;
-
-    // Get user from database to get role
-    if (oidcUser.email) {
-      const user = await User.findOne({ email: oidcUser.email });
+  // Verificar Auth0
+  if (req.oidc?.isAuthenticated?.()) {
+    const email = req.oidc.user?.email;
+    if (email) {
+      const user = await User.findOne({ email });
       if (user) {
         return {
           email: user.email,
@@ -263,61 +210,10 @@ export const getAuthenticatedUser = async (req) => {
     }
   }
 
-  // Fallback to session-based auth
-  if (req.session && req.session.user) {
+  // Fallback a sesión
+  if (req.session?.user) {
     return req.session.user;
   }
 
   return null;
-};
-
-/**
- * Middleware to handle post-login redirect on landing page
- * This runs on the root route and redirects users who just logged in
- */
-export const handleLandingRedirect = async (req, res, next) => {
-  // Only run on root path
-  if (req.path !== '/') {
-    return next();
-  }
-
-  const justLoggedIn = req.session?.justLoggedIn;
-  if (!justLoggedIn) {
-    return next();
-  }
-
-  // Clear the flag so the user can visit landing later
-  if (req.session) {
-    delete req.session.justLoggedIn;
-  }
-
-  // If the user is authenticated, redirect once after login
-  if (req.oidc?.isAuthenticated && req.oidc.isAuthenticated()) {
-    let redirectTo = req.session?.redirectAfterLogin;
-
-    if (!redirectTo) {
-      const email = req.oidc.user?.email;
-      const adminEmailEnv = process.env.ADMIN_EMAIL;
-      const normalizedAdminEmail = adminEmailEnv ? adminEmailEnv.toLowerCase() : null;
-
-      if (email && normalizedAdminEmail && email.toLowerCase() === normalizedAdminEmail) {
-        redirectTo = '/admin';
-      } else {
-        redirectTo = '/dashboard';
-      }
-    }
-
-    if (req.session) {
-      delete req.session.redirectAfterLogin;
-    }
-
-    logger.info(`handleLandingRedirect - Redirecting post-login user to ${redirectTo}`);
-    return res.redirect(redirectTo);
-  }
-
-  if (req.session) {
-    delete req.session.redirectAfterLogin;
-  }
-
-  next();
 };

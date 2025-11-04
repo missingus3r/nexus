@@ -17,12 +17,12 @@
         <header>
             <div class="brand">VORTEX</div>
             <div class="platform-nav">
-                <button class="hamburger" aria-label="Abrir menú de navegación">
+                <button class="hamburger" aria-label="Toggle menu">
                     <span></span>
                     <span></span>
                     <span></span>
                 </button>
-                <nav aria-label="Navegación principal">
+                <nav>
                     <a href="/">Inicio</a>
                     <a href="/plataforma">Plataforma</a>
                     <a href="/centinel">Centinel</a>
@@ -197,24 +197,18 @@
 
     <script src="/js/social.js"></script>
     <script>
-        // Logout handler - clear EVERYTHING before logging out
-        document.addEventListener('DOMContentLoaded', function() {
-            const logoutLinks = document.querySelectorAll('a[href="/logout"]');
-            logoutLinks.forEach(link => {
-                link.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    try {
-                        localStorage.clear();
-                        sessionStorage.clear();
-                        await fetch('/api/auth/clear-session', { method: 'GET', credentials: 'same-origin' });
-                        console.log('All data cleared successfully');
-                    } catch (error) {
-                        console.error('Error clearing data:', error);
-                    }
-                    window.location.href = '/logout';
-                });
+    // Logout handler - simplificado
+    document.addEventListener('DOMContentLoaded', function() {
+        const logoutLinks = document.querySelectorAll('a[href="/logout"]');
+        logoutLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.href = '/logout';
             });
         });
+    });
     </script>
 </body>
 </html>

@@ -218,20 +218,14 @@
 
     <script src="/js/landing.js"></script>
     <script>
-        // Logout handler - clear EVERYTHING before logging out
+        // Logout handler - simplificado
         document.addEventListener('DOMContentLoaded', function() {
             const logoutLinks = document.querySelectorAll('a[href="/logout"]');
             logoutLinks.forEach(link => {
-                link.addEventListener('click', async function(e) {
+                link.addEventListener('click', function(e) {
                     e.preventDefault();
-                    try {
-                        localStorage.clear();
-                        sessionStorage.clear();
-                        await fetch('/api/auth/clear-session', { method: 'GET', credentials: 'same-origin' });
-                        console.log('All data cleared successfully');
-                    } catch (error) {
-                        console.error('Error clearing data:', error);
-                    }
+                    localStorage.clear();
+                    sessionStorage.clear();
                     window.location.href = '/logout';
                 });
             });

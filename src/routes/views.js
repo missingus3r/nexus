@@ -4,6 +4,17 @@ import { getAuthenticatedUser } from '../config/auth0.js';
 
 const router = express.Router();
 
+// Middleware to prevent caching of pages with auth state
+router.use((req, res, next) => {
+  // Evitar caché en el navegador para páginas que dependen del estado de autenticación
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  });
+  next();
+});
+
 // Middleware to inject user and auth info into all views
 router.use((req, res, next) => {
   const isOidcAuthenticated = typeof req.oidc?.isAuthenticated === 'function'
@@ -156,14 +167,9 @@ router.get('/perfil', async (req, res) => {
 });
 
 /**
- * Login page
+ * Login - Manejado automáticamente por Auth0 middleware en /login
+ * No se define ruta aquí para evitar conflictos
  */
-router.get('/login', (req, res) => {
-  res.render('login', {
-    title: 'Iniciar Sesión - Vortex',
-    page: 'login'
-  });
-});
 
 /**
  * Privacy policy
@@ -207,11 +213,8 @@ router.get('/admin', async (req, res) => {
 });
 
 /**
- * Logout
+ * Logout - Manejado automáticamente por Auth0 middleware en /logout
+ * No se define ruta aquí para permitir que Auth0 maneje el cierre de sesión completo
  */
-router.get('/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/');
-});
 
 export default router;

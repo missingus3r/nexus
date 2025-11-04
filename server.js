@@ -40,7 +40,7 @@ import { rateLimiter } from './src/middleware/rateLimiter.js';
 import { trackPageVisit } from './src/middleware/pageTracking.js';
 
 // Auth0
-import { auth0Middleware, handleLandingRedirect } from './src/config/auth0.js';
+import { auth0Middleware } from './src/config/auth0.js';
 
 // Sockets
 import { initializeSocketHandlers } from './src/sockets/eventHandlers.js';
@@ -78,17 +78,16 @@ app.use(session({
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: 'lax', // CSRF protection while allowing navigation
-    path: '/' // Ensure cookie is sent for all paths
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' required for cross-site Auth0 redirects in production
+    path: '/', // Ensure cookie is sent for all paths
+    domain: process.env.COOKIE_DOMAIN || undefined // Set domain for production (e.g., '.yourdomain.com')
   },
-  rolling: true // Reset expiration on every request
+  rolling: true, // Reset expiration on every request
+  proxy: process.env.NODE_ENV === 'production' // Trust proxy in production (needed for secure cookies behind reverse proxy)
 }));
 
 // Auth0 middleware - attaches /login, /logout, and /callback routes
 app.use(auth0Middleware);
-
-// Handle post-login redirect from landing page
-app.use(handleLandingRedirect);
 
 // Middleware
 app.use(helmet({
@@ -113,17 +112,27 @@ mongoose.connect(process.env.MONGO_URI)
 // Make io accessible to routes
 app.set('io', io);
 
-// Middleware to pass user to all views
-// This integrates both the legacy session-based auth and Auth0
+// Middleware simplificado: pasa usuario a las vistas
 app.use((req, res, next) => {
-  // Check Auth0 authentication
-  const oidcUser = req.oidc?.user || null;
-  const isOidcAuthenticated = req.oidc?.isAuthenticated() || false;
+  // Verificar autenticación OIDC o sesión Express
+  const isOidcAuth = req.oidc?.isAuthenticated() || false;
+  const hasExpressSession = req.session?.user ? true : false;
 
-  // Prefer Auth0 user if authenticated, fallback to session user
-  res.locals.user = isOidcAuthenticated ? oidcUser : (req.session.user || null);
-  res.locals.isAuthenticated = isOidcAuthenticated || !!req.session.user;
-  res.locals.oidc = req.oidc; // Make OIDC context available in views
+  const isAuthenticated = isOidcAuth || hasExpressSession;
+
+  // Si está autenticado en OIDC, usar datos de OIDC
+  if (isOidcAuth) {
+    res.locals.user = req.oidc.user;
+  }
+  // Si solo tiene sesión Express, usar datos de la sesión
+  else if (hasExpressSession) {
+    res.locals.user = req.session.user;
+  }
+  else {
+    res.locals.user = null;
+  }
+
+  res.locals.isAuthenticated = isAuthenticated;
   next();
 });
 

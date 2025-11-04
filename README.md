@@ -54,6 +54,23 @@ npm start
 
 La aplicación estará disponible en `http://localhost:3000`
 
+### Despliegue en Producción
+
+Para desplegar en producción, sigue la guía completa:
+
+```bash
+# Verificar configuración de producción
+node scripts/check-production-config.js
+
+# Ver checklist completo
+cat PRODUCTION_DEPLOYMENT_CHECKLIST.md
+```
+
+**IMPORTANTE**: La configuración de Auth0 es crítica para el correcto funcionamiento en producción. Asegúrate de:
+- Configurar `AUTH0_BASE_URL` con tu dominio de producción (no localhost)
+- Actualizar las Allowed Callback URLs en Auth0 Dashboard
+- Ver [docs/AUTH0_PRODUCTION_REDIRECT_FIX.md](docs/AUTH0_PRODUCTION_REDIRECT_FIX.md) para detalles
+
 ## 🏗️ Estructura del Proyecto
 
 ```

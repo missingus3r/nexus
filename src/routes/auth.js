@@ -1,16 +1,10 @@
 import express from 'express';
-import { generateGuestToken, generateUserToken } from '../middleware/auth.js';
+import { generateGuestToken } from '../middleware/auth.js';
 import { User, Incident, Validation, Subscription, ForumThread, ForumComment } from '../models/index.js';
 import logger from '../utils/logger.js';
-import { checkAuthMaintenance } from '../middleware/maintenanceCheck.js';
 import { getAuthenticatedUser } from '../config/auth0.js';
 
 const router = express.Router();
-
-// Auth0 configuration
-const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN;
-const AUTH0_CLIENT_ID = process.env.AUTH0_CLIENT_ID;
-const AUTH0_CLIENT_SECRET = process.env.AUTH0_CLIENT_SECRET;
 
 /**
  * POST /auth/guest-token
@@ -30,134 +24,7 @@ router.post('/guest-token', (req, res) => {
   }
 });
 
-/**
- * POST /auth0/callback
- * Handle Auth0 authentication callback
- * Verifica el usuario y lo crea si no existe
- */
-router.post('/auth0/callback', checkAuthMaintenance, async (req, res) => {
-  try {
-    const { code, redirect_uri } = req.body;
-
-    if (!code) {
-      return res.status(400).json({ error: 'Código de autorización requerido' });
-    }
-
-    if (!AUTH0_DOMAIN || !AUTH0_CLIENT_ID || !AUTH0_CLIENT_SECRET) {
-      logger.error('Auth0 configuration missing');
-      return res.status(500).json({ error: 'Configuración de Auth0 incompleta' });
-    }
-
-    // Exchange code for tokens
-    const tokenResponse = await fetch(`https://${AUTH0_DOMAIN}/oauth/token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        grant_type: 'authorization_code',
-        client_id: AUTH0_CLIENT_ID,
-        client_secret: AUTH0_CLIENT_SECRET,
-        code,
-        redirect_uri
-      })
-    });
-
-    if (!tokenResponse.ok) {
-      const error = await tokenResponse.text();
-      logger.error('Auth0 token exchange failed:', error);
-      return res.status(400).json({ error: 'Error al intercambiar código por token' });
-    }
-
-    const tokens = await tokenResponse.json();
-    const { access_token, id_token } = tokens;
-
-    // Get user info from Auth0
-    const userInfoResponse = await fetch(`https://${AUTH0_DOMAIN}/userinfo`, {
-      headers: {
-        Authorization: `Bearer ${access_token}`
-      }
-    });
-
-    if (!userInfoResponse.ok) {
-      logger.error('Failed to get user info from Auth0');
-      return res.status(400).json({ error: 'Error al obtener información del usuario' });
-    }
-
-    const auth0User = await userInfoResponse.json();
-    logger.info('Auth0 user info:', auth0User);
-
-    const { sub, email, name, picture } = auth0User;
-
-    // Find or create user in database
-    let user = await User.findOne({
-      $or: [
-        { auth0Sub: sub },
-        { email: email }
-      ]
-    });
-
-    if (!user) {
-      // Create new user
-      user = await User.create({
-        uid: sub, // Use Auth0 sub as uid
-        auth0Sub: sub,
-        email,
-        name: name || email.split('@')[0],
-        picture,
-        reputacion: 50,
-        role: 'user',
-        lastLogin: new Date()
-      });
-      logger.info('New user created:', { email, sub });
-    } else {
-      // Update existing user
-      user.auth0Sub = sub;
-      user.email = email;
-      user.name = name || user.name;
-      user.picture = picture || user.picture;
-      user.lastLogin = new Date();
-      await user.save();
-      logger.info('Existing user updated:', { email, sub });
-    }
-
-    // Create session
-    req.session.user = {
-      id: user._id,
-      uid: user.uid,
-      username: user.name || user.email,
-      email: user.email,
-      role: user.role,
-      picture: user.picture,
-      createdAt: user.createdAt
-    };
-
-    // Generate JWT token for API calls
-    const jwtToken = generateUserToken(user.uid, []);
-
-    res.json({
-      success: true,
-      user: {
-        id: user._id,
-        uid: user.uid,
-        username: user.name || user.email,
-        email: user.email,
-        name: user.name,
-        picture: user.picture,
-        role: user.role,
-        reputacion: user.reputacion
-      },
-      token: jwtToken,
-      expiresIn: 604800, // 7 days
-      message: user.createdAt.getTime() === user.lastLogin.getTime()
-        ? 'Registro exitoso'
-        : 'Login exitoso'
-    });
-  } catch (error) {
-    logger.error('Error in Auth0 callback:', error);
-    res.status(500).json({ error: 'Error al procesar autenticación' });
-  }
-});
+// Ruta de callback eliminada - Auth0 maneja /callback automáticamente
 
 /**
  * GET /auth/profile
@@ -401,37 +268,6 @@ router.delete('/delete-account', (req, res) => {
   }
 });
 
-/**
- * GET /auth/clear-session
- * Clear session and all cookies - use before logout
- */
-router.get('/clear-session', (req, res) => {
-  try {
-    logger.info('Clear session requested');
-
-    // Destroy the session completely
-    if (req.session) {
-      req.session.destroy((err) => {
-        if (err) {
-          logger.error('Error destroying session:', err);
-        } else {
-          logger.info('Session destroyed successfully');
-        }
-      });
-    }
-
-    // Clear all cookies
-    res.clearCookie('vortex.sid', { path: '/' });
-    res.clearCookie('connect.sid', { path: '/' });
-
-    res.json({
-      success: true,
-      message: 'Sesión limpiada exitosamente'
-    });
-  } catch (error) {
-    logger.error('Error clearing session:', error);
-    res.status(500).json({ error: 'Error al limpiar sesión' });
-  }
-});
+// Ruta /auth/clear-session eliminada - Auth0 maneja el logout automáticamente en /logout
 
 export default router;

@@ -137,6 +137,14 @@ body {
     border-top: 1px solid var(--border-color);
 }
 
+/* Button inside nav-group-actions */
+.nav-group-actions .btn {
+    margin: 0.5rem 1rem;
+    width: calc(100% - 2rem);
+    text-align: center;
+    display: block;
+}
+
 .nav-link {
     text-decoration: none;
     color: var(--text-primary);

@@ -4,7 +4,7 @@ import SurlinkListing from '../models/SurlinkListing.js';
 import ForumThread from '../models/ForumThread.js';
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
-import { requireAuth } from '../config/auth0.js';
+import { requireAuth, getAuthenticatedUser } from '../config/auth0.js';
 
 const router = express.Router();
 
@@ -14,15 +14,7 @@ const router = express.Router();
  */
 router.get('/dashboard', requireAuth, async (req, res, next) => {
   try {
-    // Verify user info is available
-    if (!req.oidc || !req.oidc.user) {
-      console.error('Dashboard: User info not available in OIDC context');
-      return res.status(500).json({
-        error: 'User information not available',
-        details: 'OIDC user context missing'
-      });
-    }
-
+    // Simply render dashboard - authentication is verified by requireAuth middleware
     res.render('dashboard', {
       title: 'Dashboard - Vortex'
     });
@@ -39,16 +31,14 @@ router.get('/dashboard', requireAuth, async (req, res, next) => {
  */
 router.get('/api/dashboard/data', requireAuth, async (req, res, next) => {
   try {
-    // Verify OIDC context exists
-    if (!req.oidc || !req.oidc.user) {
-      console.error('Dashboard data: OIDC user context not available');
-      return res.status(500).json({
-        error: 'Authentication context not available',
-        details: 'OIDC user missing'
-      });
+    // Get authenticated user from either OIDC or Express session
+    const authUser = await getAuthenticatedUser(req);
+
+    if (!authUser || !authUser.email) {
+      return res.status(401).json({ error: 'Usuario no autenticado' });
     }
 
-    const userEmail = req.oidc.user?.email;
+    const userEmail = authUser.email;
 
     if (!userEmail) {
       return res.status(401).json({ error: 'Usuario no autenticado' });
@@ -163,14 +153,14 @@ router.get('/api/dashboard/data', requireAuth, async (req, res, next) => {
  */
 router.patch('/api/dashboard/notifications/:id/read', requireAuth, async (req, res, next) => {
   try {
-    const userEmail = req.oidc.user?.email;
+    const authUser = await getAuthenticatedUser(req);
     const notificationId = req.params.id;
 
-    if (!userEmail) {
+    if (!authUser || !authUser.email) {
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
 
-    const user = await User.findOne({ email: userEmail });
+    const user = await User.findOne({ email: authUser.email });
 
     if (!user) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
@@ -199,13 +189,13 @@ router.patch('/api/dashboard/notifications/:id/read', requireAuth, async (req, r
  */
 router.post('/api/dashboard/notifications/read-all', requireAuth, async (req, res, next) => {
   try {
-    const userEmail = req.oidc.user?.email;
+    const authUser = await getAuthenticatedUser(req);
 
-    if (!userEmail) {
+    if (!authUser || !authUser.email) {
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
 
-    const user = await User.findOne({ email: userEmail });
+    const user = await User.findOne({ email: authUser.email });
 
     if (!user) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
