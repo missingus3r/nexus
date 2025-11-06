@@ -51,6 +51,44 @@ const systemSettingsSchema = new mongoose.Schema({
     }
   },
 
+  // Cron job schedules (using cron syntax)
+  cronSchedules: {
+    newsIngestion: {
+      type: String,
+      default: '*/15 * * * *',
+      description: 'News ingestion schedule (default: every 15 minutes)'
+    },
+    heatmapUpdate: {
+      type: String,
+      default: '*/5 * * * *',
+      description: 'Heatmap percentile update schedule (default: every 5 minutes)'
+    },
+    cleanup: {
+      type: String,
+      default: '0 3 * * *',
+      description: 'Cleanup old data schedule (default: daily at 3 AM)'
+    }
+  },
+
+  // Cron job enabled status
+  cronEnabled: {
+    newsIngestion: {
+      type: Boolean,
+      default: true,
+      description: 'Enable/disable news ingestion job'
+    },
+    heatmapUpdate: {
+      type: Boolean,
+      default: true,
+      description: 'Enable/disable heatmap update job'
+    },
+    cleanup: {
+      type: Boolean,
+      default: true,
+      description: 'Enable/disable cleanup job'
+    }
+  },
+
   updatedAt: {
     type: Date,
     default: Date.now
@@ -86,6 +124,14 @@ systemSettingsSchema.statics.updateSettings = async function(updates, updatedBy 
 
   if (updates.maintenanceMessages) {
     Object.assign(settings.maintenanceMessages, updates.maintenanceMessages);
+  }
+
+  if (updates.cronSchedules) {
+    Object.assign(settings.cronSchedules, updates.cronSchedules);
+  }
+
+  if (updates.cronEnabled) {
+    Object.assign(settings.cronEnabled, updates.cronEnabled);
   }
 
   settings.updatedBy = updatedBy;

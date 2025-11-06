@@ -2,9 +2,9 @@ import express from 'express';
 import mongoose from 'mongoose';
 import Incident from '../models/Incident.js';
 import NewsEvent from '../models/NewsEvent.js';
-import { AdminPost, Notification, User, SurlinkListing, Subscription, PaymentHistory, ForumThread, ForumComment, ForumSettings, PricingSettings, PageVisit, SystemSettings } from '../models/index.js';
+import { AdminPost, Notification, User, SurlinkListing, ForumThread, ForumComment, ForumSettings, PricingSettings, PageVisit, SystemSettings } from '../models/index.js';
 import { runNewsIngestion } from '../jobs/newsIngestion.js';
-import { runScheduledCleanup } from '../jobs/index.js';
+import { runScheduledCleanup, reloadCronJobs } from '../jobs/index.js';
 import logger from '../utils/logger.js';
 import { Parser } from 'json2csv';
 import ExcelJS from 'exceljs';
@@ -59,8 +59,7 @@ const sanitizeUser = (user) => {
     lastLogin: plainUser.lastLogin || null,
     reportCount: plainUser.reportCount || 0,
     validationCount: plainUser.validationCount || 0,
-    strikes: plainUser.strikes || 0,
-    subscription: plainUser.subscription || null
+    strikes: plainUser.strikes || 0
   };
 };
 
@@ -244,7 +243,7 @@ router.get('/users/list', requireAdmin, async (req, res) => {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .select('email name role banned bannedUntil createdAt updatedAt lastLogin reportCount validationCount strikes subscription')
+        .select('email name role banned bannedUntil createdAt updatedAt lastLogin reportCount validationCount strikes')
         .lean(),
       User.countDocuments(filter)
     ]);
@@ -827,694 +826,6 @@ router.post('/surlink/cleanup', requireAdmin, async (req, res) => {
   } catch (error) {
     logger.error('Error cleaning up Surlink listings', { error });
     res.status(500).json({ error: 'No se pudo depurar los listados' });
-  }
-});
-
-/**
- * GET /admin/subscriptions/stats
- * Get subscription statistics
- */
-router.get('/subscriptions/stats', requireAdmin, async (req, res) => {
-  try {
-    // Total subscriptions by status
-    const totalActive = await Subscription.countDocuments({ status: 'active' });
-    const totalExpired = await Subscription.countDocuments({ status: 'expired' });
-    const totalCancelled = await Subscription.countDocuments({ status: 'cancelled' });
-    const totalTrial = await Subscription.countDocuments({ status: 'trial' });
-
-    // Subscriptions by plan
-    const subscriptionsByPlan = await Subscription.aggregate([
-      { $match: { status: 'active' } },
-      {
-        $group: {
-          _id: '$plan',
-          count: { $sum: 1 },
-          totalRevenue: {
-            $sum: {
-              $cond: [
-                { $eq: ['$price.currency', 'USD'] },
-                '$price.amount',
-                { $divide: ['$price.amount', 44] } // Convert UYU to USD (approximate)
-              ]
-            }
-          }
-        }
-      },
-      { $sort: { count: -1 } }
-    ]);
-
-    // Subscriptions by type
-    const subscriptionsByType = await Subscription.aggregate([
-      { $match: { status: 'active' } },
-      {
-        $group: {
-          _id: '$planType',
-          count: { $sum: 1 }
-        }
-      }
-    ]);
-
-    // Monthly recurring revenue (MRR)
-    const mrrData = await Subscription.aggregate([
-      { $match: { status: 'active' } },
-      {
-        $group: {
-          _id: null,
-          totalMRR: {
-            $sum: {
-              $cond: [
-                { $eq: ['$billingCycle', 'yearly'] },
-                {
-                  $divide: [
-                    {
-                      $cond: [
-                        { $eq: ['$price.currency', 'USD'] },
-                        '$price.amount',
-                        { $divide: ['$price.amount', 44] }
-                      ]
-                    },
-                    12
-                  ]
-                },
-                {
-                  $cond: [
-                    { $eq: ['$price.currency', 'USD'] },
-                    '$price.amount',
-                    { $divide: ['$price.amount', 44] }
-                  ]
-                }
-              ]
-            }
-          }
-        }
-      }
-    ]);
-
-    // New subscriptions last 30 days
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const newSubscriptionsLast30Days = await Subscription.countDocuments({
-      createdAt: { $gte: thirtyDaysAgo }
-    });
-
-    // Expiring soon (next 7 days)
-    const sevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    const expiringSoon = await Subscription.countDocuments({
-      status: 'active',
-      endDate: { $lte: sevenDaysFromNow, $gte: new Date() },
-      autoRenew: false
-    });
-
-    // Recent subscriptions
-    const recentSubscriptions = await Subscription.find()
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .populate('userId', 'email name')
-      .select('plan planType status price startDate endDate userId');
-
-    // Churn rate (cancelled in last 30 days)
-    const cancelledLast30Days = await Subscription.countDocuments({
-      status: 'cancelled',
-      updatedAt: { $gte: thirtyDaysAgo }
-    });
-
-    // Subscriptions over time (last 90 days)
-    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-    const subscriptionsOverTime = await Subscription.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: ninetyDaysAgo }
-        }
-      },
-      {
-        $group: {
-          _id: {
-            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
-          },
-          count: { $sum: 1 }
-        }
-      },
-      { $sort: { _id: 1 } }
-    ]);
-
-    const stats = {
-      summary: {
-        totalActive,
-        totalExpired,
-        totalCancelled,
-        totalTrial,
-        newLast30Days: newSubscriptionsLast30Days,
-        expiringSoon,
-        cancelledLast30Days,
-        churnRate: totalActive > 0 ? ((cancelledLast30Days / totalActive) * 100).toFixed(2) : 0
-      },
-      revenue: {
-        mrr: mrrData[0]?.totalMRR || 0,
-        arr: (mrrData[0]?.totalMRR || 0) * 12
-      },
-      byPlan: subscriptionsByPlan.map(item => ({
-        plan: item._id,
-        count: item.count,
-        revenue: item.totalRevenue
-      })),
-      byType: subscriptionsByType.reduce((acc, item) => {
-        acc[item._id] = item.count;
-        return acc;
-      }, {}),
-      timeline: subscriptionsOverTime.map(item => ({
-        date: item._id,
-        count: item.count
-      })),
-      recentSubscriptions: recentSubscriptions.map(sub => ({
-        id: sub._id,
-        plan: sub.plan,
-        planType: sub.planType,
-        status: sub.status,
-        price: sub.price,
-        startDate: sub.startDate,
-        endDate: sub.endDate,
-        user: {
-          email: sub.userId?.email || 'N/A',
-          name: sub.userId?.name || 'N/A'
-        }
-      }))
-    };
-
-    res.json(stats);
-  } catch (error) {
-    logger.error('Error getting subscription stats:', error);
-    res.status(500).json({
-      error: 'Error al obtener estadísticas de suscripciones',
-      details: error.message
-    });
-  }
-});
-
-/**
- * GET /admin/subscriptions
- * Get all subscriptions with filters
- */
-router.get('/subscriptions', requireAdmin, async (req, res) => {
-  try {
-    const { status, plan, planType, limit = 50, offset = 0 } = req.query;
-
-    // Build filter
-    const filter = {};
-    if (status) filter.status = status;
-    if (plan) filter.plan = plan;
-    if (planType) filter.planType = planType;
-
-    const subscriptions = await Subscription.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
-      .skip(parseInt(offset))
-      .populate('userId', 'email name uid');
-
-    const total = await Subscription.countDocuments(filter);
-
-    res.json({
-      subscriptions: subscriptions.map(sub => ({
-        id: sub._id,
-        plan: sub.plan,
-        planType: sub.planType,
-        status: sub.status,
-        billingCycle: sub.billingCycle,
-        price: sub.price,
-        startDate: sub.startDate,
-        endDate: sub.endDate,
-        autoRenew: sub.autoRenew,
-        user: {
-          id: sub.userId?._id,
-          email: sub.userId?.email || 'N/A',
-          name: sub.userId?.name || 'N/A',
-          uid: sub.userId?.uid
-        },
-        createdAt: sub.createdAt
-      })),
-      total,
-      page: Math.floor(offset / limit) + 1,
-      totalPages: Math.ceil(total / limit)
-    });
-  } catch (error) {
-    logger.error('Error getting subscriptions:', error);
-    res.status(500).json({
-      error: 'Error al obtener suscripciones',
-      details: error.message
-    });
-  }
-});
-
-/**
- * PATCH /admin/subscriptions/:id
- * Update subscription status or details
- */
-router.patch('/subscriptions/:id', requireAdmin, async (req, res) => {
-  try {
-    const { status, endDate, autoRenew } = req.body;
-
-    const subscription = await Subscription.findById(req.params.id);
-    if (!subscription) {
-      return res.status(404).json({ error: 'Suscripción no encontrada' });
-    }
-
-    if (status !== undefined) subscription.status = status;
-    if (endDate !== undefined) subscription.endDate = new Date(endDate);
-    if (autoRenew !== undefined) subscription.autoRenew = autoRenew;
-
-    await subscription.save();
-
-    logger.info('Subscription updated by admin', {
-      subscriptionId: subscription._id,
-      updatedBy: req.user.uid,
-      changes: { status, endDate, autoRenew }
-    });
-
-    res.json({
-      message: 'Suscripción actualizada exitosamente',
-      subscription
-    });
-  } catch (error) {
-    logger.error('Error updating subscription:', error);
-    res.status(500).json({
-      error: 'Error al actualizar suscripción',
-      details: error.message
-    });
-  }
-});
-
-/**
- * DELETE /admin/subscriptions/:id
- * Cancel a subscription
- */
-router.delete('/subscriptions/:id', requireAdmin, async (req, res) => {
-  try {
-    const subscription = await Subscription.findById(req.params.id);
-    if (!subscription) {
-      return res.status(404).json({ error: 'Suscripción no encontrada' });
-    }
-
-    await subscription.cancel();
-
-    logger.info('Subscription cancelled by admin', {
-      subscriptionId: subscription._id,
-      cancelledBy: req.user.uid
-    });
-
-    res.json({
-      message: 'Suscripción cancelada exitosamente'
-    });
-  } catch (error) {
-    logger.error('Error cancelling subscription:', error);
-    res.status(500).json({
-      error: 'Error al cancelar suscripción',
-      details: error.message
-    });
-  }
-});
-
-/**
- * POST /admin/subscriptions/:id/renew
- * Renew a subscription (extend end date)
- */
-router.post('/subscriptions/:id/renew', requireAdmin, async (req, res) => {
-  try {
-    const { months = 1 } = req.body;
-
-    const subscription = await Subscription.findById(req.params.id);
-    if (!subscription) {
-      return res.status(404).json({ error: 'Suscripción no encontrada' });
-    }
-
-    await subscription.renew(months);
-
-    logger.info('Subscription renewed by admin', {
-      subscriptionId: subscription._id,
-      renewedBy: req.user.uid,
-      months
-    });
-
-    res.json({
-      message: `Suscripción renovada por ${months} ${months === 1 ? 'mes' : 'meses'}`,
-      subscription
-    });
-  } catch (error) {
-    logger.error('Error renewing subscription:', error);
-    res.status(500).json({
-      error: 'Error al renovar suscripción',
-      details: error.message
-    });
-  }
-});
-
-/**
- * GET /admin/subscriptions/export/csv
- * Export subscriptions to CSV
- */
-router.get('/subscriptions/export/csv', requireAdmin, async (req, res) => {
-  try {
-    const { status, plan, planType } = req.query;
-
-    // Build filter
-    const filter = {};
-    if (status) filter.status = status;
-    if (plan) filter.plan = plan;
-    if (planType) filter.planType = planType;
-
-    const subscriptions = await Subscription.find(filter)
-      .populate('userId', 'email name uid')
-      .sort({ createdAt: -1 });
-
-    // Prepare data for CSV
-    const data = subscriptions.map(sub => ({
-      ID: sub._id,
-      Usuario: sub.userId?.name || 'N/A',
-      Email: sub.userId?.email || 'N/A',
-      Plan: sub.plan,
-      'Tipo de Plan': sub.planType,
-      Estado: sub.status,
-      'Ciclo de Facturación': sub.billingCycle,
-      'Precio': sub.price.amount,
-      'Moneda': sub.price.currency,
-      'Fecha de Inicio': sub.startDate.toISOString().split('T')[0],
-      'Fecha de Vencimiento': sub.endDate.toISOString().split('T')[0],
-      'Auto-renovación': sub.autoRenew ? 'Sí' : 'No',
-      'Creado': sub.createdAt.toISOString().split('T')[0]
-    }));
-
-    const parser = new Parser();
-    const csv = parser.parse(data);
-
-    res.header('Content-Type', 'text/csv');
-    res.header('Content-Disposition', 'attachment; filename=subscriptions.csv');
-    res.send(csv);
-
-    logger.info('Subscriptions exported to CSV', {
-      exportedBy: req.user.uid,
-      count: subscriptions.length
-    });
-  } catch (error) {
-    logger.error('Error exporting subscriptions to CSV:', error);
-    res.status(500).json({
-      error: 'Error al exportar suscripciones',
-      details: error.message
-    });
-  }
-});
-
-/**
- * GET /admin/subscriptions/export/excel
- * Export subscriptions to Excel
- */
-router.get('/subscriptions/export/excel', requireAdmin, async (req, res) => {
-  try {
-    const { status, plan, planType } = req.query;
-
-    // Build filter
-    const filter = {};
-    if (status) filter.status = status;
-    if (plan) filter.plan = plan;
-    if (planType) filter.planType = planType;
-
-    const subscriptions = await Subscription.find(filter)
-      .populate('userId', 'email name uid')
-      .sort({ createdAt: -1 });
-
-    // Create workbook
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Suscripciones');
-
-    // Add headers
-    worksheet.columns = [
-      { header: 'ID', key: 'id', width: 25 },
-      { header: 'Usuario', key: 'name', width: 20 },
-      { header: 'Email', key: 'email', width: 30 },
-      { header: 'Plan', key: 'plan', width: 15 },
-      { header: 'Tipo', key: 'planType', width: 15 },
-      { header: 'Estado', key: 'status', width: 15 },
-      { header: 'Ciclo', key: 'billingCycle', width: 15 },
-      { header: 'Precio', key: 'price', width: 12 },
-      { header: 'Moneda', key: 'currency', width: 10 },
-      { header: 'Inicio', key: 'startDate', width: 15 },
-      { header: 'Vencimiento', key: 'endDate', width: 15 },
-      { header: 'Auto-renovación', key: 'autoRenew', width: 15 },
-      { header: 'Creado', key: 'createdAt', width: 15 }
-    ];
-
-    // Add data
-    subscriptions.forEach(sub => {
-      worksheet.addRow({
-        id: sub._id.toString(),
-        name: sub.userId?.name || 'N/A',
-        email: sub.userId?.email || 'N/A',
-        plan: sub.plan,
-        planType: sub.planType,
-        status: sub.status,
-        billingCycle: sub.billingCycle,
-        price: sub.price.amount,
-        currency: sub.price.currency,
-        startDate: sub.startDate.toISOString().split('T')[0],
-        endDate: sub.endDate.toISOString().split('T')[0],
-        autoRenew: sub.autoRenew ? 'Sí' : 'No',
-        createdAt: sub.createdAt.toISOString().split('T')[0]
-      });
-    });
-
-    // Style header
-    worksheet.getRow(1).font = { bold: true };
-    worksheet.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FF1976D2' }
-    };
-    worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
-
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename=subscriptions.xlsx');
-
-    await workbook.xlsx.write(res);
-    res.end();
-
-    logger.info('Subscriptions exported to Excel', {
-      exportedBy: req.user.uid,
-      count: subscriptions.length
-    });
-  } catch (error) {
-    logger.error('Error exporting subscriptions to Excel:', error);
-    res.status(500).json({
-      error: 'Error al exportar suscripciones',
-      details: error.message
-    });
-  }
-});
-
-/**
- * GET /admin/payments
- * Get all payment history
- */
-router.get('/payments', requireAdmin, async (req, res) => {
-  try {
-    const { userId, status, limit = 50, offset = 0 } = req.query;
-
-    // Build filter
-    const filter = {};
-    if (userId) filter.userId = userId;
-    if (status) filter.status = status;
-
-    const payments = await PaymentHistory.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
-      .skip(parseInt(offset))
-      .populate('userId', 'email name uid')
-      .populate('subscriptionId', 'plan planType');
-
-    const total = await PaymentHistory.countDocuments(filter);
-
-    res.json({
-      payments: payments.map(payment => ({
-        id: payment._id,
-        amount: payment.amount,
-        currency: payment.currency,
-        status: payment.status,
-        paymentMethod: payment.paymentMethod,
-        transactionId: payment.transactionId,
-        description: payment.description,
-        user: {
-          id: payment.userId?._id,
-          email: payment.userId?.email || 'N/A',
-          name: payment.userId?.name || 'N/A'
-        },
-        subscription: {
-          plan: payment.subscriptionId?.plan,
-          planType: payment.subscriptionId?.planType
-        },
-        createdAt: payment.createdAt,
-        completedAt: payment.completedAt
-      })),
-      total,
-      page: Math.floor(offset / limit) + 1,
-      totalPages: Math.ceil(total / limit)
-    });
-  } catch (error) {
-    logger.error('Error getting payment history:', error);
-    res.status(500).json({
-      error: 'Error al obtener historial de pagos',
-      details: error.message
-    });
-  }
-});
-
-/**
- * GET /admin/payments/user/:userId
- * Get payment history for specific user
- */
-router.get('/payments/user/:userId', requireAdmin, async (req, res) => {
-  try {
-    const payments = await PaymentHistory.getUserPaymentHistory(req.params.userId);
-
-    res.json({
-      userId: req.params.userId,
-      payments: payments.map(payment => ({
-        id: payment._id,
-        amount: payment.amount,
-        currency: payment.currency,
-        status: payment.status,
-        paymentMethod: payment.paymentMethod,
-        transactionId: payment.transactionId,
-        description: payment.description,
-        subscription: {
-          plan: payment.subscriptionId?.plan,
-          planType: payment.subscriptionId?.planType
-        },
-        createdAt: payment.createdAt,
-        completedAt: payment.completedAt
-      })),
-      total: payments.length
-    });
-  } catch (error) {
-    logger.error('Error getting user payment history:', error);
-    res.status(500).json({
-      error: 'Error al obtener historial de pagos del usuario',
-      details: error.message
-    });
-  }
-});
-
-/**
- * POST /admin/payments
- * Create a manual payment record
- */
-router.post('/payments', requireAdmin, async (req, res) => {
-  try {
-    const {
-      subscriptionId,
-      userId,
-      amount,
-      currency,
-      paymentMethod,
-      description,
-      transactionId
-    } = req.body;
-
-    if (!subscriptionId || !userId || !amount) {
-      return res.status(400).json({
-        error: 'Faltan campos requeridos: subscriptionId, userId, amount'
-      });
-    }
-
-    const payment = new PaymentHistory({
-      subscriptionId,
-      userId,
-      amount,
-      currency: currency || 'USD',
-      status: 'completed',
-      paymentMethod: paymentMethod || 'manual',
-      paymentGateway: 'manual',
-      description,
-      transactionId,
-      completedAt: new Date()
-    });
-
-    await payment.save();
-
-    logger.info('Manual payment created', {
-      paymentId: payment._id,
-      createdBy: req.user.uid,
-      amount,
-      userId
-    });
-
-    res.status(201).json({
-      message: 'Pago registrado exitosamente',
-      payment
-    });
-  } catch (error) {
-    logger.error('Error creating payment:', error);
-    res.status(500).json({
-      error: 'Error al registrar pago',
-      details: error.message
-    });
-  }
-});
-
-/**
- * GET /admin/payments/stats
- * Get payment statistics
- */
-router.get('/payments/stats', requireAdmin, async (req, res) => {
-  try {
-    const { from, to } = req.query;
-
-    // Get total revenue
-    const revenue = await PaymentHistory.getTotalRevenue(from, to);
-
-    // Get payment counts by status
-    const paymentsByStatus = await PaymentHistory.aggregate([
-      {
-        $group: {
-          _id: '$status',
-          count: { $sum: 1 }
-        }
-      }
-    ]);
-
-    // Get payment trends (last 30 days)
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const paymentTrends = await PaymentHistory.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: thirtyDaysAgo },
-          status: 'completed'
-        }
-      },
-      {
-        $group: {
-          _id: {
-            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
-          },
-          count: { $sum: 1 },
-          total: { $sum: '$amount' }
-        }
-      },
-      { $sort: { _id: 1 } }
-    ]);
-
-    res.json({
-      revenue,
-      byStatus: paymentsByStatus.reduce((acc, item) => {
-        acc[item._id] = item.count;
-        return acc;
-      }, {}),
-      trends: paymentTrends.map(item => ({
-        date: item._id,
-        count: item.count,
-        total: item.total
-      }))
-    });
-  } catch (error) {
-    logger.error('Error getting payment stats:', error);
-    res.status(500).json({
-      error: 'Error al obtener estadísticas de pagos',
-      details: error.message
-    });
   }
 });
 
@@ -2132,6 +1443,131 @@ router.get('/visits/pages', requireAdmin, async (req, res) => {
     logger.error('Error getting page visit stats:', error);
     res.status(500).json({
       error: 'Error al obtener estadísticas por página',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * GET /admin/cron/settings
+ * Get current cron job settings
+ */
+router.get('/cron/settings', requireAdmin, async (req, res) => {
+  try {
+    const settings = await SystemSettings.getSettings();
+
+    res.json({
+      success: true,
+      cronSchedules: settings.cronSchedules,
+      cronEnabled: settings.cronEnabled
+    });
+  } catch (error) {
+    logger.error('Error getting cron settings:', error);
+    res.status(500).json({
+      error: 'Error al obtener configuración de cron jobs',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * PUT /admin/cron/settings
+ * Update cron job settings
+ */
+router.put('/cron/settings', requireAdmin, async (req, res) => {
+  try {
+    const { cronSchedules, cronEnabled } = req.body;
+
+    // Validate cron expressions
+    if (cronSchedules) {
+      const cron = await import('node-cron');
+      for (const [job, schedule] of Object.entries(cronSchedules)) {
+        if (!cron.validate(schedule)) {
+          return res.status(400).json({
+            error: `Expresión cron inválida para ${job}: ${schedule}`,
+            details: 'Formato: * * * * * (minuto hora día mes día-de-semana)'
+          });
+        }
+      }
+    }
+
+    // Update settings
+    const settings = await SystemSettings.updateSettings(
+      { cronSchedules, cronEnabled },
+      req.user.email || req.user.uid
+    );
+
+    logger.info('Cron settings updated', {
+      updatedBy: req.user.email || req.user.uid,
+      cronSchedules,
+      cronEnabled
+    });
+
+    // Reload cron jobs with new configuration
+    // Note: io needs to be passed from app.js
+    if (req.app.get('io')) {
+      await reloadCronJobs(req.app.get('io'));
+      logger.info('Cron jobs reloaded with new configuration');
+    }
+
+    res.json({
+      success: true,
+      message: 'Configuración de cron jobs actualizada exitosamente',
+      cronSchedules: settings.cronSchedules,
+      cronEnabled: settings.cronEnabled
+    });
+  } catch (error) {
+    logger.error('Error updating cron settings:', error);
+    res.status(500).json({
+      error: 'Error al actualizar configuración de cron jobs',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * POST /admin/cron/:job/run
+ * Manually trigger a cron job
+ */
+router.post('/cron/:job/run', requireAdmin, async (req, res) => {
+  try {
+    const { job } = req.params;
+
+    logger.info(`Manually triggering cron job: ${job}`, {
+      triggeredBy: req.user.email || req.user.uid
+    });
+
+    let result;
+
+    switch (job) {
+      case 'newsIngestion':
+        result = await runNewsIngestion(req.app.get('io'));
+        break;
+      case 'cleanup':
+        result = await runScheduledCleanup();
+        break;
+      case 'heatmapUpdate':
+        // Import here to avoid circular dependency
+        const { updatePercentiles } = await import('../services/heatmapService.js');
+        await updatePercentiles();
+        result = { success: true };
+        break;
+      default:
+        return res.status(400).json({
+          error: 'Trabajo cron no válido',
+          validJobs: ['newsIngestion', 'cleanup', 'heatmapUpdate']
+        });
+    }
+
+    res.json({
+      success: true,
+      message: `Trabajo ${job} ejecutado exitosamente`,
+      result
+    });
+  } catch (error) {
+    logger.error(`Error running cron job manually: ${req.params.job}`, error);
+    res.status(500).json({
+      error: `Error al ejecutar trabajo ${req.params.job}`,
       details: error.message
     });
   }

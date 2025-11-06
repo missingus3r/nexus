@@ -4,7 +4,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { runNewsIngestion } from './newsIngestion.js';
 import { updatePercentiles } from '../services/heatmapService.js';
-import { startSubscriptionNotifications } from './subscriptionNotifications.js';
 import logger from '../utils/logger.js';
 import {
   Incident,
@@ -13,7 +12,8 @@ import {
   ForumThread,
   ForumComment,
   SurlinkListing,
-  User
+  User,
+  SystemSettings
 } from '../models/index.js';
 import mongoose from 'mongoose';
 
@@ -317,45 +317,130 @@ export async function runScheduledCleanup() {
   return summary;
 }
 
+// Store active cron tasks for hot-reloading
+let activeCronTasks = {
+  newsIngestion: null,
+  heatmapUpdate: null,
+  cleanup: null
+};
+
 /**
- * Start all cron jobs
+ * Start or restart a specific cron job
+ * @param {String} jobName - Name of the job
+ * @param {String} schedule - Cron schedule expression
+ * @param {Function} task - Task function to execute
+ * @param {Boolean} enabled - Whether the job is enabled
+ */
+function scheduleCronJob(jobName, schedule, task, enabled = true) {
+  // Stop existing task if any
+  if (activeCronTasks[jobName]) {
+    activeCronTasks[jobName].stop();
+    activeCronTasks[jobName] = null;
+    logger.info(`Stopped existing cron job: ${jobName}`);
+  }
+
+  // Only schedule if enabled
+  if (enabled) {
+    try {
+      activeCronTasks[jobName] = cron.schedule(schedule, task);
+      logger.info(`Scheduled cron job: ${jobName} with schedule: ${schedule}`);
+    } catch (error) {
+      logger.error(`Failed to schedule cron job: ${jobName}`, { error: error.message });
+    }
+  } else {
+    logger.info(`Cron job ${jobName} is disabled`);
+  }
+}
+
+/**
+ * Load cron configuration from database and start jobs
  * @param {SocketIO.Server} io - Socket.IO instance
  */
-export function startCronJobs(io) {
-  logger.info('Starting cron jobs');
+export async function startCronJobs(io) {
+  logger.info('Starting cron jobs with dynamic configuration');
 
-  // News ingestion: every 15 minutes
-  cron.schedule('*/15 * * * *', async () => {
-    logger.info('Running scheduled news ingestion');
-    try {
-      await runNewsIngestion(io);
-    } catch (error) {
-      logger.error('News ingestion cron failed:', error);
-    }
-  });
+  try {
+    const settings = await SystemSettings.getSettings();
 
-  // Heatmap percentile update: every 5 minutes
-  cron.schedule('*/5 * * * *', async () => {
-    logger.info('Running scheduled heatmap percentile update');
-    try {
-      await updatePercentiles();
-    } catch (error) {
-      logger.error('Heatmap percentile update failed:', error);
-    }
-  });
+    // News ingestion job
+    scheduleCronJob(
+      'newsIngestion',
+      settings.cronSchedules.newsIngestion,
+      async () => {
+        logger.info('Running scheduled news ingestion');
+        try {
+          await runNewsIngestion(io);
+        } catch (error) {
+          logger.error('News ingestion cron failed:', error);
+        }
+      },
+      settings.cronEnabled.newsIngestion
+    );
 
-  // Cleanup old data: daily at 3 AM
-  cron.schedule('0 3 * * *', async () => {
-    logger.info('Running scheduled cleanup');
-    try {
-      await runScheduledCleanup();
-    } catch (error) {
-      logger.error('Cleanup cron failed:', error);
-    }
-  });
+    // Heatmap percentile update job
+    scheduleCronJob(
+      'heatmapUpdate',
+      settings.cronSchedules.heatmapUpdate,
+      async () => {
+        logger.info('Running scheduled heatmap percentile update');
+        try {
+          await updatePercentiles();
+        } catch (error) {
+          logger.error('Heatmap percentile update failed:', error);
+        }
+      },
+      settings.cronEnabled.heatmapUpdate
+    );
 
-  // Start subscription expiration notifications (daily at 9 AM)
-  startSubscriptionNotifications();
+    // Cleanup job
+    scheduleCronJob(
+      'cleanup',
+      settings.cronSchedules.cleanup,
+      async () => {
+        logger.info('Running scheduled cleanup');
+        try {
+          await runScheduledCleanup();
+        } catch (error) {
+          logger.error('Cleanup cron failed:', error);
+        }
+      },
+      settings.cronEnabled.cleanup
+    );
 
-  logger.info('All cron jobs started successfully');
+    logger.info('All cron jobs started successfully');
+  } catch (error) {
+    logger.error('Failed to start cron jobs:', error);
+    // Fallback to default schedules if database fails
+    logger.warn('Falling back to default cron schedules');
+    scheduleCronJob('newsIngestion', '*/15 * * * *', async () => {
+      try {
+        await runNewsIngestion(io);
+      } catch (error) {
+        logger.error('News ingestion cron failed:', error);
+      }
+    });
+    scheduleCronJob('heatmapUpdate', '*/5 * * * *', async () => {
+      try {
+        await updatePercentiles();
+      } catch (error) {
+        logger.error('Heatmap percentile update failed:', error);
+      }
+    });
+    scheduleCronJob('cleanup', '0 3 * * *', async () => {
+      try {
+        await runScheduledCleanup();
+      } catch (error) {
+        logger.error('Cleanup cron failed:', error);
+      }
+    });
+  }
+}
+
+/**
+ * Reload cron jobs with updated configuration
+ * @param {SocketIO.Server} io - Socket.IO instance
+ */
+export async function reloadCronJobs(io) {
+  logger.info('Reloading cron jobs with updated configuration');
+  await startCronJobs(io);
 }

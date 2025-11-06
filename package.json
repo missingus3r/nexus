@@ -9,7 +9,6 @@
     "dev": "nodemon server.js",
     "test": "echo 'No tests configured yet' && exit 0",
     "lint": "eslint .",
-    "clean-fake-data": "node src/scripts/cleanFakeData.js",
     "recalculate-counters": "node src/scripts/recalculateCounters.js"
   },
   "keywords": [

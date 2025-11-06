@@ -1,49 +1,68 @@
 import express from 'express';
-import {
-  getPlans,
-  submitInquiry,
-  getMySubscription,
-  cancelSubscription,
-  checkFeature
-} from '../controllers/pricingController.js';
 import { PricingSettings } from '../models/index.js';
 
 const router = express.Router();
 
 /**
  * @route GET /api/pricing/plans
- * @desc Get all available plans
+ * @desc Get all available plans (read-only, for display purposes)
  * @access Public
  */
-router.get('/plans', getPlans);
+router.get('/plans', async (req, res) => {
+  try {
+    const settings = await PricingSettings.getSettings();
 
-/**
- * @route POST /api/pricing/inquiry
- * @desc Submit a plan inquiry
- * @access Public
- */
-router.post('/inquiry', submitInquiry);
+    const plans = [
+      {
+        id: 'free',
+        name: 'Free',
+        price: 0,
+        currency: 'USD',
+        interval: 'lifetime',
+        features: [
+          'Hasta 5 reportes de incidentes al mes',
+          'Acceso al mapa en tiempo real',
+          'Visualización de noticias geolocalizadas',
+          'Navegación de Surlink (solo búsqueda)',
+          'Acceso al foro comunitario'
+        ],
+        active: true
+      },
+      {
+        id: 'premium',
+        name: 'Premium',
+        price: settings.proMonthly || 5,
+        priceYearly: settings.proYearly || 54,
+        currency: 'USD',
+        interval: 'month',
+        features: [
+          'Reportes ilimitados de incidentes',
+          'Publicaciones en Surlink (casas o autos)',
+          'Acceso a la API REST',
+          'Exportación de datos (PDF/Excel)',
+          'Chatbot IA con GPT-5 para búsqueda inteligente',
+          'Soporte prioritario',
+          'Acceso anticipado a nuevas funcionalidades',
+          'Aparición en el muro de donadores',
+          'Todo lo del plan Free'
+        ],
+        active: true,
+        priceUyu: Math.round((settings.proMonthly || 5) * settings.usdToUyu),
+        priceUyuYearly: Math.round((settings.proYearly || 54) * settings.usdToUyu),
+        popular: true
+      }
+    ];
 
-/**
- * @route GET /api/pricing/my-subscription
- * @desc Get current user's subscription
- * @access Private
- */
-router.get('/my-subscription', getMySubscription);
-
-/**
- * @route POST /api/pricing/cancel
- * @desc Cancel user's subscription
- * @access Private
- */
-router.post('/cancel', cancelSubscription);
-
-/**
- * @route GET /api/pricing/check-feature/:feature
- * @desc Check if user has access to a specific feature
- * @access Private
- */
-router.get('/check-feature/:feature', checkFeature);
+    res.json({
+      success: true,
+      plans,
+      contactEmail: 'info.vortexlabs@protonmail.com'
+    });
+  } catch (error) {
+    console.error('Error fetching plans:', error);
+    res.status(500).json({ error: 'Error al obtener planes' });
+  }
+});
 
 /**
  * @route GET /api/pricing/settings

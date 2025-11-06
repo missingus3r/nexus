@@ -1,6 +1,6 @@
 import express from 'express';
 import { generateGuestToken } from '../middleware/auth.js';
-import { User, Incident, Validation, Subscription, ForumThread, ForumComment } from '../models/index.js';
+import { User, Incident, Validation, ForumThread, ForumComment } from '../models/index.js';
 import logger from '../utils/logger.js';
 import { getAuthenticatedUser } from '../config/auth0.js';
 
@@ -47,7 +47,6 @@ router.get('/profile', async (req, res) => {
     const [
       recentIncidents,
       recentValidations,
-      subscription,
       forumThreadsCount,
       forumCommentsCount,
       forumThreadStats,
@@ -67,10 +66,6 @@ router.get('/profile', async (req, res) => {
         .sort({ createdAt: -1 })
         .limit(5)
         .select('vote createdAt incidentId'),
-      Subscription.findOne({
-        userId: user._id,
-        status: 'active'
-      }).sort({ createdAt: -1 }),
       ForumThread.countDocuments({ author: user._id, status: 'active' }),
       ForumComment.countDocuments({ author: user._id, status: 'active' }),
       ForumThread.aggregate([
@@ -172,13 +167,6 @@ router.get('/profile', async (req, res) => {
         totalReports: user.reportCount || 0,
         totalValidations: user.validationCount || 0,
         reputation: user.reputacion || 50
-      },
-      subscription: {
-        plan: subscription?.plan || 'free',
-        status: subscription?.status || 'active',
-        endDate: subscription?.endDate,
-        billingCycle: subscription?.billingCycle,
-        isActive: subscription?.isActive() || false
       },
       recentActivity: activities,
       settings: {

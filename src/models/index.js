@@ -7,8 +7,6 @@ export { default as Neighborhood } from './Neighborhood.js';
 export { default as Notification } from './Notification.js';
 export { default as AdminPost } from './AdminPost.js';
 export { default as SurlinkListing } from './SurlinkListing.js';
-export { default as Subscription } from './Subscription.js';
-export { default as PaymentHistory } from './PaymentHistory.js';
 export { default as ForumThread } from './ForumThread.js';
 export { default as ForumComment } from './ForumComment.js';
 export { default as ForumSettings } from './ForumSettings.js';

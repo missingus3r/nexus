@@ -200,6 +200,33 @@ const construccionSites = {
       description: 'Empresa constructora con proyectos de vivienda y desarrollos comerciales en Uruguay.',
       category: 'proyectos',
       featured: false
+    },
+    {
+      id: 'gopunta',
+      name: 'GoPunta',
+      url: 'https://gopunta.uy',
+      logo: 'https://www.google.com/s2/favicons?domain=gopunta.uy&sz=128',
+      description: 'Desarrolladora inmobiliaria especializada en proyectos en Punta del Este y zona costera.',
+      category: 'proyectos',
+      featured: false
+    },
+    {
+      id: 'plazadesarrollos',
+      name: 'Plaza Desarrollos - Tres Cruces Plaza',
+      url: 'https://plazadesarrollos.uy',
+      logo: 'https://www.google.com/s2/favicons?domain=plazadesarrollos.uy&sz=128',
+      description: 'Desarrolladora responsable del emblemático proyecto Tres Cruces Plaza y otros desarrollos urbanos de gran escala.',
+      category: 'proyectos',
+      featured: true
+    },
+    {
+      id: 'xukahlatam',
+      name: 'Xukah Latam',
+      url: 'https://xukah.com',
+      logo: 'https://www.google.com/s2/favicons?domain=xukah.com&sz=128',
+      description: 'Desarrolladora inmobiliaria con presencia en América Latina especializada en proyectos innovadores y sostenibles.',
+      category: 'proyectos',
+      featured: false
     }
   ],
 
@@ -548,6 +575,15 @@ const construccionSites = {
       description: 'Publicación oficial de remates judiciales y extrajudiciales en el portal del IMPO.',
       category: 'remates',
       featured: false
+    },
+    {
+      id: 'jpcarrau',
+      name: 'JP Carrau Remates',
+      url: 'https://www.jpcarrau.com.uy',
+      logo: 'https://www.google.com/s2/favicons?domain=jpcarrau.com.uy&sz=128',
+      description: 'Martillero público especializado en remates de inmuebles, vehículos y bienes muebles con amplia trayectoria en Uruguay.',
+      category: 'remates',
+      featured: true
     }
   ]
 };

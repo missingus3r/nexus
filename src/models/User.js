@@ -55,17 +55,11 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  subscription: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Subscription',
-    default: null,
-    description: 'Reference to user subscription'
-  },
   email: {
     type: String,
     required: false,
     index: true,
-    description: 'User email for subscription and notifications'
+    description: 'User email for notifications'
   },
   name: {
     type: String,
