@@ -7,6 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <%- include('partials/theme-init') %>
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/forum-features.css">
 
     <!-- Quill.js CSS -->
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
@@ -16,6 +17,9 @@
 
     <!-- Quill.js -->
     <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <script src="/js/auth-utils.js"></script>
+    <script src="/js/forum-mentions.js" defer></script>
+    <script src="/js/forum-polls.js" defer></script>
     <script src="/js/forum.js" defer></script>
 </head>
 <body>
@@ -35,7 +39,7 @@
                 </a>
 
                 <!-- Header -->
-                <div class="forum-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                <div class="forum-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <div>
                         <p style="margin: 0; color: var(--text-secondary);">Comparte y discute sobre Centinel, Surlink y todos los servicios de Vortex</p>
                     </div>
@@ -52,7 +56,28 @@
                     <% } %>
                 </div>
 
-                <!-- Filter/Sort Options -->
+                <!-- Navigation Tabs -->
+                <div class="forum-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 2px solid var(--border-color); overflow-x: auto;">
+                    <button class="forum-tab active" data-tab="all" onclick="switchForumTab('all')" style="padding: 0.75rem 1.5rem; background: transparent; border: none; border-bottom: 3px solid var(--primary-color); cursor: pointer; color: var(--primary-color); font-weight: 600; white-space: nowrap; margin-bottom: -2px;">
+                        Todos los Posts
+                    </button>
+                    <% if (isAuthenticated) { %>
+                        <button class="forum-tab" data-tab="my-posts" onclick="switchForumTab('my-posts')" style="padding: 0.75rem 1.5rem; background: transparent; border: none; border-bottom: 3px solid transparent; cursor: pointer; color: var(--text-secondary); font-weight: 500; white-space: nowrap; margin-bottom: -2px;">
+                            Mis Posts
+                        </button>
+                        <button class="forum-tab" data-tab="my-reports" onclick="switchForumTab('my-reports')" style="padding: 0.75rem 1.5rem; background: transparent; border: none; border-bottom: 3px solid transparent; cursor: pointer; color: var(--text-secondary); font-weight: 500; white-space: nowrap; margin-bottom: -2px;">
+                            Mis Reportes
+                        </button>
+                        <button class="forum-tab" data-tab="notifications" onclick="switchForumTab('notifications')" style="padding: 0.75rem 1.5rem; background: transparent; border: none; border-bottom: 3px solid transparent; cursor: pointer; color: var(--text-secondary); font-weight: 500; white-space: nowrap; margin-bottom: -2px; position: relative;">
+                            Notificaciones
+                            <span id="notificationsBadge" style="display: none; position: absolute; top: 0.5rem; right: 0.5rem; background: var(--danger-color); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.7rem; font-weight: bold; text-align: center; line-height: 18px;"></span>
+                        </button>
+                    <% } %>
+                </div>
+
+                <!-- Tab Content: All Posts -->
+                <div id="allPostsTab" class="forum-tab-content" style="display: block;">
+                    <!-- Filter/Sort Options -->
                 <div class="forum-controls" style="display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center; flex-wrap: wrap;">
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                         <button id="sortRecent" class="sort-btn active" data-sort="recent">🕒 Recientes</button>
@@ -100,6 +125,56 @@
 
                 <!-- Pagination -->
                 <div id="pagination" style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem;"></div>
+                </div>
+
+                <!-- Tab Content: My Posts -->
+                <% if (isAuthenticated) { %>
+                <div id="myPostsTab" class="forum-tab-content" style="display: none;">
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 2rem; align-items: center;">
+                        <button id="myPostsSortRecent" class="sort-btn active" data-sort="recent">🕒 Recientes</button>
+                        <button id="myPostsSortPopular" class="sort-btn" data-sort="popular">🔥 Populares</button>
+                    </div>
+                    <div id="myThreadsList">
+                        <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                            Cargando tus posts...
+                        </div>
+                    </div>
+                    <div id="myThreadsPagination" style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem;"></div>
+                </div>
+
+                <!-- Tab Content: My Reports -->
+                <div id="myReportsTab" class="forum-tab-content" style="display: none;">
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 2rem; align-items: center; flex-wrap: wrap;">
+                        <span style="font-size: 0.875rem; color: var(--text-secondary);">Filtrar:</span>
+                        <button class="hashtag-filter-btn" onclick="filterMyReports('')">Todos</button>
+                        <button class="hashtag-filter-btn" onclick="filterMyReports('pending')">Pendientes</button>
+                        <button class="hashtag-filter-btn" onclick="filterMyReports('reviewed')">Revisados</button>
+                        <button class="hashtag-filter-btn" onclick="filterMyReports('resolved')">Resueltos</button>
+                        <button class="hashtag-filter-btn" onclick="filterMyReports('rejected')">Rechazados</button>
+                    </div>
+                    <div id="myReportsList">
+                        <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                            Cargando tus reportes...
+                        </div>
+                    </div>
+                    <div id="myReportsPagination" style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem;"></div>
+                </div>
+
+                <!-- Tab Content: Notifications -->
+                <div id="notificationsTab" class="forum-tab-content" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h3 style="margin: 0;">Tus Notificaciones</h3>
+                        <button onclick="markAllNotificationsAsRead()" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                            Marcar todas como leídas
+                        </button>
+                    </div>
+                    <div id="notificationsList">
+                        <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                            Cargando notificaciones...
+                        </div>
+                    </div>
+                </div>
+                <% } %>
 
             </div>
         </div>
@@ -144,7 +219,7 @@
                     <p style="margin-bottom: 0.75rem; color: var(--text-secondary); line-height: 1.6; font-size: 0.9rem;">
                         <strong>El administrador se reserva el derecho de eliminar cualquier contenido, suspender o banear permanentemente a cualquier usuario que no respete las normas del foro, sin previo aviso.</strong>
                     </p>
-                    <ul style="line-height: 1.6; color: var(--text-secondary); font-size: 0.9rem; display: inline-block; text-align: left; margin: 0 auto;">
+                    <ul style="line-height: 1.6; color: var(--text-secondary); font-size: 0.9rem; list-style-position: inside; text-align: center; margin: 0 auto;">
                         <li>Trata a otros usuarios con respeto</li>
                         <li>No publiques contenido ofensivo, ilegal o spam</li>
                         <li>Mantén las discusiones relevantes a los servicios de Vortex</li>
@@ -173,6 +248,18 @@
                 <button class="modal-close" onclick="closeNewThreadModal()">&times;</button>
             </div>
             <form id="newThreadForm" enctype="multipart/form-data">
+                <!-- Thread Type Selector -->
+                <div class="thread-type-selector">
+                    <div class="thread-type-option">
+                        <input type="radio" id="typeDiscussion" name="threadType" value="discussion" checked>
+                        <label for="typeDiscussion">💬 Discusión</label>
+                    </div>
+                    <div class="thread-type-option">
+                        <input type="radio" id="typePoll" name="threadType" value="poll">
+                        <label for="typePoll">📊 Encuesta/Votación</label>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label for="threadTitle">Título *</label>
                     <input type="text" id="threadTitle" name="title" maxlength="200" required placeholder="Título del thread...">
@@ -187,8 +274,43 @@
                     <input type="hidden" id="threadHashtags" name="hashtags" required>
                 </div>
 
+                <!-- Poll Creation Section -->
+                <div id="pollCreationSection">
+                    <h4>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                            <path d="M7 10h4M7 14h8M17 10v4"></path>
+                        </svg>
+                        Configurar Encuesta
+                    </h4>
+
+                    <div id="pollOptionsContainer"></div>
+
+                    <button type="button" id="addPollOptionBtn" onclick="addPollOption()">
+                        + Agregar opción
+                    </button>
+
+                    <div class="poll-settings">
+                        <div class="poll-setting-item">
+                            <label for="pollExpiresAt">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                Fecha de expiración (opcional):
+                            </label>
+                            <input type="datetime-local" id="pollExpiresAt" name="pollExpiresAt">
+                        </div>
+
+                        <div class="poll-setting-item">
+                            <input type="checkbox" id="pollAllowMultiple" name="pollAllowMultiple">
+                            <label for="pollAllowMultiple">Permitir selección múltiple</label>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label for="threadContent">Contenido *</label>
+                    <label for="threadContent">Contenido * <small style="color: var(--text-secondary); font-weight: normal;">(Puedes mencionar usuarios con @nombre)</small></label>
                     <div id="threadContentEditor" style="min-height: 250px; background: var(--surface); border: 1px solid var(--border-color); border-radius: 4px;"></div>
                     <input type="hidden" id="threadContent" name="content" required>
                     <small><span id="contentCharCount">0</span>/10000 caracteres</small>
@@ -211,6 +333,21 @@
         </div>
     </div>
 
+    <!-- User Profile Modal -->
+    <div id="userProfileModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Perfil de Usuario</h2>
+                <button class="modal-close" onclick="closeUserProfileModal()">&times;</button>
+            </div>
+            <div id="userProfileContent">
+                <p style="text-align: center; padding: 2rem; color: var(--text-secondary);">Cargando...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/forum-user-profile.js"></script>
+    <script src="/js/forum-tabs.js"></script>
     <%- include('partials/footer') %>
 </body>
 </html>

@@ -513,3 +513,138 @@
         padding: 1.5rem;
     }
 }
+
+/* Currency Converter Styles */
+.insight-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    transition: all 0.3s;
+    margin-top: 0.5rem;
+    width: 100%;
+}
+
+.insight-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 198, 255, 0.3);
+}
+
+.currency-converter {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.converter-input-group,
+.converter-select-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.converter-input-group label,
+.converter-select-group label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.converter-input,
+.converter-select {
+    padding: 0.875rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background: var(--background);
+    color: var(--text-primary);
+    transition: all 0.3s;
+}
+
+.converter-input:focus,
+.converter-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(16, 198, 255, 0.1);
+}
+
+.converter-input {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.swap-btn {
+    background: var(--surface);
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: var(--text-secondary);
+}
+
+.swap-btn:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    transform: rotate(180deg);
+}
+
+.converter-result {
+    background: linear-gradient(135deg, rgba(16, 198, 255, 0.08), rgba(124, 92, 255, 0.08));
+    border: 2px solid rgba(16, 198, 255, 0.2);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+.result-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+
+.result-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.result-rate {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.converter-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--background);
+    border-radius: 8px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+.converter-info svg {
+    flex-shrink: 0;
+}

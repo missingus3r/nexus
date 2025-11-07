@@ -95,6 +95,19 @@ const financialSites = {
       featured: false
     },
     {
+      id: 'bandes',
+      name: 'Banco Bandes Uruguay S.A.',
+      url: 'https://www.bandes.com.uy',
+      domain: 'bandes.com.uy',
+      logo: 'https://www.google.com/s2/favicons?domain=bandes.com.uy&sz=128',
+      description: 'Banco privado supervisado por BCU con enfoque en personas y Mipymes. Amplia red de sucursales en todo el país.',
+      phone: 'Ver sitio web',
+      address: 'Zabala 1338, Montevideo',
+      category: 'bancos',
+      serviceType: 'Crédito, Servicios Bancarios',
+      featured: false
+    },
+    {
       id: 'bhu',
       name: 'Banco Hipotecario del Uruguay (BHU)',
       url: 'https://www.bhu.com.uy',
@@ -346,6 +359,71 @@ const financialSites = {
       category: 'financieras',
       serviceType: 'Red de Cajeros',
       featured: false
+    },
+    {
+      id: 'nixus',
+      name: 'Nixus Servicios Financieros',
+      url: 'https://www.nixus.com.uy',
+      domain: 'nixus.com.uy',
+      logo: 'https://www.google.com/s2/favicons?domain=nixus.com.uy&sz=128',
+      description: 'Empresa de servicios financieros autorizada por BCU. Préstamos, transferencias, compra-venta de divisas y metales preciosos.',
+      phone: '+598 2200 7452',
+      address: 'Yí 1530, Montevideo',
+      category: 'financieras',
+      serviceType: 'Préstamo, Cambio',
+      featured: false
+    },
+    {
+      id: 'gales',
+      name: 'GALES Servicios Financieros',
+      url: 'https://www.gales.com.uy',
+      domain: 'gales.com.uy',
+      logo: 'https://www.google.com/s2/favicons?domain=gales.com.uy&sz=128',
+      description: 'Empresa familiar de servicios financieros regulada por BCU. Más de 40 años ofreciendo cambio de divisas y servicios financieros.',
+      phone: 'Ver sitio web',
+      address: 'Av. Dr. Luis Alberto De Herrera 1248 Local 20, Montevideo',
+      category: 'financieras',
+      serviceType: 'Cambio, Servicios Financieros',
+      featured: false
+    },
+    {
+      id: 'indumex',
+      name: 'INDUMEX Servicios Financieros',
+      url: 'https://www.indumex.com',
+      domain: 'indumex.com',
+      logo: 'https://www.google.com/s2/favicons?domain=indumex.com&sz=128',
+      description: 'Empresa de servicios financieros con 11 sucursales. Cambio de divisas, cobranza de facturas y tarjetas prepagas.',
+      phone: 'Ver sitio web',
+      address: 'Sucursales en Montevideo, Punta del Este, Colonia, Paysandú, Salto y Rivera',
+      category: 'financieras',
+      serviceType: 'Cambio, Tarjeta Prepaga',
+      featured: false
+    },
+    {
+      id: 'varlix',
+      name: 'VARLIX Servicios Financieros',
+      url: 'https://www.varlix.com.uy',
+      domain: 'varlix.com.uy',
+      logo: 'https://www.google.com/s2/favicons?domain=varlix.com.uy&sz=128',
+      description: 'Empresa con más de 30 años en el mercado financiero uruguayo. Compra-venta de divisas, cheques de jubilación, giros y transferencias.',
+      phone: 'Ver sitio web',
+      address: 'Divina Comedia 1689, Montevideo',
+      category: 'financieras',
+      serviceType: 'Cambio, Transferencias',
+      featured: false
+    },
+    {
+      id: 'deanda',
+      name: 'DEANDA (Tarjeta ANDA)',
+      url: 'https://www.deanda.com.uy',
+      domain: 'deanda.com.uy',
+      logo: 'https://www.google.com/s2/favicons?domain=deanda.com.uy&sz=128',
+      description: 'Tarjeta prepaga de nómina asociada a ANDA. Sistema de pago para empleadores y empleados con acceso en sucursales ANDA.',
+      phone: '+598 2409 4646',
+      address: 'Sucursales ANDA en todo el país',
+      category: 'financieras',
+      serviceType: 'Tarjeta Prepaga, Nómina',
+      featured: false
     }
   ],
   fintech: [
@@ -386,6 +464,19 @@ const financialSites = {
       address: 'Ver sitio web',
       category: 'fintech',
       serviceType: 'Pagos Transfronterizos (B2B)',
+      featured: true
+    },
+    {
+      id: 'grin',
+      name: 'GRIN (FUCAC Dinero Electrónico)',
+      url: 'https://grin.com.uy',
+      domain: 'grin.com.uy',
+      logo: 'https://www.google.com/s2/favicons?domain=grin.com.uy&sz=128',
+      description: 'Institución Emisora de Dinero Electrónico regulada por BCU, propiedad de VERDE. Cuenta digital gratuita con crédito instantáneo y tarjeta prepaga.',
+      phone: 'Ver sitio web',
+      address: 'Ver sitio web',
+      category: 'fintech',
+      serviceType: 'Billetera Digital, Dinero Electrónico',
       featured: true
     }
   ],

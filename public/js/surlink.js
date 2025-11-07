@@ -955,6 +955,7 @@
     const isLiked = isAuthenticated ? isAcademyFavorite(site.id) : false;
     const likeLabel = isLiked ? 'Quitar de favoritos' : 'Guardar en favoritos';
     const likesCount = site.likesCount || 0;
+    const commentsCount = site.commentsCount || 0;
 
     return `
       <article class="construccion-site-card" data-site-id="${site.id}">
@@ -962,10 +963,18 @@
           <div class="construccion-card-logo">
             <img src="${escapeHtml(site.logo)}" alt="${escapeHtml(site.name)}" loading="lazy" onerror="this.style.display='none'">
           </div>
-          <button type="button" class="surlink-like-btn construccion-like-btn" data-action="like-academy" data-site-id="${site.id}" data-liked="${isLiked ? 'true' : 'false'}" title="${escapeHtml(likeLabel)}">
-            <span class="surlink-like-icon">♥</span>
-            <span class="surlink-like-count">${likesCount}</span>
-          </button>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <button type="button" class="surlink-like-btn construccion-like-btn" data-action="like-academy" data-site-id="${site.id}" data-liked="${isLiked ? 'true' : 'false'}" title="${escapeHtml(likeLabel)}">
+              <span class="surlink-like-icon">♥</span>
+              <span class="surlink-like-count">${likesCount}</span>
+            </button>
+            <div class="surlink-comment-badge" title="${commentsCount} ${commentsCount === 1 ? 'comentario' : 'comentarios'}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>${commentsCount}</span>
+            </div>
+          </div>
         </div>
         <div class="construccion-card-content">
           <h3 class="construccion-card-title">${escapeHtml(site.name)}</h3>
@@ -1107,6 +1116,7 @@
     const isLiked = isAuthenticated ? isFinancialFavorite(site.id) : false;
     const likeLabel = isLiked ? 'Quitar de favoritos' : 'Guardar en favoritos';
     const likesCount = site.likesCount || 0;
+    const commentsCount = site.commentsCount || 0;
 
     return `
       <article class="construccion-site-card" data-site-id="${site.id}">
@@ -1114,10 +1124,18 @@
           <div class="construccion-card-logo">
             <img src="${escapeHtml(site.logo)}" alt="${escapeHtml(site.name)}" loading="lazy" onerror="this.style.display='none'">
           </div>
-          <button type="button" class="surlink-like-btn construccion-like-btn" data-action="like-financial" data-site-id="${site.id}" data-liked="${isLiked ? 'true' : 'false'}" title="${escapeHtml(likeLabel)}">
-            <span class="surlink-like-icon">♥</span>
-            <span class="surlink-like-count">${likesCount}</span>
-          </button>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <button type="button" class="surlink-like-btn construccion-like-btn" data-action="like-financial" data-site-id="${site.id}" data-liked="${isLiked ? 'true' : 'false'}" title="${escapeHtml(likeLabel)}">
+              <span class="surlink-like-icon">♥</span>
+              <span class="surlink-like-count">${likesCount}</span>
+            </button>
+            <div class="surlink-comment-badge" title="${commentsCount} ${commentsCount === 1 ? 'comentario' : 'comentarios'}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>${commentsCount}</span>
+            </div>
+          </div>
         </div>
         <div class="construccion-card-content">
           <h3 class="construccion-card-title">${escapeHtml(site.name)}</h3>
@@ -1466,6 +1484,9 @@
     // Store current site info for comments
     state.currentSite = site;
 
+    const likesCount = site.likesCount || 0;
+    const commentsCount = site.commentsCount || 0;
+
     elements.siteModalBody.innerHTML = `
       <div class="surlink-modal-hero">
         <div class="surlink-card-header">
@@ -1474,6 +1495,18 @@
           </div>
           <div>
             <h3>${escapeHtml(site.name)}</h3>
+            <div style="display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem;">
+              <div style="display: flex; align-items: center; gap: 0.35rem; color: var(--text-secondary); font-size: 0.875rem;">
+                <span style="font-size: 1rem;">♥</span>
+                <span>${likesCount} ${likesCount === 1 ? 'like' : 'likes'}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.35rem; color: var(--text-secondary); font-size: 0.875rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>${commentsCount} ${commentsCount === 1 ? 'comentario' : 'comentarios'}</span>
+              </div>
+            </div>
           </div>
         </div>
         <p>${escapeHtml(site.description)}</p>

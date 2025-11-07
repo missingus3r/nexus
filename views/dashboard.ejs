@@ -54,12 +54,21 @@
                     <span class="icon">💱</span>
                     <h3>Divisas</h3>
                 </header>
-                <ul class="insight-list">
-                    <li>USD / UYU <strong>↑ 42,80</strong></li>
-                    <li>EUR / UYU <strong>↓ 46,10</strong></li>
-                    <li>BRL / UYU <strong>↑ 8,25</strong></li>
+                <ul class="insight-list" id="currencyRates">
+                    <li>USD <strong id="usdValue">42,80 UYU</strong></li>
+                    <li>EUR <strong id="eurValue">46,10 UYU</strong></li>
+                    <li>ARS <strong id="arsValue">0,045 UYU</strong></li>
+                    <li>BRL <strong id="brlValue">8,25 UYU</strong></li>
+                    <li>UI <strong id="uiValue">5,8247 UYU</strong></li>
+                    <li>UR <strong id="urValue">4.765,32 UYU</strong></li>
                 </ul>
-                <p class="insight-meta">Variación diaria respecto al cierre anterior</p>
+                <button class="insight-btn" onclick="openCurrencyModal()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.25rem;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 6v6l4 2"></path>
+                    </svg>
+                    Convertir divisas
+                </button>
             </div>
             <div class="insight-card">
                 <header>
@@ -141,6 +150,74 @@
                 <div class="loading">Cargando notificaciones...</div>
             </div>
             <button class="mark-all-read-btn" onclick="markAllAsRead()">Marcar todas como leídas</button>
+        </div>
+    </div>
+
+    <!-- Currency Conversion Modal -->
+    <div id="currencyModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>💱 Convertir Divisas</h2>
+                <button class="close-btn" onclick="closeCurrencyModal()">×</button>
+            </div>
+            <div style="padding: 1.5rem;">
+                <div class="currency-converter">
+                    <div class="converter-input-group">
+                        <label for="fromAmount">Cantidad</label>
+                        <input type="number" id="fromAmount" class="converter-input" placeholder="0.00" value="1" min="0" step="0.01">
+                    </div>
+
+                    <div class="converter-select-group">
+                        <label for="fromCurrency">De</label>
+                        <select id="fromCurrency" class="converter-select">
+                            <option value="USD">USD - Dólar Estadounidense</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="ARS">ARS - Peso Argentino</option>
+                            <option value="BRL">BRL - Real Brasileño</option>
+                            <option value="UYU" selected>UYU - Peso Uruguayo</option>
+                            <option value="UI">UI - Unidad Indexada</option>
+                            <option value="UR">UR - Unidad Reajustable</option>
+                        </select>
+                    </div>
+
+                    <div style="text-align: center; margin: 1rem 0;">
+                        <button class="swap-btn" onclick="swapCurrencies()" title="Intercambiar">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <polyline points="19 12 12 19 5 12"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="converter-select-group">
+                        <label for="toCurrency">A</label>
+                        <select id="toCurrency" class="converter-select">
+                            <option value="USD" selected>USD - Dólar Estadounidense</option>
+                            <option value="EUR">EUR - Euro</option>
+                            <option value="ARS">ARS - Peso Argentino</option>
+                            <option value="BRL">BRL - Real Brasileño</option>
+                            <option value="UYU">UYU - Peso Uruguayo</option>
+                            <option value="UI">UI - Unidad Indexada</option>
+                            <option value="UR">UR - Unidad Reajustable</option>
+                        </select>
+                    </div>
+
+                    <div class="converter-result">
+                        <div class="result-label">Resultado</div>
+                        <div class="result-value" id="conversionResult">0.00</div>
+                        <div class="result-rate" id="conversionRate">1 UYU = 0.0234 USD</div>
+                    </div>
+
+                    <div class="converter-info">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        <span>Tasas de referencia - Actualizado: <span id="ratesUpdateTime">hoy</span></span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

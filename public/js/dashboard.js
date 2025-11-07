@@ -3,6 +3,26 @@ let dashboardData = null;
 // Load dashboard data on page load
 document.addEventListener('DOMContentLoaded', async () => {
     await loadDashboardData();
+
+    // Currency converter event listeners
+    const fromAmount = document.getElementById('fromAmount');
+    const fromCurrency = document.getElementById('fromCurrency');
+    const toCurrency = document.getElementById('toCurrency');
+
+    if (fromAmount) {
+        fromAmount.addEventListener('input', performConversion);
+    }
+
+    if (fromCurrency) {
+        fromCurrency.addEventListener('change', performConversion);
+    }
+
+    if (toCurrency) {
+        toCurrency.addEventListener('change', performConversion);
+    }
+
+    // Update currency values in the insight card
+    updateCurrencyCard();
 });
 
 async function loadDashboardData() {
@@ -235,8 +255,129 @@ function getTimeAgo(date) {
 
 // Close modal when clicking outside
 window.onclick = function(event) {
-    const modal = document.getElementById('notificationsModal');
-    if (event.target === modal) {
+    const notifModal = document.getElementById('notificationsModal');
+    const currModal = document.getElementById('currencyModal');
+
+    if (event.target === notifModal) {
         closeNotificationsModal();
     }
+    if (event.target === currModal) {
+        closeCurrencyModal();
+    }
 };
+
+// ===== CURRENCY CONVERTER =====
+
+// Exchange rates (relative to UYU - Peso Uruguayo)
+// These are example rates - in production, you'd fetch these from an API
+const exchangeRates = {
+    UYU: 1,
+    USD: 42.80,
+    EUR: 46.10,
+    ARS: 0.045,  // Peso Argentino
+    BRL: 8.25,   // Real Brasileño
+    UI: 5.8247,  // Unidad Indexada
+    UR: 4765.32  // Unidad Reajustable
+};
+
+function openCurrencyModal() {
+    const modal = document.getElementById('currencyModal');
+    modal.classList.add('active');
+
+    // Perform initial conversion
+    performConversion();
+}
+
+function closeCurrencyModal() {
+    const modal = document.getElementById('currencyModal');
+    modal.classList.remove('active');
+}
+
+function swapCurrencies() {
+    const fromCurrency = document.getElementById('fromCurrency');
+    const toCurrency = document.getElementById('toCurrency');
+
+    // Swap the values
+    const temp = fromCurrency.value;
+    fromCurrency.value = toCurrency.value;
+    toCurrency.value = temp;
+
+    // Perform conversion with new values
+    performConversion();
+}
+
+function performConversion() {
+    const amount = parseFloat(document.getElementById('fromAmount').value) || 0;
+    const fromCurrency = document.getElementById('fromCurrency').value;
+    const toCurrency = document.getElementById('toCurrency').value;
+
+    // Convert to UYU first, then to target currency
+    const amountInUYU = amount * exchangeRates[fromCurrency];
+    const result = amountInUYU / exchangeRates[toCurrency];
+
+    // Calculate exchange rate
+    const rate = exchangeRates[toCurrency] / exchangeRates[fromCurrency];
+
+    // Update UI
+    document.getElementById('conversionResult').textContent = formatCurrency(result, toCurrency);
+    document.getElementById('conversionRate').textContent = `1 ${fromCurrency} = ${formatNumber(rate, 4)} ${toCurrency}`;
+
+    // Update last update time
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('ratesUpdateTime').textContent = `hoy a las ${timeStr}`;
+}
+
+function formatCurrency(value, currency) {
+    // Format based on currency
+    if (currency === 'ARS' || currency === 'UYU') {
+        return value.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    } else if (currency === 'UI') {
+        return value.toLocaleString('es-UY', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+    } else if (currency === 'UR') {
+        return value.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    } else {
+        return value.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+}
+
+function formatNumber(value, decimals = 2) {
+    return value.toLocaleString('es-UY', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    });
+}
+
+function updateCurrencyCard() {
+    // Update all currency values in the card
+    const usdValue = document.getElementById('usdValue');
+    const eurValue = document.getElementById('eurValue');
+    const arsValue = document.getElementById('arsValue');
+    const brlValue = document.getElementById('brlValue');
+    const uiValue = document.getElementById('uiValue');
+    const urValue = document.getElementById('urValue');
+
+    if (usdValue) {
+        usdValue.textContent = formatNumber(exchangeRates.USD, 2) + ' UYU';
+    }
+
+    if (eurValue) {
+        eurValue.textContent = formatNumber(exchangeRates.EUR, 2) + ' UYU';
+    }
+
+    if (arsValue) {
+        arsValue.textContent = formatNumber(exchangeRates.ARS, 3) + ' UYU';
+    }
+
+    if (brlValue) {
+        brlValue.textContent = formatNumber(exchangeRates.BRL, 2) + ' UYU';
+    }
+
+    if (uiValue) {
+        uiValue.textContent = formatNumber(exchangeRates.UI, 4) + ' UYU';
+    }
+
+    if (urValue) {
+        urValue.textContent = formatNumber(exchangeRates.UR, 2) + ' UYU';
+    }
+}

@@ -141,83 +141,6 @@
                 <div id="newsStatus" class="status-message"></div>
             </div>
 
-            <!-- Subscriptions Dashboard -->
-            <div class="surlink-controls">
-                <h2>💳 Gestión de Suscripciones</h2>
-                <p>
-                    Dashboard de suscripciones con métricas de ingresos, planes activos y gestión de usuarios.
-                </p>
-
-                <!-- Export Buttons -->
-                <div class="export-buttons">
-                    <button class="btn btn-success btn-icon" onclick="exportSubscriptions('csv')">
-                        📄 Exportar CSV
-                    </button>
-                    <button class="btn btn-success btn-icon" onclick="exportSubscriptions('excel')">
-                        📊 Exportar Excel
-                    </button>
-                </div>
-
-                <div id="subscriptionStatsContainer" class="loading" style="margin-top: 1rem;">
-                    <p>Cargando estadísticas de suscripciones...</p>
-                </div>
-
-                <!-- Trend Charts -->
-                <div class="charts-grid" id="chartsContainer" style="display: none;">
-                    <div class="chart-card">
-                        <h3>Suscripciones por Mes</h3>
-                        <canvas id="subscriptionsTrendChart"></canvas>
-                    </div>
-                    <div class="chart-card">
-                        <h3>Ingresos por Plan</h3>
-                        <canvas id="revenuePlanChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Filters -->
-                <div class="filters-container" style="margin-top: 2rem;">
-                    <h3 style="margin-top: 0;">Filtros</h3>
-                    <div class="filters-grid">
-                        <div class="filter-group">
-                            <label>Estado</label>
-                            <select id="filterStatus" onchange="applyFilters()">
-                                <option value="">Todos</option>
-                                <option value="active">Activas</option>
-                                <option value="expired">Expiradas</option>
-                                <option value="cancelled">Canceladas</option>
-                                <option value="trial">Prueba</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>Plan</label>
-                            <select id="filterPlan" onchange="applyFilters()">
-                                <option value="">Todos</option>
-                                <option value="free">Free</option>
-                                <option value="premium">Premium</option>
-                                <option value="pro">Pro</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>Tipo</label>
-                            <select id="filterPlanType" onchange="applyFilters()">
-                                <option value="">Todos</option>
-                                <option value="personal">Personal</option>
-                            </select>
-                        </div>
-                        <div class="filter-group" style="display: flex; align-items: flex-end;">
-                            <button class="btn btn-secondary" onclick="clearFilters()" style="width: 100%;">
-                                Limpiar Filtros
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 2rem;">
-                    <h3 style="margin-bottom: 1rem;">Suscripciones</h3>
-                    <div id="recentSubscriptionsContainer"></div>
-                </div>
-            </div>
-
             <!-- Forum Management -->
             <div class="surlink-controls">
                 <h2>💬 Gestión del Foro Vortex</h2>
@@ -334,6 +257,96 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Management -->
+            <div class="surlink-controls">
+                <h2>🚨 Gestión de Reportes</h2>
+                <p>
+                    Administra los reportes de contenido inapropiado realizados por los usuarios del foro.
+                </p>
+
+                <!-- Reports Stats -->
+                <div id="reportsStatsContainer" style="margin-top: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div style="background: var(--surface); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--warning-color);">
+                        <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Reportes Pendientes</div>
+                        <div id="pendingReportsCount" style="font-size: 2rem; font-weight: bold; color: var(--warning-color);">-</div>
+                    </div>
+                    <div style="background: var(--surface); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--primary-color);">
+                        <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Total de Reportes</div>
+                        <div id="totalReportsCount" style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">-</div>
+                    </div>
+                    <div style="background: var(--surface); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--success-color);">
+                        <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Resueltos</div>
+                        <div id="resolvedReportsCount" style="font-size: 2rem; font-weight: bold; color: var(--success-color);">-</div>
+                    </div>
+                </div>
+
+                <!-- Reports Filters -->
+                <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+                    <div>
+                        <label for="reportStatusFilter" style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: var(--text-secondary);">Estado</label>
+                        <select id="reportStatusFilter" style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--surface); color: var(--text-primary);">
+                            <option value="">Todos</option>
+                            <option value="pending" selected>Pendientes</option>
+                            <option value="reviewed">Revisados</option>
+                            <option value="resolved">Resueltos</option>
+                            <option value="rejected">Rechazados</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="reportTypeFilter" style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: var(--text-secondary);">Tipo</label>
+                        <select id="reportTypeFilter" style="padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--surface); color: var(--text-primary);">
+                            <option value="">Todos</option>
+                            <option value="thread">Threads</option>
+                            <option value="comment">Comentarios</option>
+                            <option value="user">Usuarios</option>
+                        </select>
+                    </div>
+                    <button id="refreshReportsBtn" class="btn btn-secondary" style="margin-top: auto;">Actualizar</button>
+                </div>
+
+                <!-- Reports List -->
+                <div style="margin-top: 2rem; overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 8px; min-width: 900px;">
+                        <thead>
+                            <tr style="background: var(--background); border-bottom: 2px solid var(--border-color); text-align: left;">
+                                <th style="padding: 1rem;">Tipo</th>
+                                <th style="padding: 1rem;">Razón</th>
+                                <th style="padding: 1rem;">Reportado por</th>
+                                <th style="padding: 1rem;">Usuario reportado</th>
+                                <th style="padding: 1rem;">Estado</th>
+                                <th style="padding: 1rem;">Fecha</th>
+                                <th style="padding: 1rem;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportsTableBody">
+                            <tr>
+                                <td colspan="7" style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+                                    Cargando reportes...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Reports Pagination -->
+                <div id="reportsPaginationContainer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap; gap: 1rem;">
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                        <span id="reportsPaginationInfo">Mostrando 0 de 0 reportes</span>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button class="btn btn-secondary" id="reportsPrevPageBtn" disabled>
+                            ← Anterior
+                        </button>
+                        <span id="reportsCurrentPage" style="padding: 0 1rem; color: var(--text-primary);">
+                            Página 1 de 1
+                        </span>
+                        <button class="btn btn-secondary" id="reportsNextPageBtn" disabled>
+                            Siguiente →
+                        </button>
                     </div>
                 </div>
             </div>
@@ -516,9 +529,130 @@
                 </div>
             </div>
 
+            <!-- Cron Jobs Management -->
+            <div class="surlink-controls">
+                <h2>⏰ Gestión de Cron Jobs</h2>
+                <p>
+                    Configura los horarios de ejecución automática de tareas programadas del sistema.
+                </p>
+
+                <div id="cronSettingsContainer" class="loading" style="margin-top: 1.5rem;">
+                    <p>Cargando configuración de cron jobs...</p>
+                </div>
+
+                <div id="cronSettingsPanel" style="display: none; margin-top: 1.5rem;">
+                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                            <h3 style="margin: 0;">Estado de Cron Jobs</h3>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="cronEnabled">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                            Activa o desactiva la ejecución automática de todas las tareas programadas.
+                        </p>
+                    </div>
+
+                    <div style="display: grid; gap: 1.5rem;">
+                        <!-- News Ingestion -->
+                        <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                                <div style="flex: 1;">
+                                    <h4 style="margin: 0 0 0.5rem 0;">📰 Ingesta de Noticias</h4>
+                                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0 0 1rem 0;">
+                                        Carga automática de noticias desde feeds RSS configurados.
+                                    </p>
+                                </div>
+                                <button class="btn btn-secondary" onclick="runCronJobManually('newsIngestion')" style="white-space: nowrap;">
+                                    ▶️ Ejecutar ahora
+                                </button>
+                            </div>
+                            <label for="cronNewsIngestion" style="display: block; font-weight: 600; margin-bottom: 0.5rem;">
+                                Expresión Cron
+                            </label>
+                            <input
+                                type="text"
+                                id="cronNewsIngestion"
+                                placeholder="0 */6 * * *"
+                                style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--background); color: var(--text-primary); font-family: monospace;"
+                            >
+                            <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+                                Formato: minuto hora día mes día-de-semana. Ejemplo: "0 */6 * * *" (cada 6 horas)
+                            </small>
+                        </div>
+
+                        <!-- Cleanup -->
+                        <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                                <div style="flex: 1;">
+                                    <h4 style="margin: 0 0 0.5rem 0;">🧹 Limpieza del Sistema</h4>
+                                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0 0 1rem 0;">
+                                        Elimina incidentes pendientes antiguos, archiva validaciones y borra archivos huérfanos.
+                                    </p>
+                                </div>
+                                <button class="btn btn-secondary" onclick="runCronJobManually('cleanup')" style="white-space: nowrap;">
+                                    ▶️ Ejecutar ahora
+                                </button>
+                            </div>
+                            <label for="cronCleanup" style="display: block; font-weight: 600; margin-bottom: 0.5rem;">
+                                Expresión Cron
+                            </label>
+                            <input
+                                type="text"
+                                id="cronCleanup"
+                                placeholder="0 2 * * *"
+                                style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--background); color: var(--text-primary); font-family: monospace;"
+                            >
+                            <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+                                Ejemplo: "0 2 * * *" (todos los días a las 2 AM)
+                            </small>
+                        </div>
+
+                        <!-- Heatmap Update -->
+                        <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                                <div style="flex: 1;">
+                                    <h4 style="margin: 0 0 0.5rem 0;">🗺️ Actualización de Heatmap</h4>
+                                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0 0 1rem 0;">
+                                        Recalcula los percentiles del heatmap de incidentes para colorear correctamente las zonas.
+                                    </p>
+                                </div>
+                                <button class="btn btn-secondary" onclick="runCronJobManually('heatmapUpdate')" style="white-space: nowrap;">
+                                    ▶️ Ejecutar ahora
+                                </button>
+                            </div>
+                            <label for="cronHeatmapUpdate" style="display: block; font-weight: 600; margin-bottom: 0.5rem;">
+                                Expresión Cron
+                            </label>
+                            <input
+                                type="text"
+                                id="cronHeatmapUpdate"
+                                placeholder="0 * * * *"
+                                style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--background); color: var(--text-primary); font-family: monospace;"
+                            >
+                            <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+                                Ejemplo: "0 * * * *" (cada hora en punto)
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="button-group" style="margin-top: 1.5rem;">
+                        <button class="btn btn-primary" onclick="saveCronSettings()">
+                            💾 Guardar Configuración
+                        </button>
+                        <button class="btn btn-secondary" onclick="loadCronSettings()">
+                            🔄 Recargar
+                        </button>
+                    </div>
+
+                    <div id="cronSettingsStatus" class="status-message" style="margin-top: 1rem;"></div>
+                </div>
+            </div>
+
             <!-- Pricing Management -->
             <div class="surlink-controls">
-                <h2>Gestión de Precios</h2>
+                <h2>💰 Gestión de Precios</h2>
                 <p>
                     Configura los precios de cada plan y el valor del dólar para conversión a pesos UYU.
                 </p>
@@ -639,6 +773,37 @@
         </div>
     </div>
 
+    <!-- Report Details Modal -->
+    <div id="reportDetailsModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 1000; overflow-y: auto;">
+        <div style="max-width: 800px; margin: 2rem auto; background: var(--surface); border-radius: 8px; padding: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0;">Detalles del Reporte</h2>
+                <button onclick="closeReportDetailsModal()" style="background: transparent; border: none; font-size: 2rem; cursor: pointer; color: var(--text-primary);">&times;</button>
+            </div>
+
+            <div id="reportDetailsContent">
+                <p style="text-align: center; color: var(--text-secondary);">Cargando...</p>
+            </div>
+
+            <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <h3 style="margin-bottom: 1rem;">Acciones del Administrador</h3>
+
+                <div style="margin-bottom: 1rem;">
+                    <label for="resolutionText" style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Notas de resolución</label>
+                    <textarea id="resolutionText" placeholder="Escribe notas sobre la acción tomada..." style="width: 100%; min-height: 100px; padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--background); color: var(--text-primary);"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button onclick="updateReportStatus('reviewed')" class="btn btn-secondary">Marcar como Revisado</button>
+                    <button onclick="updateReportStatus('resolved')" class="btn btn-primary">Resolver</button>
+                    <button onclick="updateReportStatus('rejected')" class="btn" style="background: var(--danger-color); color: white;">Rechazar</button>
+                    <button onclick="deleteReport()" class="btn" style="background: var(--danger-color); color: white; margin-left: auto;">Eliminar Reporte</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="/js/admin.js"></script>
+    <script src="/js/admin-reports.js"></script>
 </body>
 </html>

@@ -1,9 +1,11 @@
 import express from 'express';
 import sanitizeHtml from 'sanitize-html';
-import { ForumThread, ForumComment, ForumSettings } from '../models/index.js';
+import { ForumThread, ForumComment, ForumSettings, User } from '../models/index.js';
 import { ALLOWED_HASHTAGS } from '../models/ForumThread.js';
 import { checkJwt, attachUser } from '../middleware/auth.js';
 import { uploadForumImages, handleUploadErrors } from '../middleware/upload.js';
+import { processMentions, createMentionNotifications } from '../utils/forumHelpers.js';
+import crypto from 'crypto';
 
 const router = express.Router();
 
@@ -107,6 +109,33 @@ router.get('/hashtags', (req, res) => {
 });
 
 /**
+ * GET /api/forum/users/search
+ * Search users by name for mentions autocomplete
+ */
+router.get('/users/search', optionalAuth, async (req, res) => {
+  try {
+    const query = req.query.q || '';
+
+    if (query.length < 2) {
+      return res.json({ users: [] });
+    }
+
+    // Search for users by name (case-insensitive, partial match)
+    const users = await User.find({
+      name: { $regex: query, $options: 'i' }
+    })
+      .select('_id name email picture')
+      .limit(10)
+      .lean();
+
+    res.json({ users });
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ error: 'Error searching users' });
+  }
+});
+
+/**
  * GET /api/forum/threads
  * Get all forum threads with pagination and sorting
  */
@@ -172,7 +201,7 @@ router.get('/threads', optionalAuth, async (req, res) => {
  */
 router.post('/threads', authenticate, checkThreadRateLimit, uploadForumImages, handleUploadErrors, async (req, res) => {
   try {
-    const { title, content, links, hashtags } = req.body;
+    const { title, content, links, hashtags, type, poll } = req.body;
 
     // Validation
     if (!title || title.trim().length < 3) {
@@ -230,11 +259,59 @@ router.post('/threads', authenticate, checkThreadRateLimit, uploadForumImages, h
     // Sanitize HTML content
     const sanitizedContent = sanitizeHtml(content, sanitizeConfig);
 
+    // Process mentions
+    const { mentions } = await processMentions(sanitizedContent);
+
+    // Validate and process poll if type is 'poll'
+    let pollData = null;
+    const threadType = type === 'poll' ? 'poll' : 'discussion';
+
+    if (threadType === 'poll') {
+      let parsedPoll = poll;
+      if (typeof poll === 'string') {
+        try {
+          parsedPoll = JSON.parse(poll);
+        } catch (e) {
+          return res.status(400).json({ error: 'Invalid poll data' });
+        }
+      }
+
+      if (!parsedPoll || !parsedPoll.options || parsedPoll.options.length < 2) {
+        return res.status(400).json({ error: 'Poll must have at least 2 options' });
+      }
+
+      if (parsedPoll.options.length > 10) {
+        return res.status(400).json({ error: 'Poll cannot have more than 10 options' });
+      }
+
+      // Create poll structure
+      pollData = {
+        question: parsedPoll.question || title,
+        options: parsedPoll.options.map(opt => ({
+          id: crypto.randomBytes(8).toString('hex'),
+          text: opt.text || opt,
+          votes: [],
+          votesCount: 0
+        })),
+        expiresAt: parsedPoll.expiresAt ? new Date(parsedPoll.expiresAt) : null,
+        allowMultiple: parsedPoll.allowMultiple || false,
+        totalVotes: 0
+      };
+
+      // Validate expiration date
+      if (pollData.expiresAt && pollData.expiresAt <= new Date()) {
+        return res.status(400).json({ error: 'Poll expiration date must be in the future' });
+      }
+    }
+
     const thread = new ForumThread({
       title: title.trim(),
       content: sanitizedContent,
+      type: threadType,
+      poll: pollData,
       hashtags: validHashtags,
       author: req.user._id,
+      mentions: mentions,
       images,
       links: parsedLinks
     });
@@ -242,10 +319,21 @@ router.post('/threads', authenticate, checkThreadRateLimit, uploadForumImages, h
     await thread.save();
     await thread.populate('author', 'email name picture');
 
+    // Create notifications for mentioned users
+    if (mentions.length > 0) {
+      await createMentionNotifications(mentions, {
+        authorId: req.user._id,
+        authorUid: req.user.uid,
+        threadId: thread._id,
+        type: 'thread',
+        threadTitle: thread.title
+      });
+    }
+
     res.status(201).json({
       success: true,
       thread,
-      message: 'Thread created successfully'
+      message: threadType === 'poll' ? 'Poll created successfully' : 'Thread created successfully'
     });
   } catch (error) {
     console.error('Error creating thread:', error);
@@ -304,6 +392,26 @@ router.get('/threads/:id', optionalAuth, async (req, res) => {
         like.userId.toString() === req.user._id.toString()
       );
 
+      // Add user's votes for polls
+      if (thread.type === 'poll' && thread.poll) {
+        thread.userVotes = thread.poll.options
+          .filter(opt => opt.votes.some(v => v.userId.toString() === req.user._id.toString()))
+          .map(opt => opt.id);
+
+        // Hide individual voter info, only show counts
+        thread.poll = {
+          ...thread.poll,
+          options: thread.poll.options.map(opt => ({
+            id: opt.id,
+            text: opt.text,
+            votesCount: opt.votesCount
+          })),
+          expiresAt: thread.poll.expiresAt,
+          allowMultiple: thread.poll.allowMultiple,
+          totalVotes: thread.poll.totalVotes
+        };
+      }
+
       const markLiked = (comment) => {
         comment.isLiked = comment.likes.some(like =>
           like.userId.toString() === req.user._id.toString()
@@ -311,6 +419,20 @@ router.get('/threads/:id', optionalAuth, async (req, res) => {
         comment.replies.forEach(markLiked);
       };
       rootComments.forEach(markLiked);
+    } else if (thread.type === 'poll' && thread.poll) {
+      // For non-authenticated users, hide voter details
+      thread.poll = {
+        ...thread.poll,
+        options: thread.poll.options.map(opt => ({
+          id: opt.id,
+          text: opt.text,
+          votesCount: opt.votesCount
+        })),
+        expiresAt: thread.poll.expiresAt,
+        allowMultiple: thread.poll.allowMultiple,
+        totalVotes: thread.poll.totalVotes
+      };
+      thread.userVotes = [];
     }
 
     res.json({
@@ -346,6 +468,54 @@ router.post('/threads/:id/like', authenticate, async (req, res) => {
   } catch (error) {
     console.error('Error toggling like:', error);
     res.status(500).json({ error: 'Error toggling like' });
+  }
+});
+
+/**
+ * POST /api/forum/threads/:id/vote
+ * Vote in a poll thread
+ */
+router.post('/threads/:id/vote', authenticate, async (req, res) => {
+  try {
+    const { optionIds } = req.body;
+
+    if (!optionIds || (Array.isArray(optionIds) && optionIds.length === 0)) {
+      return res.status(400).json({ error: 'No options selected' });
+    }
+
+    const thread = await ForumThread.findById(req.params.id);
+
+    if (!thread) {
+      return res.status(404).json({ error: 'Thread not found' });
+    }
+
+    if (thread.type !== 'poll') {
+      return res.status(400).json({ error: 'This thread is not a poll' });
+    }
+
+    try {
+      thread.vote(req.user._id, optionIds);
+      await thread.save();
+
+      res.json({
+        success: true,
+        message: 'Vote recorded successfully',
+        poll: {
+          options: thread.poll.options.map(opt => ({
+            id: opt.id,
+            text: opt.text,
+            votesCount: opt.votesCount
+          })),
+          totalVotes: thread.poll.totalVotes,
+          userVotes: thread.getUserVotes(req.user._id)
+        }
+      });
+    } catch (voteError) {
+      return res.status(400).json({ error: voteError.message });
+    }
+  } catch (error) {
+    console.error('Error voting in poll:', error);
+    res.status(500).json({ error: 'Error voting in poll' });
   }
 });
 
@@ -389,11 +559,15 @@ router.post('/threads/:id/comments', authenticate, checkCommentRateLimit, upload
     // Sanitize HTML content
     const sanitizedContent = sanitizeHtml(content, sanitizeConfig);
 
+    // Process mentions
+    const { mentions } = await processMentions(sanitizedContent);
+
     const comment = new ForumComment({
       threadId: req.params.id,
       parentCommentId: parentCommentId || null,
       content: sanitizedContent,
       author: req.user._id,
+      mentions: mentions,
       images,
       depth
     });
@@ -404,6 +578,18 @@ router.post('/threads/:id/comments', authenticate, checkCommentRateLimit, upload
     // Update thread comments count
     thread.commentsCount += 1;
     await thread.save();
+
+    // Create notifications for mentioned users
+    if (mentions.length > 0) {
+      await createMentionNotifications(mentions, {
+        authorId: req.user._id,
+        authorUid: req.user.uid,
+        threadId: thread._id,
+        commentId: comment._id,
+        type: 'comment',
+        threadTitle: thread.title
+      });
+    }
 
     res.status(201).json({
       success: true,
@@ -752,6 +938,105 @@ router.delete('/comments/:id', authenticate, async (req, res) => {
   } catch (error) {
     console.error('Error deleting comment:', error);
     res.status(500).json({ error: 'Error deleting comment' });
+  }
+});
+
+/**
+ * GET /api/forum/users/:id/profile
+ * Get user profile with forum statistics
+ */
+router.get('/users/:id/profile', optionalAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select('email name picture createdAt')
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get user's forum statistics
+    const [threadsCount, commentsCount, likesReceived] = await Promise.all([
+      ForumThread.countDocuments({ author: req.params.id, status: 'active' }),
+      ForumComment.countDocuments({ author: req.params.id, status: 'active' }),
+      ForumThread.aggregate([
+        { $match: { author: user._id } },
+        { $group: { _id: null, total: { $sum: '$likesCount' } } }
+      ])
+    ]);
+
+    // Get recent threads
+    const recentThreads = await ForumThread.find({
+      author: req.params.id,
+      status: 'active'
+    })
+      .select('title createdAt likesCount commentsCount')
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean();
+
+    res.json({
+      user: {
+        ...user,
+        stats: {
+          threads: threadsCount,
+          comments: commentsCount,
+          likesReceived: likesReceived[0]?.total || 0
+        },
+        recentThreads
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ error: 'Error fetching user profile' });
+  }
+});
+
+/**
+ * GET /api/forum/my-threads
+ * Get threads created by authenticated user
+ */
+router.get('/my-threads', authenticate, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const sort = req.query.sort || 'recent';
+    const skip = (page - 1) * limit;
+
+    let sortQuery = {};
+    if (sort === 'popular') {
+      sortQuery = { likesCount: -1, createdAt: -1 };
+    } else {
+      sortQuery = { createdAt: -1 };
+    }
+
+    const threads = await ForumThread.find({
+      author: req.user._id,
+      status: { $ne: 'deleted' }
+    })
+      .populate('author', 'email name picture')
+      .sort(sortQuery)
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const total = await ForumThread.countDocuments({
+      author: req.user._id,
+      status: { $ne: 'deleted' }
+    });
+
+    res.json({
+      threads,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user threads:', error);
+    res.status(500).json({ error: 'Error fetching threads' });
   }
 });
 

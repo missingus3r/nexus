@@ -75,7 +75,7 @@ async function reverseGeocode(lat, lon) {
 
 async function loadNews() {
     try {
-        const token = localStorage.getItem('jwt') || await getGuestToken();
+        const token = await window.authUtils.getAuthToken();
         const showAll = document.getElementById('showAllToggle').checked;
         const radius = document.getElementById('radiusSelect').value;
 
@@ -141,14 +141,3 @@ function displayNews(newsItems, showAll, radius) {
     }).join('');
 }
 
-async function getGuestToken() {
-    try {
-        const response = await fetch('/api/auth/guest-token', { method: 'POST' });
-        const data = await response.json();
-        localStorage.setItem('jwt', data.token);
-        return data.token;
-    } catch (error) {
-        console.error('Error getting guest token:', error);
-        return null;
-    }
-}

@@ -1,7 +1,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadStats();
             loadUserStats();
-            loadSubscriptionStats();
             loadForumStats();
             loadForumSettings();
             loadPricingSettings();
@@ -10,6 +9,7 @@
             loadRecentVisits();
             loadMaintenanceSettings();
             setupUserManagementHandlers();
+            loadCronSettings();
         });
 
         async function loadStats() {
@@ -593,507 +593,6 @@
 
             tbody.innerHTML = tableHTML;
             document.getElementById('recentUsersContainer').style.display = 'block';
-        }
-
-        // Subscription Management Functions
-        async function loadSubscriptionStats() {
-            try {
-                const response = await fetch('/api/admin/subscriptions/stats');
-                const stats = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(stats.error || 'Error al cargar estadísticas de suscripciones');
-                }
-
-                displaySubscriptionStats(stats);
-            } catch (error) {
-                console.error('Error loading subscription stats:', error);
-                document.getElementById('subscriptionStatsContainer').innerHTML = `
-                    <div style="padding: 1rem; color: var(--danger-color);">
-                        <p>Error al cargar estadísticas: ${error.message}</p>
-                    </div>
-                `;
-            }
-        }
-
-        function displaySubscriptionStats(stats) {
-            const container = document.getElementById('subscriptionStatsContainer');
-
-            const planLabels = {
-                'free': 'Free',
-                'premium': 'Premium',
-                'pro': 'Pro'
-            };
-
-            container.innerHTML = `
-                <div class="dashboard-grid">
-                    <div class="stat-card success">
-                        <h3>Suscripciones Activas</h3>
-                        <div class="value">${stats.summary.totalActive || 0}</div>
-                        <div class="subtitle">Usuarios con plan activo</div>
-                    </div>
-
-                    <div class="stat-card">
-                        <h3>MRR (Monthly Recurring Revenue)</h3>
-                        <div class="value">$${(stats.revenue.mrr || 0).toFixed(0)}</div>
-                        <div class="subtitle">Ingresos mensuales recurrentes (USD)</div>
-                    </div>
-
-                    <div class="stat-card">
-                        <h3>ARR (Annual Recurring Revenue)</h3>
-                        <div class="value">$${(stats.revenue.arr || 0).toFixed(0)}</div>
-                        <div class="subtitle">Ingresos anuales proyectados (USD)</div>
-                    </div>
-
-                    <div class="stat-card success">
-                        <h3>Nuevas (30 días)</h3>
-                        <div class="value">${stats.summary.newLast30Days || 0}</div>
-                        <div class="subtitle">Suscripciones nuevas</div>
-                    </div>
-
-                    <div class="stat-card warning">
-                        <h3>Por Vencer (7 días)</h3>
-                        <div class="value">${stats.summary.expiringSoon || 0}</div>
-                        <div class="subtitle">Requieren renovación</div>
-                    </div>
-
-                    <div class="stat-card danger">
-                        <h3>Canceladas (30 días)</h3>
-                        <div class="value">${stats.summary.cancelledLast30Days || 0}</div>
-                        <div class="subtitle">Churn Rate: ${stats.summary.churnRate || 0}%</div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 2rem;">
-                    <h3 style="margin-bottom: 1rem;">Distribución por Plan</h3>
-                    <div class="dashboard-grid">
-                        ${stats.byPlan.map(plan => `
-                            <div class="stat-card">
-                                <h3>${planLabels[plan.plan] || plan.plan}</h3>
-                                <div class="value" style="font-size: 2rem;">${plan.count}</div>
-                                <div class="subtitle">$${(plan.revenue || 0).toFixed(0)} USD/mes</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-
-                <div style="margin-top: 2rem;">
-                    <h3 style="margin-bottom: 1rem;">Por Tipo</h3>
-                    <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
-                        <div class="stat-card">
-                            <h3>Personales</h3>
-                            <div class="value" style="font-size: 2rem;">${stats.byType.personal || 0}</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Display recent subscriptions
-            displayRecentSubscriptions(stats.recentSubscriptions || []);
-
-            // Initialize charts
-            initializeCharts(stats);
-        }
-
-        function displayRecentSubscriptions(subscriptions) {
-            const container = document.getElementById('recentSubscriptionsContainer');
-
-            if (!subscriptions || subscriptions.length === 0) {
-                container.innerHTML = '<p style="color: var(--text-secondary);">No hay suscripciones recientes</p>';
-                return;
-            }
-
-            const planLabels = {
-                'free': 'Free',
-                'premium': 'Premium',
-                'pro': 'Pro'
-            };
-
-            const statusLabels = {
-                'active': { text: 'Activa', color: 'var(--success-color)' },
-                'expired': { text: 'Expirada', color: 'var(--danger-color)' },
-                'cancelled': { text: 'Cancelada', color: 'var(--text-secondary)' },
-                'trial': { text: 'Prueba', color: 'var(--warning-color)' }
-            };
-
-            container.innerHTML = `
-                <div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead style="background: var(--background);">
-                            <tr>
-                                <th style="padding: 1rem; text-align: left;">Usuario</th>
-                                <th style="padding: 1rem; text-align: left;">Plan</th>
-                                <th style="padding: 1rem; text-align: left;">Estado</th>
-                                <th style="padding: 1rem; text-align: right;">Precio</th>
-                                <th style="padding: 1rem; text-align: left;">Vencimiento</th>
-                                <th style="padding: 1rem; text-align: center;">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${subscriptions.map(sub => {
-                                const status = statusLabels[sub.status] || { text: sub.status, color: 'var(--text-secondary)' };
-                                const endDate = new Date(sub.endDate);
-                                const isExpiringSoon = endDate <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-                                return `
-                                    <tr style="border-bottom: 1px solid var(--background);">
-                                        <td style="padding: 1rem;">
-                                            <div style="font-weight: 500;">${sub.user.name || 'N/A'}</div>
-                                            <div style="font-size: 0.75rem; color: var(--text-secondary);">${sub.user.email}</div>
-                                        </td>
-                                        <td style="padding: 1rem;">
-                                            <span style="background: var(--primary-color); color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem;">
-                                                ${planLabels[sub.plan] || sub.plan}
-                                            </span>
-                                        </td>
-                                        <td style="padding: 1rem;">
-                                            <span style="color: ${status.color}; font-weight: 500;">
-                                                ${status.text}
-                                            </span>
-                                        </td>
-                                        <td style="padding: 1rem; text-align: right; font-weight: 500;">
-                                            ${sub.price.amount} ${sub.price.currency}
-                                        </td>
-                                        <td style="padding: 1rem;">
-                                            <div style="color: ${isExpiringSoon && sub.status === 'active' ? 'var(--warning-color)' : 'var(--text-secondary)'};">
-                                                ${endDate.toLocaleDateString('es-UY')}
-                                            </div>
-                                            ${isExpiringSoon && sub.status === 'active' ?
-                                                '<div style="font-size: 0.75rem; color: var(--warning-color);">⚠️ Por vencer</div>'
-                                                : ''}
-                                        </td>
-                                        <td style="padding: 1rem; text-align: center;">
-                                            <button class="action-btn view" onclick="viewPaymentHistory('${sub.user.id}')" title="Ver historial de pagos">
-                                                📜
-                                            </button>
-                                            ${sub.status === 'active' ? `
-                                                <button class="action-btn renew" onclick="renewSubscription('${sub.id}')" title="Renovar">
-                                                    🔄
-                                                </button>
-                                                <button class="action-btn cancel" onclick="cancelSubscription('${sub.id}')" title="Cancelar">
-                                                    ✖
-                                                </button>
-                                            ` : ''}
-                                        </td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        // Initialize Chart.js charts
-        let revenueChart = null;
-        let planDistributionChart = null;
-
-        function initializeCharts(stats) {
-            // Destroy existing charts if they exist
-            if (revenueChart) revenueChart.destroy();
-            if (planDistributionChart) planDistributionChart.destroy();
-
-            // Revenue Trend Chart
-            const revenueCtx = document.getElementById('revenueChart');
-            if (revenueCtx) {
-                const last12Months = [];
-                const now = new Date();
-                for (let i = 11; i >= 0; i--) {
-                    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-                    last12Months.push(date.toLocaleDateString('es-UY', { month: 'short', year: '2-digit' }));
-                }
-
-                revenueChart = new Chart(revenueCtx, {
-                    type: 'line',
-                    data: {
-                        labels: last12Months,
-                        datasets: [{
-                            label: 'MRR (USD)',
-                            data: stats.revenue.trend || Array(12).fill(0),
-                            borderColor: 'rgb(99, 102, 241)',
-                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'top'
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    callback: function(value) {
-                                        return '$' + value;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-            // Plan Distribution Chart
-            const planCtx = document.getElementById('planDistributionChart');
-            if (planCtx && stats.byPlan && stats.byPlan.length > 0) {
-                const planLabels = {
-                    'free': 'Free',
-                    'premium': 'Premium',
-                    'pro': 'Pro'
-                };
-
-                planDistributionChart = new Chart(planCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: stats.byPlan.map(p => planLabels[p.plan] || p.plan),
-                        datasets: [{
-                            data: stats.byPlan.map(p => p.count),
-                            backgroundColor: [
-                                'rgb(99, 102, 241)',
-                                'rgb(139, 92, 246)',
-                                'rgb(59, 130, 246)',
-                                'rgb(16, 185, 129)',
-                                'rgb(245, 158, 11)',
-                                'rgb(239, 68, 68)'
-                            ]
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'right'
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-        // Filter functionality
-        async function applyFilters() {
-            const status = document.getElementById('filterStatus').value;
-            const plan = document.getElementById('filterPlan').value;
-            const planType = document.getElementById('filterPlanType').value;
-
-            try {
-                const params = new URLSearchParams();
-                if (status) params.append('status', status);
-                if (plan) params.append('plan', plan);
-                if (planType) params.append('planType', planType);
-
-                const response = await fetch(`/admin/subscriptions?${params.toString()}`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-
-                if (!response.ok) throw new Error('Error al cargar suscripciones filtradas');
-
-                const subscriptions = await response.json();
-                displayRecentSubscriptions(subscriptions);
-            } catch (error) {
-                console.error('Error applying filters:', error);
-                toastError('Error al aplicar filtros: ' + error.message);
-            }
-        }
-
-        function clearFilters() {
-            document.getElementById('filterStatus').value = '';
-            document.getElementById('filterPlan').value = '';
-            document.getElementById('filterPlanType').value = '';
-            loadSubscriptionStats();
-        }
-
-        // Export functionality
-        async function exportSubscriptions(format) {
-            try {
-                const status = document.getElementById('filterStatus').value;
-                const plan = document.getElementById('filterPlan').value;
-                const planType = document.getElementById('filterPlanType').value;
-
-                const params = new URLSearchParams();
-                if (status) params.append('status', status);
-                if (plan) params.append('plan', plan);
-                if (planType) params.append('planType', planType);
-
-                const url = `/admin/subscriptions/export/${format}?${params.toString()}`;
-
-                const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-
-                if (!response.ok) throw new Error('Error al exportar datos');
-
-                const blob = await response.blob();
-                const downloadUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = downloadUrl;
-                a.download = `suscripciones_${new Date().toISOString().split('T')[0]}.${format}`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(downloadUrl);
-                document.body.removeChild(a);
-
-                toastSuccess(`Datos exportados exitosamente en formato ${format.toUpperCase()}`);
-            } catch (error) {
-                console.error('Error exporting subscriptions:', error);
-                toastError('Error al exportar datos: ' + error.message);
-            }
-        }
-
-        // Quick actions
-        async function renewSubscription(subscriptionId) {
-            if (!confirm('¿Está seguro que desea renovar esta suscripción por 30 días más?')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/admin/subscriptions/${subscriptionId}/renew`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.error || 'Error al renovar suscripción');
-                }
-
-                toastSuccess('Suscripción renovada exitosamente hasta ' + new Date(result.subscription.endDate).toLocaleDateString('es-UY'));
-                loadSubscriptionStats();
-            } catch (error) {
-                console.error('Error renewing subscription:', error);
-                toastError('Error al renovar suscripción: ' + error.message);
-            }
-        }
-
-        async function cancelSubscription(subscriptionId) {
-            if (!confirm('¿Está seguro que desea cancelar esta suscripción? Esta acción no se puede deshacer.')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/admin/subscriptions/${subscriptionId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.error || 'Error al cancelar suscripción');
-                }
-
-                toastSuccess('Suscripción cancelada exitosamente');
-                loadSubscriptionStats();
-            } catch (error) {
-                console.error('Error cancelling subscription:', error);
-                toastError('Error al cancelar suscripción: ' + error.message);
-            }
-        }
-
-        // Payment history functionality
-        async function viewPaymentHistory(userId) {
-            try {
-                const response = await fetch(`/admin/payments/user/${userId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-
-                if (!response.ok) throw new Error('Error al cargar historial de pagos');
-
-                const payments = await response.json();
-                displayPaymentHistory(payments);
-
-                const modal = document.getElementById('paymentHistoryModal');
-                modal.style.display = 'flex';
-            } catch (error) {
-                console.error('Error loading payment history:', error);
-                toastError('Error al cargar historial de pagos: ' + error.message);
-            }
-        }
-
-        function closePaymentModal() {
-            const modal = document.getElementById('paymentHistoryModal');
-            modal.style.display = 'none';
-        }
-
-        function displayPaymentHistory(payments) {
-            const container = document.getElementById('paymentHistoryContent');
-
-            if (!payments || payments.length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">No hay historial de pagos</p>';
-                return;
-            }
-
-            const statusLabels = {
-                'pending': { text: 'Pendiente', color: 'var(--warning-color)' },
-                'completed': { text: 'Completado', color: 'var(--success-color)' },
-                'failed': { text: 'Fallido', color: 'var(--danger-color)' },
-                'refunded': { text: 'Reembolsado', color: 'var(--text-secondary)' }
-            };
-
-            container.innerHTML = `
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead style="background: var(--background);">
-                        <tr>
-                            <th style="padding: 0.75rem; text-align: left;">Fecha</th>
-                            <th style="padding: 0.75rem; text-align: left;">Monto</th>
-                            <th style="padding: 0.75rem; text-align: left;">Método</th>
-                            <th style="padding: 0.75rem; text-align: left;">Estado</th>
-                            <th style="padding: 0.75rem; text-align: left;">ID Transacción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${payments.map(payment => {
-                            const status = statusLabels[payment.status] || { text: payment.status, color: 'var(--text-secondary)' };
-                            const date = new Date(payment.createdAt).toLocaleDateString('es-UY');
-
-                            return `
-                                <tr style="border-bottom: 1px solid var(--background);">
-                                    <td style="padding: 0.75rem;">${date}</td>
-                                    <td style="padding: 0.75rem; font-weight: 500;">
-                                        ${payment.amount} ${payment.currency}
-                                    </td>
-                                    <td style="padding: 0.75rem;">${payment.paymentMethod || 'N/A'}</td>
-                                    <td style="padding: 0.75rem;">
-                                        <span style="color: ${status.color}; font-weight: 500;">
-                                            ${status.text}
-                                        </span>
-                                    </td>
-                                    <td style="padding: 0.75rem; font-size: 0.75rem; color: var(--text-secondary);">
-                                        ${payment.transactionId || 'N/A'}
-                                    </td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-            `;
-        }
-
-        // Close modal when clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('paymentHistoryModal');
-            if (event.target === modal) {
-                closePaymentModal();
-            }
         }
 
         // Forum Management Functions
@@ -1713,6 +1212,144 @@
                 setTimeout(() => {
                     statusDiv.textContent = '';
                 }, 8000);
+            }
+        }
+
+        // Cron Jobs Management Functions
+        async function loadCronSettings() {
+            try {
+                const response = await fetch('/api/admin/cron/settings');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al cargar configuración de cron jobs');
+                }
+
+                // Set enabled checkbox
+                document.getElementById('cronEnabled').checked = data.cronEnabled || false;
+
+                // Set cron schedules
+                const schedules = data.cronSchedules || {};
+                document.getElementById('cronNewsIngestion').value = schedules.newsIngestion || '0 */6 * * *';
+                document.getElementById('cronCleanup').value = schedules.cleanup || '0 2 * * *';
+                document.getElementById('cronHeatmapUpdate').value = schedules.heatmapUpdate || '0 * * * *';
+
+                // Show panel
+                document.getElementById('cronSettingsContainer').style.display = 'none';
+                document.getElementById('cronSettingsPanel').style.display = 'block';
+            } catch (error) {
+                console.error('Error loading cron settings:', error);
+                document.getElementById('cronSettingsContainer').innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--danger-color);">
+                        Error al cargar configuración de cron jobs: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function saveCronSettings() {
+            const statusDiv = document.getElementById('cronSettingsStatus');
+
+            try {
+                const settings = {
+                    cronEnabled: document.getElementById('cronEnabled').checked,
+                    cronSchedules: {
+                        newsIngestion: document.getElementById('cronNewsIngestion').value.trim(),
+                        cleanup: document.getElementById('cronCleanup').value.trim(),
+                        heatmapUpdate: document.getElementById('cronHeatmapUpdate').value.trim()
+                    }
+                };
+
+                // Validate that cron expressions are not empty
+                if (!settings.cronSchedules.newsIngestion ||
+                    !settings.cronSchedules.cleanup ||
+                    !settings.cronSchedules.heatmapUpdate) {
+                    throw new Error('Todas las expresiones cron son obligatorias');
+                }
+
+                statusDiv.textContent = 'Guardando configuración...';
+                statusDiv.className = 'status-message';
+
+                const response = await fetch('/api/admin/cron/settings', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(settings)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al guardar configuración');
+                }
+
+                statusDiv.className = 'status-message success';
+                statusDiv.textContent = '✅ Configuración de cron jobs guardada correctamente. Los trabajos se recargarán automáticamente.';
+
+                setTimeout(() => {
+                    statusDiv.textContent = '';
+                }, 5000);
+            } catch (error) {
+                console.error('Error saving cron settings:', error);
+                statusDiv.className = 'status-message error';
+                statusDiv.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+
+        async function runCronJobManually(jobName) {
+            const statusDiv = document.getElementById('cronSettingsStatus');
+
+            const jobLabels = {
+                newsIngestion: 'Ingesta de Noticias',
+                cleanup: 'Limpieza del Sistema',
+                heatmapUpdate: 'Actualización de Heatmap'
+            };
+
+            const label = jobLabels[jobName] || jobName;
+
+            if (!confirm(`¿Ejecutar ahora el trabajo "${label}"?`)) {
+                return;
+            }
+
+            try {
+                statusDiv.textContent = `Ejecutando ${label}...`;
+                statusDiv.className = 'status-message';
+
+                const response = await fetch(`/api/admin/cron/${jobName}/run`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || `Error al ejecutar ${label}`);
+                }
+
+                statusDiv.className = 'status-message success';
+
+                // Custom messages based on job type
+                if (jobName === 'cleanup' && data.result) {
+                    const summary = data.result;
+                    statusDiv.textContent = `✅ ${label} completado. Incidentes eliminados: ${summary.removedPendingIncidents || 0}, Validaciones archivadas: ${summary.validationsArchived || 0}, Archivos huérfanos: ${summary.orphanedFilesDeleted || 0}.`;
+                } else if (jobName === 'newsIngestion') {
+                    statusDiv.textContent = `✅ ${label} iniciado en segundo plano. Revisa los logs del servidor para ver el progreso.`;
+                } else {
+                    statusDiv.textContent = `✅ ${label} ejecutado correctamente.`;
+                }
+
+                // Reload stats after job execution
+                setTimeout(() => {
+                    loadStats();
+                }, 2000);
+
+                setTimeout(() => {
+                    statusDiv.textContent = '';
+                }, 8000);
+            } catch (error) {
+                console.error(`Error running cron job ${jobName}:`, error);
+                statusDiv.className = 'status-message error';
+                statusDiv.textContent = `❌ Error al ejecutar ${label}: ${error.message}`;
             }
         }
 

@@ -532,7 +532,7 @@ router.post('/listings/:id/comments', requireLogin, async (req, res) => {
     }
 
     const uid = req.session.user.uid;
-    const username = req.session.user.username || uid;
+    const username = req.session.user.name || req.session.user.email || uid;
 
     listing.addComment(uid, username, body.trim());
     await listing.save();
@@ -694,7 +694,7 @@ router.post('/listings/:listingId/comments/:commentId/replies', requireLogin, as
     }
 
     const uid = req.session.user.uid;
-    const username = req.session.user.username || uid;
+    const username = req.session.user.name || req.session.user.email || uid;
 
     listing.addReply(commentId, uid, username, body.trim());
     await listing.save();
@@ -776,10 +776,14 @@ router.get('/construccion/sites', async (req, res) => {
     // Get likes count for all sites
     const likesCountMap = await SiteLike.getMultipleCounts(sites, 'construccion');
 
-    // Add likesCount to each site
+    // Get comments count for all sites
+    const commentsCountMap = await SiteComment.getMultipleCounts(sites, 'construccion');
+
+    // Add likesCount and commentsCount to each site
     const sitesWithLikes = sites.map(site => ({
       ...site,
-      likesCount: likesCountMap[site.id] || 0
+      likesCount: likesCountMap[site.id] || 0,
+      commentsCount: commentsCountMap[site.id] || 0
     }));
 
     res.json({
@@ -805,7 +809,13 @@ router.get('/construccion/sites/:id', async (req, res) => {
       return res.status(404).json({ error: 'Sitio no encontrado' });
     }
 
-    res.json(site);
+    // Get likes count (construccion doesn't have comments)
+    const likesCount = await SiteLike.countDocuments({ siteId: id, siteType: 'construccion' });
+
+    res.json({
+      ...site,
+      likesCount
+    });
   } catch (error) {
     logger.error('Error fetching construccion site', { error });
     res.status(500).json({ error: 'Error al obtener sitio' });
@@ -828,10 +838,14 @@ router.get('/academy/sites', async (req, res) => {
     // Get likes count for all sites
     const likesCountMap = await SiteLike.getMultipleCounts(sites, 'academy');
 
-    // Add likesCount to each site
+    // Get comments count for all sites
+    const commentsCountMap = await SiteComment.getMultipleCounts(sites, 'academy');
+
+    // Add likesCount and commentsCount to each site
     const sitesWithLikes = sites.map(site => ({
       ...site,
-      likesCount: likesCountMap[site.id] || 0
+      likesCount: likesCountMap[site.id] || 0,
+      commentsCount: commentsCountMap[site.id] || 0
     }));
 
     res.json({
@@ -858,7 +872,15 @@ router.get('/academy/sites/:id', async (req, res) => {
       return res.status(404).json({ error: 'Sitio no encontrado' });
     }
 
-    res.json(site);
+    // Get likes and comments count
+    const likesCount = await SiteLike.countDocuments({ siteId: id, siteType: 'academy' });
+    const commentsCount = await SiteComment.countDocuments({ siteId: id, siteType: 'academy' });
+
+    res.json({
+      ...site,
+      likesCount,
+      commentsCount
+    });
   } catch (error) {
     logger.error('Error fetching academy site', { error });
     res.status(500).json({ error: 'Error al obtener sitio' });
@@ -881,10 +903,14 @@ router.get('/financial/sites', async (req, res) => {
     // Get likes count for all sites
     const likesCountMap = await SiteLike.getMultipleCounts(sites, 'financial');
 
-    // Add likesCount to each site
+    // Get comments count for all sites
+    const commentsCountMap = await SiteComment.getMultipleCounts(sites, 'financial');
+
+    // Add likesCount and commentsCount to each site
     const sitesWithLikes = sites.map(site => ({
       ...site,
-      likesCount: likesCountMap[site.id] || 0
+      likesCount: likesCountMap[site.id] || 0,
+      commentsCount: commentsCountMap[site.id] || 0
     }));
 
     res.json({
@@ -912,7 +938,15 @@ router.get('/financial/sites/:id', async (req, res) => {
       return res.status(404).json({ error: 'Sitio no encontrado' });
     }
 
-    res.json(site);
+    // Get likes and comments count
+    const likesCount = await SiteLike.countDocuments({ siteId: id, siteType: 'financial' });
+    const commentsCount = await SiteComment.countDocuments({ siteId: id, siteType: 'financial' });
+
+    res.json({
+      ...site,
+      likesCount,
+      commentsCount
+    });
   } catch (error) {
     logger.error('Error fetching financial site', { error });
     res.status(500).json({ error: 'Error al obtener sitio' });
@@ -1015,7 +1049,7 @@ router.post('/sites/:siteId/comments', requireLogin, async (req, res) => {
     const comment = new SiteComment({
       siteId,
       siteType,
-      username: user.username,
+      username: user.name || user.email || user.uid,
       userId: user.uid,
       content: content.trim(),
       replies: []
@@ -1063,7 +1097,7 @@ router.post('/sites/:siteId/comments/:commentId/replies', requireLogin, async (r
     }
 
     const reply = {
-      username: user.username,
+      username: user.name || user.email || user.uid,
       userId: user.uid,
       content: content.trim(),
       createdAt: new Date()

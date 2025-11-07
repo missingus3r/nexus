@@ -65,6 +65,37 @@ siteCommentSchema.pre('save', function(next) {
   next();
 });
 
+// Static method to get comments count for multiple sites
+siteCommentSchema.statics.getMultipleCounts = async function(sites, siteType) {
+  if (!sites || sites.length === 0) {
+    return {};
+  }
+
+  const siteIds = sites.map(site => site.id);
+
+  const counts = await this.aggregate([
+    {
+      $match: {
+        siteId: { $in: siteIds },
+        siteType: siteType
+      }
+    },
+    {
+      $group: {
+        _id: '$siteId',
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const countMap = {};
+  counts.forEach(item => {
+    countMap[item._id] = item.count;
+  });
+
+  return countMap;
+};
+
 const SiteComment = mongoose.model('SiteComment', siteCommentSchema);
 
 export default SiteComment;

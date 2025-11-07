@@ -244,7 +244,7 @@ async function loadIncidentsList() {
     content.innerHTML = '<p class="text-center">Cargando incidentes...</p>';
 
     try {
-        const token = localStorage.getItem('jwt') || await getGuestToken();
+        const token = await window.authUtils.getAuthToken();
         const response = await fetch('/api/map/incidents?limit=20', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -350,17 +350,6 @@ window.centerMapOnIncident = function(lon, lat, incidentId) {
     }
 };
 
-async function getGuestToken() {
-    try {
-        const response = await fetch('/api/auth/guest-token', { method: 'POST' });
-        const data = await response.json();
-        localStorage.setItem('jwt', data.token);
-        return data.token;
-    } catch (error) {
-        console.error('Error getting guest token:', error);
-        return null;
-    }
-}
 
 // Event listeners for incidents list buttons
 document.getElementById('incidentsListBtn')?.addEventListener('click', openIncidentsListModal);

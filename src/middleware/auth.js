@@ -63,11 +63,25 @@ export const attachUser = async (req, res, next) => {
     let user = await User.findOne({ uid: req.auth.sub });
 
     if (!user) {
-      // First time user - create profile
+      // First time user - create profile with data from JWT
       user = await User.create({
         uid: req.auth.sub,
+        email: req.auth.email || null,
+        name: req.auth.name || req.auth.email?.split('@')[0] || null,
+        picture: req.auth.picture || null,
         reputacion: 50
       });
+    } else {
+      // Update user data from JWT if available
+      if (req.auth.email && !user.email) {
+        user.email = req.auth.email;
+      }
+      if (req.auth.name && !user.name) {
+        user.name = req.auth.name;
+      }
+      if (req.auth.picture && !user.picture) {
+        user.picture = req.auth.picture;
+      }
     }
 
     // Check if banned
@@ -90,11 +104,14 @@ export const attachUser = async (req, res, next) => {
 };
 
 // Generate user JWT token
-export const generateUserToken = (userId, permissions = []) => {
+export const generateUserToken = (userId, permissions = [], userData = {}) => {
   const payload = {
     sub: userId,
     permissions,
     type: 'user',
+    email: userData.email || null,
+    name: userData.name || null,
+    picture: userData.picture || null,
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 7) // 7 days
   };

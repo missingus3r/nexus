@@ -92,7 +92,7 @@ function initThreadQuillEditor() {
 
   threadQuillEditor = new Quill('#threadContentEditor', {
     theme: 'snow',
-    placeholder: 'Escribe el contenido de tu thread...',
+    placeholder: 'Escribe el contenido de tu thread (puedes mencionar usuarios con @nombre)...',
     modules: {
       toolbar: toolbarOptions
     }
@@ -103,6 +103,16 @@ function initThreadQuillEditor() {
     const length = threadQuillEditor.getLength() - 1; // -1 for the trailing newline
     document.getElementById('contentCharCount').textContent = length;
   });
+
+  // Initialize mentions for Quill editor
+  if (typeof initMentions === 'function') {
+    initMentions(threadQuillEditor);
+  }
+
+  // Initialize poll creation
+  if (typeof initPollCreation === 'function') {
+    initPollCreation();
+  }
 }
 
 // Load available hashtags from API
@@ -196,7 +206,7 @@ window.clearHashtagFilter = clearHashtagFilter;
 
 async function loadThreads() {
   try {
-    const token = localStorage.getItem('jwt');
+    const token = await window.authUtils.getAuthToken();
     let url = `/api/forum/threads?page=${currentPage}&limit=20&sort=${currentSort}`;
     if (currentHashtag) {
       url += `&hashtag=${currentHashtag}`;
@@ -216,7 +226,7 @@ async function loadThreads() {
 
 function displayThreads(threads) {
   const container = document.getElementById('threadsList');
-  const token = localStorage.getItem('jwt');
+  const token = await window.authUtils.getAuthToken();
 
   if (!threads || threads.length === 0) {
     container.innerHTML = `
@@ -328,7 +338,7 @@ function goToPage(page) {
 async function handleNewThreadSubmit(e) {
   e.preventDefault();
 
-  const token = localStorage.getItem('jwt');
+  const token = await window.authUtils.getAuthToken();
   if (!token) {
     toastWarning('Debes iniciar sesión');
     window.location.href = '/login';
@@ -363,6 +373,18 @@ async function handleNewThreadSubmit(e) {
 
   // Add hashtags
   formData.set('hashtags', JSON.stringify(selectedHashtags));
+
+  // Add poll data if this is a poll
+  if (typeof getPollData === 'function') {
+    const pollData = getPollData();
+    if (pollData) {
+      formData.set('type', 'poll');
+      formData.set('poll', JSON.stringify(pollData));
+    } else if (document.querySelector('input[name="threadType"]:checked')?.value === 'poll') {
+      toastWarning('La encuesta debe tener al menos 2 opciones válidas');
+      return;
+    }
+  }
 
   try {
     const response = await fetch('/api/forum/threads', {
@@ -411,6 +433,16 @@ function closeNewThreadModal() {
   selectedHashtags = [];
   const hashtagBtns = document.querySelectorAll('.hashtag-btn');
   hashtagBtns.forEach(btn => btn.classList.remove('selected'));
+
+  // Reset poll creation
+  if (typeof resetPollCreation === 'function') {
+    resetPollCreation();
+  }
+
+  // Close mention suggestions if open
+  if (typeof closeMentionSuggestions === 'function') {
+    closeMentionSuggestions();
+  }
 }
 
 // Make function global
@@ -452,7 +484,7 @@ function initThreadView() {
 
 async function loadThread() {
   try {
-    const token = localStorage.getItem('jwt');
+    const token = await window.authUtils.getAuthToken();
     const response = await fetch(`/api/forum/threads/${currentThreadId}`, {
       headers: token ? { 'Authorization': `Bearer ${token}` } : {}
     });
@@ -470,7 +502,7 @@ function displayThread(thread) {
   const container = document.getElementById('threadContent');
 
   // Check if user can edit/delete
-  const token = localStorage.getItem('jwt');
+  const token = await window.authUtils.getAuthToken();
   const isAuthor = token && thread.author._id === getUserIdFromToken(token);
   const isAdmin = token && isUserAdmin(token);
   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
@@ -481,7 +513,7 @@ function displayThread(thread) {
     <div class="thread-detail">
       <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
         <h1 style="margin: 0;">${escapeHtml(thread.title)}</h1>
-        ${canEdit || canDelete ? `
+        ${canEdit || canDelete || token ? `
           <div style="display: flex; gap: 0.5rem;">
             ${canEdit ? `
               <button onclick="openEditThreadModal('${thread._id}')" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
@@ -493,14 +525,24 @@ function displayThread(thread) {
                 ${isAdmin ? 'Eliminar (Admin)' : 'Eliminar'}
               </button>
             ` : ''}
+            ${token && !isAuthor ? `
+              <button onclick="openReportModal('thread', '${thread._id}')" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem; background: transparent; border: 1px solid var(--border-color);" title="Reportar thread">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                Reportar
+              </button>
+            ` : ''}
           </div>
         ` : ''}
       </div>
 
       <div class="thread-meta" style="margin-bottom: 2rem; color: var(--text-secondary); display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
         <span style="display: flex; align-items: center; gap: 0.5rem;">
-          <img src="${thread.author.picture || '/images/default-avatar.svg'}" alt="Avatar" class="user-avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
-          Por <strong>${escapeHtml(thread.author.name || thread.author.email || 'Usuario')}</strong>
+          <img src="${thread.author.picture || '/images/default-avatar.svg'}" alt="Avatar" class="user-avatar" onclick="openUserProfileModal('${thread.author._id}')" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; cursor: pointer;">
+          Por ${makeUserNameClickable ? makeUserNameClickable(thread.author.name || thread.author.email || 'Usuario', thread.author._id) : `<strong>${escapeHtml(thread.author.name || thread.author.email || 'Usuario')}</strong>`}
         </span>
         <span>${formatDate(thread.createdAt)}</span>
         ${thread.updatedAt && thread.updatedAt !== thread.createdAt ? '<span style="font-style: italic;">(editado)</span>' : ''}
@@ -509,6 +551,8 @@ function displayThread(thread) {
       <div class="thread-content" style="line-height: 1.7; white-space: pre-wrap; margin-bottom: 1.5rem;">
         ${formatContent(thread.content)}
       </div>
+
+      ${thread.type === 'poll' && thread.poll ? (typeof renderPoll === 'function' ? renderPoll(thread.poll, thread.userVotes || [], thread._id) : '') : ''}
 
       ${thread.hashtags && thread.hashtags.length > 0 ? `
         <div class="thread-hashtags" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem;">
@@ -567,7 +611,7 @@ function renderComment(comment, depth = 0) {
   const marginLeft = Math.min(depth * 2, 10); // Max 10rem indentation
 
   // Check if user can edit/delete
-  const token = localStorage.getItem('jwt');
+  const token = await window.authUtils.getAuthToken();
   const isAuthor = token && comment.author._id === getUserIdFromToken(token);
   const isAdmin = token && isUserAdmin(token);
   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
@@ -578,14 +622,14 @@ function renderComment(comment, depth = 0) {
     <div class="comment" data-comment-id="${comment._id}" style="margin-left: ${marginLeft}rem; margin-bottom: 1rem; padding: 1rem; background: var(--surface); border-radius: 8px; border-left: 3px solid var(--primary-color);">
       <div class="comment-header" style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <img src="${comment.author.picture || '/images/default-avatar.svg'}" alt="Avatar" class="user-avatar" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;">
+          <img src="${comment.author.picture || '/images/default-avatar.svg'}" alt="Avatar" class="user-avatar" onclick="openUserProfileModal('${comment.author._id}')" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; cursor: pointer;">
           <div>
-            <strong style="color: var(--text-primary);">${escapeHtml(comment.author.name || comment.author.email || 'Usuario')}</strong>
+            ${makeUserNameClickable ? makeUserNameClickable(comment.author.name || comment.author.email || 'Usuario', comment.author._id) : `<strong style="color: var(--text-primary);">${escapeHtml(comment.author.name || comment.author.email || 'Usuario')}</strong>`}
             <span style="color: var(--text-secondary); font-size: 0.875rem; margin-left: 0.5rem;">${formatDate(comment.createdAt)}</span>
             ${comment.updatedAt && comment.updatedAt !== comment.createdAt ? '<span style="color: var(--text-secondary); font-size: 0.875rem; font-style: italic; margin-left: 0.5rem;">(editado)</span>' : ''}
           </div>
         </div>
-        ${canEdit || canDelete ? `
+        ${canEdit || canDelete || (token && !isAuthor) ? `
           <div style="display: flex; gap: 0.5rem;">
             ${canEdit ? `
               <button onclick="openEditCommentModal('${comment._id}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: var(--surface-elevated); border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; color: var(--text-primary);">
@@ -595,6 +639,15 @@ function renderComment(comment, depth = 0) {
             ${canDelete ? `
               <button onclick="deleteComment('${comment._id}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: var(--danger-color); border: none; border-radius: 4px; cursor: pointer; color: white;">
                 ${isAdmin ? 'Eliminar (Admin)' : 'Eliminar'}
+              </button>
+            ` : ''}
+            ${token && !isAuthor ? `
+              <button onclick="openReportModal('comment', '${comment._id}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: transparent; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; color: var(--text-secondary);" title="Reportar comentario">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
               </button>
             ` : ''}
           </div>
@@ -654,7 +707,7 @@ function countAllComments(comments) {
 async function handleNewCommentSubmit(e) {
   e.preventDefault();
 
-  const token = localStorage.getItem('jwt');
+  const token = await window.authUtils.getAuthToken();
   if (!token) {
     toastWarning('Debes iniciar sesión');
     return;
@@ -694,7 +747,7 @@ async function handleNewCommentSubmit(e) {
 }
 
 function openReplyModal(commentId) {
-  const token = localStorage.getItem('jwt');
+  const token = await window.authUtils.getAuthToken();
   if (!token) {
     toastWarning('Debes iniciar sesión');
     window.location.href = '/login';
@@ -719,7 +772,7 @@ window.closeReplyModal = closeReplyModal;
 async function handleReplySubmit(e) {
   e.preventDefault();
 
-  const token = localStorage.getItem('jwt');
+  const token = await window.authUtils.getAuthToken();
   if (!token) {
     toastWarning('Debes iniciar sesión');
     return;
@@ -762,7 +815,7 @@ async function toggleThreadLike(threadId, event) {
   event.preventDefault();
   event.stopPropagation();
 
-  const token = localStorage.getItem('jwt');
+  const token = await window.authUtils.getAuthToken();
   if (!token) {
     toastWarning('Debes iniciar sesión para dar like');
     window.location.href = '/login';
@@ -808,7 +861,7 @@ async function toggleCommentLike(commentId, event) {
   event.preventDefault();
   event.stopPropagation();
 
-  const token = localStorage.getItem('jwt');
+  const token = await window.authUtils.getAuthToken();
   if (!token) {
     toastWarning('Debes iniciar sesión para dar like');
     return;
@@ -931,6 +984,29 @@ function formatContent(content) {
     .replace(/on\w+="[^"]*"/g, '')
     .replace(/on\w+='[^']*'/g, '');
 
+  // Process mentions - look for text within <a> tags that have mentions
+  // Quill already formats mentions as links, so we just need to style them
+  sanitized = sanitized.replace(
+    /<a[^>]*href="[^"]*perfil[^"]*"[^>]*>(.*?)<\/a>/gi,
+    (match, innerText) => {
+      // Extract the user ID from the href if possible
+      const userIdMatch = match.match(/uid=([^"&]+)/);
+      const userId = userIdMatch ? userIdMatch[1] : '';
+
+      // Return styled mention that's clickable
+      return `<span class="mention-link" onclick="openUserProfileModal('${userId}')" style="color: #10c6ff; font-weight: bold; cursor: pointer; text-decoration: none;">${innerText}</span>`;
+    }
+  );
+
+  // Also handle plain @mentions that might not be formatted yet
+  sanitized = sanitized.replace(
+    /@(\w+)/g,
+    (match, username) => {
+      // Check if it's already inside an HTML tag (avoid double-processing)
+      return `<span class="mention-text" style="color: #10c6ff; font-weight: bold;">@${username}</span>`;
+    }
+  );
+
   return sanitized;
 }
 
@@ -965,7 +1041,7 @@ function isUserAdmin(token) {
 
 // Open edit thread modal
 async function openEditThreadModal(threadId) {
-  const token = localStorage.getItem('jwt');
+  const token = await window.authUtils.getAuthToken();
   if (!token) {
     toastWarning('Debes iniciar sesión');
     return;
@@ -1029,7 +1105,7 @@ window.closeEditThreadModal = closeEditThreadModal;
 async function handleEditThreadSubmit(e) {
   e.preventDefault();
 
-  const token = localStorage.getItem('jwt');
+  const token = await window.authUtils.getAuthToken();
   if (!token) {
     toastWarning('Debes iniciar sesión');
     return;
@@ -1069,7 +1145,7 @@ async function handleEditThreadSubmit(e) {
 
 // Delete thread
 async function deleteThread(threadId) {
-  const token = localStorage.getItem('jwt');
+  const token = await window.authUtils.getAuthToken();
   if (!token) {
     toastWarning('Debes iniciar sesión');
     return;
@@ -1121,7 +1197,7 @@ window.deleteThread = deleteThread;
 
 // Open edit comment modal
 async function openEditCommentModal(commentId) {
-  const token = localStorage.getItem('jwt');
+  const token = await window.authUtils.getAuthToken();
   if (!token) {
     toastWarning('Debes iniciar sesión');
     return;
@@ -1186,7 +1262,7 @@ window.closeEditCommentModal = closeEditCommentModal;
 async function handleEditCommentSubmit(e) {
   e.preventDefault();
 
-  const token = localStorage.getItem('jwt');
+  const token = await window.authUtils.getAuthToken();
   if (!token) {
     toastWarning('Debes iniciar sesión');
     return;
@@ -1224,7 +1300,7 @@ async function handleEditCommentSubmit(e) {
 
 // Delete comment
 async function deleteComment(commentId) {
-  const token = localStorage.getItem('jwt');
+  const token = await window.authUtils.getAuthToken();
   if (!token) {
     toastWarning('Debes iniciar sesión');
     return;

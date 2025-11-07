@@ -28,6 +28,7 @@ import notificationRoutes from './src/routes/notifications.js';
 import surlinkRoutes from './src/routes/surlink.js';
 import pricingRoutes from './src/routes/pricing.js';
 import forumRoutes from './src/routes/forum.js';
+import reportsRoutes from './src/routes/reports.js';
 import dashboardRoutes from './src/routes/dashboard.js';
 import preferencesRoutes from './src/routes/preferences.js';
 
@@ -151,6 +152,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/surlink', surlinkRoutes);
 app.use('/api/pricing', pricingRoutes);
 app.use('/api/forum', forumRoutes);
+app.use('/api/reports', reportsRoutes);
 app.use('/api/preferences', preferencesRoutes);
 
 // Dashboard routes (includes both view and API routes)

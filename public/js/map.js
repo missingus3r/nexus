@@ -420,7 +420,7 @@ function addNeighborhoodsLayer() {
 
 async function loadMapData() {
     try {
-        const token = localStorage.getItem('jwt') || await getGuestToken();
+        const token = await window.authUtils.getAuthToken();
 
         // Get current map bounds
         const bounds = map.getBounds();
@@ -469,17 +469,6 @@ async function loadMapData() {
     }
 }
 
-async function getGuestToken() {
-    try {
-        const response = await fetch('/api/auth/guest-token', { method: 'POST' });
-        const data = await response.json();
-        localStorage.setItem('jwt', data.token);
-        return data.token;
-    } catch (error) {
-        console.error('Error getting guest token:', error);
-        return null;
-    }
-}
 
 function setupEventListeners() {
     // Type filter change
@@ -822,8 +811,8 @@ function cancelLocationSelection() {
 async function handleReportSubmit(e) {
     e.preventDefault();
 
-    const token = localStorage.getItem('jwt');
-    if (!token) {
+    const token = await window.authUtils.getAuthToken();
+    if (!token || !window.authUtils.isAuthenticated()) {
         toastWarning('Debes iniciar sesión para reportar incidentes');
         window.location.href = '/login';
         return;
@@ -901,7 +890,7 @@ window.cancelLocationSelection = cancelLocationSelection;
  */
 async function fetchIncidentDetails(incidentId) {
     try {
-        const token = localStorage.getItem('jwt');
+        const token = await window.authUtils.getAuthToken();
         const response = await fetch(`/api/map/incidents/${incidentId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -978,8 +967,7 @@ function createIncidentPopupHTML(incident) {
     `;
 
     // Check if user is authenticated (not guest)
-    const token = localStorage.getItem('jwt');
-    const isAuthenticated = token && !isGuestToken(token);
+    const isAuthenticated = window.authUtils.isAuthenticated();
     let actionsHTML = '';
 
     if (isAuthenticated && status === 'pending') {
@@ -1093,9 +1081,9 @@ async function validateIncident(incidentId, vote) {
     if (invalidBtn) invalidBtn.disabled = true;
 
     try {
-        const token = localStorage.getItem('jwt');
+        const token = await window.authUtils.getAuthToken();
 
-        if (!token) {
+        if (!token || !window.authUtils.isAuthenticated()) {
             showValidationMessage('Debes iniciar sesión para validar', 'error');
             return;
         }

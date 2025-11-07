@@ -19,6 +19,17 @@ const forumCommentSchema = new mongoose.Schema({
     trim: true,
     maxlength: 5000
   },
+  mentions: [{
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    username: String,
+    mentionedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   author: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

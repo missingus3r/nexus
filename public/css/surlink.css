@@ -309,6 +309,25 @@ html[data-theme="dark"] {
     color: inherit;
 }
 
+.surlink-comment-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.8rem;
+    background: var(--background);
+    border-radius: 999px;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    cursor: default;
+}
+
+.surlink-comment-badge svg {
+    width: 14px;
+    height: 14px;
+    color: #9ca3af;
+}
+
 .surlink-card-price {
     font-size: 1.1rem;
     font-weight: 700;

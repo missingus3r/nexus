@@ -15,3 +15,4 @@ export { default as PageVisit } from './PageVisit.js';
 export { default as SystemSettings } from './SystemSettings.js';
 export { default as UserPreferences } from './UserPreferences.js';
 export { default as SiteLike } from './SiteLike.js';
+export { default as Report } from './Report.js';

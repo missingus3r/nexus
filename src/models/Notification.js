@@ -15,7 +15,9 @@ const notificationSchema = new mongoose.Schema({
       'incident_validated', // Someone validated your incident
       'validation_reward',  // You got reputation from validation
       'news',              // New news event
-      'admin_post'         // Admin announcement
+      'admin_post',        // Admin announcement
+      'forum_mention',     // Someone mentioned you in forum
+      'forum_reply'        // Someone replied to your thread/comment
     ],
     index: true
   },
