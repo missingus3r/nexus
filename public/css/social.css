@@ -503,6 +503,17 @@ footer nav a:focus-visible {
 }
 
 @media (max-width: 860px) {
+    .page {
+        padding: 44px clamp(20px, 7vw, 48px);
+    }
+
+    .action-panel {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 768px) {
     body {
         padding: 24px 16px;
     }
@@ -555,9 +566,16 @@ footer nav a:focus-visible {
         transform: translateY(0);
     }
 
-    .action-panel {
-        flex-direction: column;
-        align-items: flex-start;
+    .platform-nav nav a {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        padding: 8px 0;
+        transition: color 0.2s ease;
+    }
+
+    .platform-nav nav a:hover,
+    .platform-nav nav a:focus-visible {
+        color: var(--text-primary);
     }
 }
 

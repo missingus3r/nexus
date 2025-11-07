@@ -22,7 +22,7 @@ async function openUserProfileModal(userId) {
 
     if (response.ok) {
       const data = await response.json();
-      displayUserProfile(data.user);
+      await displayUserProfile(data.user);
     } else {
       content.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--danger-color);">Error al cargar el perfil</div>';
     }
@@ -33,7 +33,7 @@ async function openUserProfileModal(userId) {
 }
 
 // Display user profile in modal
-function displayUserProfile(user) {
+async function displayUserProfile(user) {
   const content = document.getElementById('userProfileContent');
   const token = await window.authUtils.getAuthToken();
   const currentUserId = token ? getUserIdFromToken(token) : null;

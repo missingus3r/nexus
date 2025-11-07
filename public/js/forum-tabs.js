@@ -398,7 +398,7 @@ function updateNotificationBadge(count) {
 }
 
 // Check for new notifications periodically
-function checkNotifications() {
+async function checkNotifications() {
   const token = await window.authUtils.getAuthToken();
   if (!token) return;
 

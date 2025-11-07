@@ -224,7 +224,7 @@ async function loadThreads() {
   }
 }
 
-function displayThreads(threads) {
+async function displayThreads(threads) {
   const container = document.getElementById('threadsList');
   const token = await window.authUtils.getAuthToken();
 
@@ -498,7 +498,7 @@ async function loadThread() {
   }
 }
 
-function displayThread(thread) {
+async function displayThread(thread) {
   const container = document.getElementById('threadContent');
 
   // Check if user can edit/delete
@@ -592,7 +592,7 @@ function displayThread(thread) {
   `;
 }
 
-function displayComments(comments) {
+async function displayComments(comments) {
   const container = document.getElementById('commentsList');
   const count = document.getElementById('commentsCount');
 
@@ -604,14 +604,15 @@ function displayComments(comments) {
     return;
   }
 
-  container.innerHTML = comments.map(comment => renderComment(comment)).join('');
+  // Get token once and pass to renderComment
+  const token = await window.authUtils.getAuthToken();
+  container.innerHTML = comments.map(comment => renderComment(comment, 0, token)).join('');
 }
 
-function renderComment(comment, depth = 0) {
+function renderComment(comment, depth = 0, token = null) {
   const marginLeft = Math.min(depth * 2, 10); // Max 10rem indentation
 
   // Check if user can edit/delete
-  const token = await window.authUtils.getAuthToken();
   const isAuthor = token && comment.author._id === getUserIdFromToken(token);
   const isAdmin = token && isUserAdmin(token);
   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
@@ -687,7 +688,7 @@ function renderComment(comment, depth = 0) {
 
       ${comment.replies && comment.replies.length > 0 ? `
         <div class="comment-replies" style="margin-top: 1rem;">
-          ${comment.replies.map(reply => renderComment(reply, depth + 1)).join('')}
+          ${comment.replies.map(reply => renderComment(reply, depth + 1, token)).join('')}
         </div>
       ` : ''}
     </div>
@@ -746,7 +747,7 @@ async function handleNewCommentSubmit(e) {
   }
 }
 
-function openReplyModal(commentId) {
+async function openReplyModal(commentId) {
   const token = await window.authUtils.getAuthToken();
   if (!token) {
     toastWarning('Debes iniciar sesión');
