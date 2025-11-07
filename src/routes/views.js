@@ -111,12 +111,12 @@ router.get('/forum-thread/:id', checkMaintenance('forum'), (req, res) => {
 });
 
 /**
- * Links page (Ministry of Interior)
+ * Enlaces Ministerio del Interior page
  */
-router.get('/links', (req, res) => {
-  res.render('links', {
-    title: 'Enlaces Oficiales - Vortex',
-    page: 'links'
+router.get('/enlacesminterior', (req, res) => {
+  res.render('enlacesminterior', {
+    title: 'Enlaces Oficiales - Ministerio del Interior - Vortex',
+    page: 'enlacesminterior'
   });
 });
 
@@ -137,6 +137,16 @@ router.get('/pricing', (req, res) => {
   res.render('pricing', {
     title: 'Planes y Precios - Vortex',
     page: 'pricing'
+  });
+});
+
+/**
+ * Nexus page - Geospatial data and maps
+ */
+router.get('/nexus', (req, res) => {
+  res.render('nexus', {
+    title: 'Nexus - Vortex',
+    page: 'nexus'
   });
 });
 

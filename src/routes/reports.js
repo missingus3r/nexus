@@ -15,8 +15,20 @@ const authenticate = [checkJwt, attachUser, (req, res, next) => {
 
 // Admin-only middleware
 const requireAdmin = (req, res, next) => {
+  if (!req.user) {
+    console.error('requireAdmin: req.user is null or undefined');
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
   if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
+    console.error('requireAdmin: User role is not admin', {
+      uid: req.user.uid,
+      role: req.user.role
+    });
+    return res.status(403).json({
+      error: 'Admin access required',
+      currentRole: req.user.role
+    });
   }
   next();
 };
@@ -59,25 +71,33 @@ router.post('/', authenticate, async (req, res) => {
     let contentSnapshot = {};
 
     if (reportedType === 'thread') {
-      const thread = await ForumThread.findById(reportedId).populate('author', 'name email');
+      const thread = await ForumThread.findById(reportedId).populate({
+        path: 'author',
+        select: 'name email',
+        options: { strictPopulate: false }
+      });
       if (!thread) {
         return res.status(404).json({ error: 'Thread not found' });
       }
-      reportedUserId = thread.author._id;
+      reportedUserId = thread.author?._id || thread.author;
       contentSnapshot = {
         title: thread.title,
         content: thread.content.substring(0, 200), // First 200 chars
-        author: thread.author.name || thread.author.email
+        author: thread.author?.name || thread.author?.email || 'Usuario desconocido'
       };
     } else if (reportedType === 'comment') {
-      const comment = await ForumComment.findById(reportedId).populate('author', 'name email');
+      const comment = await ForumComment.findById(reportedId).populate({
+        path: 'author',
+        select: 'name email',
+        options: { strictPopulate: false }
+      });
       if (!comment) {
         return res.status(404).json({ error: 'Comment not found' });
       }
-      reportedUserId = comment.author._id;
+      reportedUserId = comment.author?._id || comment.author;
       contentSnapshot = {
         content: comment.content.substring(0, 200),
-        author: comment.author.name || comment.author.email
+        author: comment.author?.name || comment.author?.email || 'Usuario desconocido'
       };
     } else if (reportedType === 'user') {
       const user = await User.findById(reportedId);
@@ -151,8 +171,16 @@ router.get('/my-reports', authenticate, async (req, res) => {
     }
 
     const reports = await Report.find(queryFilter)
-      .populate('reportedUserId', 'email name picture')
-      .populate('reviewedBy', 'email name')
+      .populate({
+        path: 'reportedUserId',
+        select: 'email name picture',
+        options: { strictPopulate: false }
+      })
+      .populate({
+        path: 'reviewedBy',
+        select: 'email name',
+        options: { strictPopulate: false }
+      })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -219,14 +247,34 @@ router.get('/', authenticate, requireAdmin, async (req, res) => {
       queryFilter.reportedType = type;
     }
 
-    const reports = await Report.find(queryFilter)
-      .populate('reporter', 'email name picture')
-      .populate('reportedUserId', 'email name picture')
-      .populate('reviewedBy', 'email name')
+    let reports = await Report.find(queryFilter)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
+
+    // Manually populate to handle missing references gracefully
+    const reporterIds = [...new Set(reports.map(r => r.reporter).filter(Boolean))];
+    const reportedUserIds = [...new Set(reports.map(r => r.reportedUserId).filter(Boolean))];
+    const reviewerIds = [...new Set(reports.map(r => r.reviewedBy).filter(Boolean))];
+
+    const [reporters, reportedUsers, reviewers] = await Promise.all([
+      User.find({ _id: { $in: reporterIds } }).select('_id email name picture').lean(),
+      User.find({ _id: { $in: reportedUserIds } }).select('_id email name picture').lean(),
+      User.find({ _id: { $in: reviewerIds } }).select('_id email name').lean()
+    ]);
+
+    const reporterMap = Object.fromEntries(reporters.map(u => [u._id.toString(), u]));
+    const reportedUserMap = Object.fromEntries(reportedUsers.map(u => [u._id.toString(), u]));
+    const reviewerMap = Object.fromEntries(reviewers.map(u => [u._id.toString(), u]));
+
+    // Attach populated data
+    reports = reports.map(report => ({
+      ...report,
+      reporter: report.reporter ? reporterMap[report.reporter.toString()] || null : null,
+      reportedUserId: report.reportedUserId ? reportedUserMap[report.reportedUserId.toString()] || null : null,
+      reviewedBy: report.reviewedBy ? reviewerMap[report.reviewedBy.toString()] || null : null
+    }));
 
     const total = await Report.countDocuments(queryFilter);
 
@@ -263,7 +311,7 @@ router.get('/', authenticate, requireAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching reports:', error);
-    res.status(500).json({ error: 'Error al obtener reportes' });
+    res.status(500).json({ error: 'Error al obtener reportes', details: error.message });
   }
 });
 
@@ -274,9 +322,21 @@ router.get('/', authenticate, requireAdmin, async (req, res) => {
 router.get('/:id', authenticate, requireAdmin, async (req, res) => {
   try {
     const report = await Report.findById(req.params.id)
-      .populate('reporter', 'email name picture')
-      .populate('reportedUserId', 'email name picture')
-      .populate('reviewedBy', 'email name')
+      .populate({
+        path: 'reporter',
+        select: 'email name picture',
+        options: { strictPopulate: false }
+      })
+      .populate({
+        path: 'reportedUserId',
+        select: 'email name picture',
+        options: { strictPopulate: false }
+      })
+      .populate({
+        path: 'reviewedBy',
+        select: 'email name',
+        options: { strictPopulate: false }
+      })
       .lean();
 
     if (!report) {
@@ -287,11 +347,19 @@ router.get('/:id', authenticate, requireAdmin, async (req, res) => {
     let reportedContent = null;
     if (report.reportedType === 'thread') {
       reportedContent = await ForumThread.findById(report.reportedId)
-        .populate('author', 'email name picture')
+        .populate({
+          path: 'author',
+          select: 'email name picture',
+          options: { strictPopulate: false }
+        })
         .lean();
     } else if (report.reportedType === 'comment') {
       reportedContent = await ForumComment.findById(report.reportedId)
-        .populate('author', 'email name picture')
+        .populate({
+          path: 'author',
+          select: 'email name picture',
+          options: { strictPopulate: false }
+        })
         .lean();
     } else if (report.reportedType === 'user') {
       reportedContent = await User.findById(report.reportedId)
@@ -336,7 +404,11 @@ router.put('/:id', authenticate, requireAdmin, async (req, res) => {
     }
 
     await report.save();
-    await report.populate('reviewer', 'email name');
+    await report.populate({
+      path: 'reviewedBy',
+      select: 'email name',
+      options: { strictPopulate: false }
+    });
 
     res.json({
       success: true,

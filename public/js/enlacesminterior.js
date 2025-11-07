@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', loadLinks);
 
 async function loadLinks() {
     try {
-        const response = await fetch('/api/links/mi');
+        const response = await fetch('/api/enlacesminterior/mi');
         const data = await response.json();
 
         const linksList = document.getElementById('linksList');
@@ -67,6 +67,35 @@ async function loadLinks() {
                            </a>
                            <a href="https://amberalertbrasil.mj.gov.br/" target="_blank" class="btn btn-secondary">
                             Amber Alert Brasil
+                           </a>`
+                        : ''
+                    }
+                    ${link.name === 'Denuncia Acoso Sexual en Transporte Público'
+                        ? `<a href="https://tramites.montevideo.gub.uy/sites/tramites.montevideo.gub.uy/files/tramites/documentos/protocolodeactuacionantesituacionesdeacososexualeneltransportepublico.pdf" target="_blank" class="btn btn-secondary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: middle;">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            Protocolo de Actuación
+                           </a>
+                           <a href="https://tramites.montevideo.gub.uy/sites/tramites.montevideo.gub.uy/files/tramites/documentos/protocoloparachoferes.pdf" target="_blank" class="btn btn-secondary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: middle;">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            Protocolo para Choferes
+                           </a>
+                           <a href="https://montevideo.gub.uy/app/sur/ingreso/pages/ingresoClausula.xhtml" target="_blank" class="btn btn-primary" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: middle;">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                            Iniciar Denuncia Online
                            </a>`
                         : ''
                     }

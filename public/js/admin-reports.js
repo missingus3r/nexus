@@ -5,7 +5,44 @@ let currentReportStatusFilter = 'pending';
 let currentReportTypeFilter = '';
 let currentReportId = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize JWT token for authenticated admin user
+async function initializeAdminAuth() {
+  try {
+    // Check if we already have a valid token
+    const existingToken = localStorage.getItem('jwt');
+    if (existingToken) {
+      // Verify if it's not a guest token
+      const payload = JSON.parse(atob(existingToken.split('.')[1]));
+      if (payload.sub !== 'guest' && payload.type !== 'guest') {
+        console.log('Using existing JWT token');
+        return; // Token is valid
+      }
+    }
+
+    // Get a new token from the server for the authenticated user
+    console.log('Requesting user JWT token...');
+    const response = await fetch('/auth/user-token', {
+      method: 'POST',
+      credentials: 'include' // Include session cookie
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      localStorage.setItem('jwt', data.token);
+      console.log('JWT token obtained successfully for role:', data.user.role);
+    } else {
+      console.error('Failed to get user token:', response.status);
+      // Keep using existing token (might be guest)
+    }
+  } catch (error) {
+    console.error('Error initializing admin auth:', error);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // First, ensure we have a valid JWT token
+  await initializeAdminAuth();
+
   // Initialize reports management
   loadReportsStats();
   loadReports();

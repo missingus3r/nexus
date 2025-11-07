@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <%- include('partials/theme-init') %>
+    <link rel="stylesheet" href="/css/nexus.css">
+</head>
+<body>
+    <div class="page">
+        <div class="glow one"></div>
+        <div class="glow two"></div>
+
+        <header>
+            <div class="brand">VORTEX</div>
+            <div class="platform-nav">
+                <button class="hamburger" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <nav>
+                    <a href="/">Inicio</a>
+                    <a href="/plataforma">Plataforma</a>
+                    <a href="/centinel">Centinel</a>
+                    <a href="/forum">Foro</a>
+                    <a href="/surlink">Surlink</a>
+                    <a href="/social">Social</a>
+                    <a href="/nexus" aria-current="page" class="active">Nexus</a>
+                    <a href="/pricing">Pricing</a>
+                    <% if (isAuthenticated) { %>
+                        <a href="/logout">Cerrar sesión</a>
+                    <% } else { %>
+                        <a href="/login">Iniciar sesión</a>
+                    <% } %>
+                </nav>
+            </div>
+        </header>
+
+        <main>
+            <section class="hero">
+                <div class="hero-copy">
+                    <h1 class="hero-title">El <span>nexo</span> del conocimiento</h1>
+                    <p class="hero-text">
+                        Nexus conecta el conocimiento del país y la sociedad en un solo lugar.
+                        Accede a herramientas oficiales, datos abiertos, recursos públicos y plataformas de información
+                        que facilitan el acceso democrático al conocimiento libre. Todo centralizado para tu consulta.
+                    </p>
+                </div>
+            </section>
+
+            <div class="disclaimer-banner">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <p>Estos sitios se visualizan mejor desde una tablet o PC para una experiencia óptima.</p>
+            </div>
+
+            <section class="resource-section">
+                <div class="resource-header">
+                    <h2>Cámaras en Tiempo Real</h2>
+                    <p>Acceso a cámaras de seguridad y tránsito de Montevideo. <strong>Nota:</strong> Se requiere usuario de VeraTV para acceder.</p>
+                </div>
+                <div class="iframe-container auth-required">
+                    <iframe
+                        src="https://anteltv.com.uy/camaras"
+                        title="Cámaras VeraTV"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                    <div class="iframe-overlay auth-overlay">
+                        <div class="overlay-message">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            <p>Se requiere autenticación de VeraTV</p>
+                            <a href="https://anteltv.com.uy/camaras" target="_blank" rel="noopener noreferrer" class="cta primary small">
+                                Abrir en nueva pestaña
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="resource-actions">
+                    <a href="https://anteltv.com.uy/camaras" target="_blank" rel="noopener noreferrer" class="btn-visit">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                        Visitar sitio
+                    </a>
+                </div>
+            </section>
+
+            <section class="resource-section">
+                <div class="resource-header">
+                    <h2>Visor de Mapas de Montevideo</h2>
+                    <p>Herramienta de visualización con datos de transporte, servicios públicos, zonas de riesgo, áreas protegidas y puntos de interés ciudadano.</p>
+                </div>
+                <div class="iframe-container">
+                    <iframe
+                        src="https://montevideo.gub.uy/app/mapas/#/viewer/26"
+                        title="Visor de Mapas Montevideo"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+                <div class="resource-actions">
+                    <a href="https://montevideo.gub.uy/app/mapas/#/viewer/26" target="_blank" rel="noopener noreferrer" class="btn-visit">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                        Visitar sitio
+                    </a>
+                </div>
+            </section>
+
+            <section class="resource-section">
+                <div class="resource-header">
+                    <h2>Datos LiDAR 2024</h2>
+                    <p>Información topográfica de alta precisión capturada mediante tecnología láser. Visualiza elevaciones, modelos 3D del terreno y análisis geoespaciales detallados.</p>
+                </div>
+                <div class="iframe-container">
+                    <iframe
+                        src="https://sig.montevideo.gub.uy/lidar-2024.html"
+                        title="Datos LiDAR Montevideo 2024"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+                <div class="resource-actions">
+                    <a href="https://sig.montevideo.gub.uy/lidar-2024.html" target="_blank" rel="noopener noreferrer" class="btn-visit">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                        Visitar sitio
+                    </a>
+                </div>
+            </section>
+
+            <section class="resource-section">
+                <div class="resource-header">
+                    <h2>Tránsito en Tiempo Real</h2>
+                    <p>Mapa interactivo con información actualizada del tránsito en Montevideo. Visualiza el estado de las vías, congestión vehicular y condiciones de circulación en tiempo real.</p>
+                </div>
+                <div class="iframe-container">
+                    <iframe
+                        src="https://www.google.com/maps/d/embed?mid=1HOy2oek2H11IgucNzVV8-P2fo6mO4Hcg&hl=es&femb=1&ll=-34.90774367154243%2C-56.1758484183712&z=16"
+                        title="Tránsito en Tiempo Real Montevideo"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+                <div class="resource-actions">
+                    <a href="https://montevideo.gub.uy/area-tematica/movilidad/gestion-de-la-movilidad/centro-de-gestion-de-movilidad" target="_blank" rel="noopener noreferrer" class="btn-visit">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                        Visitar sitio
+                    </a>
+                </div>
+            </section>
+
+            <section class="resource-section">
+                <div class="resource-header">
+                    <h2>Ubicación de Cámaras de Monitoreo</h2>
+                    <p>Mapa con la ubicación exacta de todas las cámaras de monitoreo de tránsito en Montevideo. Identifica puntos de vigilancia y cobertura del sistema de monitoreo urbano.</p>
+                </div>
+                <div class="iframe-container">
+                    <iframe
+                        src="https://www.google.com/maps/d/embed?mid=15AKVoOmHrsx38Hk3SIvgWtAaLvGMeoYv&femb=1&ll=-34.86236964974273%2C-56.14404285000001&z=12"
+                        title="Ubicación de Cámaras de Monitoreo Montevideo"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+                <div class="resource-actions">
+                    <a href="https://montevideo.gub.uy/area-tematica/movilidad/gestion-de-la-movilidad/centro-de-gestion-de-movilidad" target="_blank" rel="noopener noreferrer" class="btn-visit">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                        Visitar sitio
+                    </a>
+                </div>
+            </section>
+
+            <section class="resource-section">
+                <div class="resource-header">
+                    <h2>Mapa Interactivo IntGIS</h2>
+                    <p>Sistema de información geográfica con múltiples capas: catastro, padrón territorial, espacios verdes, infraestructura urbana y más.</p>
+                </div>
+                <div class="iframe-container with-overlay">
+                    <iframe
+                        src="https://intgis.montevideo.gub.uy/pmapper/map.phtml?&config=default&me=548000,6130000,596000,6162000"
+                        title="Mapa IntGIS Montevideo"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                    <div class="iframe-overlay">
+                        <div class="overlay-message">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                <polyline points="15 3 21 3 21 9"></polyline>
+                                <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                            <p>Mejor experiencia en nueva pestaña</p>
+                            <a href="https://intgis.montevideo.gub.uy/pmapper/map.phtml?&config=default&me=548000,6130000,596000,6162000" target="_blank" rel="noopener noreferrer" class="cta primary small">
+                                Abrir en nueva pestaña
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="resource-actions">
+                    <a href="https://intgis.montevideo.gub.uy/pmapper/map.phtml?&config=default&me=548000,6130000,596000,6162000" target="_blank" rel="noopener noreferrer" class="btn-visit">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                        Visitar sitio
+                    </a>
+                </div>
+            </section>
+
+            <section class="resource-section enlaces-mi-section">
+                <div class="resource-header">
+                    <h2>Enlaces Oficiales del Ministerio del Interior</h2>
+                    <p>Acceso rápido a recursos oficiales del Ministerio del Interior de Uruguay: denuncias, búsqueda de personas, emergencias y más.</p>
+                </div>
+
+                <div class="enlaces-grid">
+                    <div class="enlace-card">
+                        <div class="enlace-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="9" cy="7" r="4"></circle>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            </svg>
+                        </div>
+                        <h3>Personas Ausentes</h3>
+                        <p>Galería de personas desaparecidas y sistema de alertas regionales</p>
+                    </div>
+
+                    <div class="enlace-card">
+                        <div class="enlace-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </div>
+                        <h3>Personas Condenadas</h3>
+                        <p>Listado oficial de personas procesadas por la justicia uruguaya</p>
+                    </div>
+
+                    <div class="enlace-card">
+                        <div class="enlace-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                <line x1="9" y1="10" x2="15" y2="10"></line>
+                                <line x1="12" y1="14" x2="12" y2="14.01"></line>
+                            </svg>
+                        </div>
+                        <h3>Denuncias Anónimas</h3>
+                        <p>Sistema seguro para realizar denuncias anónimas de forma confidencial</p>
+                    </div>
+
+                    <div class="enlace-card">
+                        <div class="enlace-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                        </div>
+                        <h3>Mapa de Comisarías</h3>
+                        <p>Ubicación de todas las comisarías y dependencias policiales en Uruguay</p>
+                    </div>
+
+                    <div class="enlace-card">
+                        <div class="enlace-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                            </svg>
+                        </div>
+                        <h3>Emergencia 9-1-1</h3>
+                        <p>Información del servicio de emergencias y manual de usuario de la app</p>
+                    </div>
+
+                    <div class="enlace-card">
+                        <div class="enlace-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                <path d="M9 12l2 2 4-4"></path>
+                            </svg>
+                        </div>
+                        <h3>Acoso en Transporte</h3>
+                        <p>Denuncia situaciones de acoso sexual en transporte público</p>
+                    </div>
+                </div>
+
+                <div class="enlaces-cta">
+                    <a href="/enlacesminterior" class="btn-enlaces-principal">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                        Ver todos los enlaces y recursos
+                    </a>
+                </div>
+            </section>
+
+            <section class="info-panel">
+                <div class="panel-content">
+                    <h3>Sobre Nexus</h3>
+                    <p>
+                        Nexus es el punto de encuentro entre el conocimiento público y la ciudadanía. Aquí reunimos herramientas oficiales,
+                        bases de datos gubernamentales, recursos educativos y plataformas de información abierta para democratizar
+                        el acceso al conocimiento.
+                    </p>
+                    <p>
+                        Todos los recursos provienen de fuentes oficiales y están disponibles públicamente. Vortex actúa como nexo,
+                        facilitando el descubrimiento y acceso centralizado a información que de otra forma estaría dispersa.
+                        El conocimiento es libre, y debe ser accesible para todos.
+                    </p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <span>© <%= new Date().getFullYear() %> Vortex, una empresa de <a href="https://dokta.cc/" target="_blank" rel="noopener noreferrer">DOKTA</a>. Diseñado en Uruguay con 💙.</span>
+            <span>
+                <a href="/privacy">Privacidad</a> ·
+                <a href="/terms">Términos</a>
+            </span>
+        </footer>
+    </div>
+
+    <script src="/js/nexus.js"></script>
+    <script>
+        // Logout handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutLinks = document.querySelectorAll('a[href="/logout"]');
+            logoutLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    window.location.href = '/logout';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

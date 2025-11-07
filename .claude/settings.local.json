@@ -25,7 +25,8 @@
       "WebFetch(domain:stiler.com.uy)",
       "WebFetch(domain:nebimol.com)",
       "WebFetch(domain:www.anv.gub.uy)",
-      "Bash(for file in /mnt/c/Users/Br1/Desktop/vortex/public/js/forum-mentions.js /mnt/c/Users/Br1/Desktop/vortex/public/js/forum-polls.js /mnt/c/Users/Br1/Desktop/vortex/public/js/forum-reports.js /mnt/c/Users/Br1/Desktop/vortex/public/js/forum-tabs.js /mnt/c/Users/Br1/Desktop/vortex/public/js/forum-user-profile.js)"
+      "Bash(for file in /mnt/c/Users/Br1/Desktop/vortex/public/js/forum-mentions.js /mnt/c/Users/Br1/Desktop/vortex/public/js/forum-polls.js /mnt/c/Users/Br1/Desktop/vortex/public/js/forum-reports.js /mnt/c/Users/Br1/Desktop/vortex/public/js/forum-tabs.js /mnt/c/Users/Br1/Desktop/vortex/public/js/forum-user-profile.js)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []

@@ -3,7 +3,7 @@ import express from 'express';
 const router = express.Router();
 
 /**
- * GET /links/mi
+ * GET /enlacesminterior/mi
  * Return official Ministry of Interior links
  */
 router.get('/mi', (req, res) => {
@@ -34,6 +34,11 @@ router.get('/mi', (req, res) => {
         name: 'Emergencia 9-1-1',
         url: 'https://www.gub.uy/ministerio-interior/tramites-y-servicios/servicios/emergencia-9-1-1',
         description: 'Información oficial sobre el servicio de emergencias 9-1-1'
+      },
+      {
+        name: 'Denuncia Acoso Sexual en Transporte Público',
+        url: 'https://tramites.montevideo.gub.uy/tramite/acoso-sexual-en-transporte-publico',
+        description: 'Información sobre cómo denunciar situaciones de acoso sexual en el transporte público. Incluye protocolos de actuación para víctimas y choferes, y acceso al sistema de denuncias online.'
       }
     ],
     disclaimer: 'Estos enlaces son proporcionados para acceso a información oficial. Vortex no almacena ni procesa datos de personas procesadas.'

@@ -633,7 +633,7 @@ Auto, Camioneta, Moto, SUV, Utilitario, Otro
 - **Lista del foro** (/forum, /forum-vortex)
 - **Vista de hilo del foro** (/forum-thread/:id)
 - **Marketplace Surlink** (/surlink)
-- **Enlaces oficiales** (/links)
+- **Enlaces Ministerio del Interior** (/enlacesminterior)
 - **Perfil de usuario** (/perfil)
 - **Dashboard** (/dashboard)
 - **Panel de administrador** (/admin)
@@ -652,7 +652,7 @@ Auto, Camioneta, Moto, SUV, Utilitario, Otro
 - **news.js** - Visualización de noticias
 - **perfil.js** - Gestión de perfil de usuario
 - **notifications.js** - Manejo de notificaciones
-- **links.js** - Página de enlaces oficiales
+- **enlacesminterior.js** - Página de enlaces oficiales del Ministerio del Interior
 - **preferences-service.js** - Gestión de preferencias de usuario
 - **theme-toggle.js** - Cambio de tema oscuro/claro
 - **header-common.js** - Funcionalidad de navegación
@@ -699,8 +699,8 @@ Auto, Camioneta, Moto, SUV, Utilitario, Otro
 - `GET /` - Listar noticias (con filtros)
 - `GET /:id` - Obtener detalles de noticia
 
-### Rutas de Enlaces (`/api/links`)
-- `GET /` - Obtener enlaces oficiales
+### Rutas de Enlaces Ministerio del Interior (`/api/enlacesminterior`)
+- `GET /mi` - Obtener enlaces oficiales del Ministerio del Interior
 
 ### Rutas de Administrador (`/api/admin`)
 - `GET /stats` - Estadísticas del sistema
