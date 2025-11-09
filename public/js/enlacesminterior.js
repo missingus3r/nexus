@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', loadLinks);
 
 async function loadLinks() {
     try {
-        const response = await fetch('/api/enlacesminterior/mi');
+        const response = await fetch('/enlacesminterior/mi');
         const data = await response.json();
 
         const linksList = document.getElementById('linksList');
@@ -96,6 +96,17 @@ async function loadLinks() {
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                             </svg>
                             Iniciar Denuncia Online
+                           </a>`
+                        : ''
+                    }
+                    ${link.name === 'Estadísticas de Criminalidad - AECA'
+                        ? `<a href="https://observatorioseguridad.minterior.gub.uy/pentaho/api/repos/:public:observatorio:MININT_Observatorio.wcdf/generatedContent" target="_blank" class="btn btn-secondary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: middle;">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="3" y1="9" x2="21" y2="9"></line>
+                                <line x1="9" y1="21" x2="9" y2="9"></line>
+                            </svg>
+                            Observatorio de Seguridad
                            </a>`
                         : ''
                     }

@@ -3,7 +3,6 @@
             loadUserStats();
             loadForumStats();
             loadForumSettings();
-            loadPricingSettings();
             loadVisitStats();
             loadTopPages();
             loadRecentVisits();
@@ -14,7 +13,9 @@
 
         async function loadStats() {
             try {
-                const response = await fetch('/api/admin/stats');
+                const response = await fetch('/admin/stats', {
+                    credentials: 'include'
+                });
                 const stats = await response.json();
 
                 if (!response.ok) {
@@ -112,8 +113,10 @@
         }
 
         // News management functions
-        function showStatus(message, type = 'info') {
-            const statusEl = document.getElementById('newsStatus');
+        function showNewsStatus(message, type = 'info') {
+            const statusEl = document.getElementById('cronSettingsStatus');
+            if (!statusEl) return;
+
             statusEl.textContent = message;
             statusEl.className = `status-message ${type}`;
             statusEl.style.display = 'block';
@@ -121,40 +124,8 @@
             // Auto-hide after 10 seconds for success messages
             if (type === 'success' || type === 'info') {
                 setTimeout(() => {
-                    statusEl.style.display = 'none';
+                    statusEl.textContent = '';
                 }, 10000);
-            }
-        }
-
-        function disableButtons(disabled) {
-            document.getElementById('loadNewsBtn').disabled = disabled;
-            document.getElementById('clearNewsBtn').disabled = disabled;
-        }
-
-        async function loadNews() {
-            const confirmMsg = '¿Cargar noticias de seguridad de los feeds RSS?\n\nSolo se indexarán noticias relacionadas con seguridad (homicidio, rapiña, hurto, etc.).\n\nEsto puede tomar varios minutos.';
-
-            if (!confirm(confirmMsg)) return;
-
-            disableButtons(true);
-            showStatus('Iniciando carga de noticias de seguridad... Este proceso puede tomar varios minutos.', 'info');
-
-            try {
-                const response = await fetch('/api/admin/news/ingest', { method: 'POST' });
-                const data = await response.json();
-
-                if (response.ok) {
-                    showStatus(data.message + ' Revisa los logs del servidor para ver el progreso.', 'success');
-                    // Reload stats after a delay
-                    setTimeout(loadStats, 5000);
-                } else {
-                    showStatus('Error: ' + (data.error || 'No se pudo iniciar la carga'), 'error');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showStatus('Error al cargar noticias: ' + error.message, 'error');
-            } finally {
-                disableButtons(false);
             }
         }
 
@@ -167,24 +138,29 @@
                 return;
             }
 
-            disableButtons(true);
-            showStatus('Eliminando todas las noticias...', 'info');
+            const clearNewsBtn = document.getElementById('clearNewsBtn');
+            if (clearNewsBtn) clearNewsBtn.disabled = true;
+
+            showNewsStatus('Eliminando todas las noticias...', 'info');
 
             try {
-                const response = await fetch('/api/admin/news/clear', { method: 'DELETE' });
+                const response = await fetch('/admin/news/clear', {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
                 const data = await response.json();
 
                 if (response.ok) {
-                    showStatus(`✓ ${data.deletedCount} noticias eliminadas exitosamente`, 'success');
+                    showNewsStatus(`✓ ${data.deletedCount} noticias eliminadas exitosamente`, 'success');
                     loadStats(); // Reload stats
                 } else {
-                    showStatus('Error: ' + (data.error || 'No se pudieron eliminar las noticias'), 'error');
+                    showNewsStatus('Error: ' + (data.error || 'No se pudieron eliminar las noticias'), 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showStatus('Error al eliminar noticias: ' + error.message, 'error');
+                showNewsStatus('Error al eliminar noticias: ' + error.message, 'error');
             } finally {
-                disableButtons(false);
+                if (clearNewsBtn) clearNewsBtn.disabled = false;
             }
         }
 
@@ -295,7 +271,9 @@
                     params.append('search', userManagementState.search);
                 }
 
-                const response = await fetch(`/api/admin/users/list?${params.toString()}`);
+                const response = await fetch(`/admin/users/list?${params.toString()}`, {
+                    credentials: 'include'
+                });
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -416,8 +394,9 @@
         }
 
         async function updateUserStatus(userId, banned) {
-            const response = await fetch(`/api/admin/users/${userId}/status`, {
+            const response = await fetch(`/admin/users/${userId}/status`, {
                 method: 'PATCH',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -434,8 +413,9 @@
         }
 
         async function deleteUser(userId) {
-            const response = await fetch(`/api/admin/users/${userId}`, {
-                method: 'DELETE'
+            const response = await fetch(`/admin/users/${userId}`, {
+                method: 'DELETE',
+                credentials: 'include'
             });
 
             const data = await response.json();
@@ -505,7 +485,9 @@
 
         async function loadUserStats() {
             try {
-                const response = await fetch('/api/admin/users');
+                const response = await fetch('/admin/users', {
+                    credentials: 'include'
+                });
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -598,7 +580,9 @@
         // Forum Management Functions
         async function loadForumStats() {
             try {
-                const response = await fetch('/api/admin/forum/stats');
+                const response = await fetch('/admin/forum/stats', {
+                    credentials: 'include'
+                });
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -713,7 +697,9 @@
 
         async function loadForumSettings() {
             try {
-                const response = await fetch('/api/admin/forum/settings');
+                const response = await fetch('/admin/forum/settings', {
+                    credentials: 'include'
+                });
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -744,8 +730,9 @@
                     maxImagesPerPost: parseInt(document.getElementById('maxImagesPerPost').value)
                 };
 
-                const response = await fetch('/api/admin/forum/settings', {
+                const response = await fetch('/admin/forum/settings', {
                     method: 'PUT',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json'
                     },
@@ -776,7 +763,9 @@
         // Page Visits Functions
         async function loadVisitStats() {
             try {
-                const response = await fetch('/api/admin/visits/stats');
+                const response = await fetch('/admin/visits/stats', {
+                    credentials: 'include'
+                });
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -825,7 +814,9 @@
 
         async function loadTopPages() {
             try {
-                const response = await fetch('/api/admin/visits/pages?limit=10');
+                const response = await fetch('/admin/visits/pages?limit=10', {
+                    credentials: 'include'
+                });
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -868,7 +859,9 @@
 
         async function loadRecentVisits() {
             try {
-                const response = await fetch('/api/admin/visits/recent?limit=5');
+                const response = await fetch('/admin/visits/recent?limit=5', {
+                    credentials: 'include'
+                });
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -917,7 +910,9 @@
             }
 
             try {
-                const response = await fetch(`/api/admin/visits/recent?limit=${limit}`);
+                const response = await fetch(`/admin/visits/recent?limit=${limit}`, {
+                    credentials: 'include'
+                });
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -987,8 +982,9 @@
             }
 
             try {
-                const response = await fetch('/api/admin/visits/purge', {
+                const response = await fetch('/admin/visits/purge', {
                     method: 'DELETE',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json'
                     },
@@ -1027,7 +1023,9 @@
         // Maintenance Mode Functions
         async function loadMaintenanceSettings() {
             try {
-                const response = await fetch('/api/admin/system/settings');
+                const response = await fetch('/admin/system/settings', {
+                    credentials: 'include'
+                });
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -1066,8 +1064,9 @@
                 statusDiv.textContent = `Actualizando modo mantenimiento para ${platform}...`;
                 statusDiv.className = 'status-message';
 
-                const response = await fetch('/api/admin/system/settings', {
+                const response = await fetch('/admin/system/settings', {
                     method: 'PUT',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json'
                     },
@@ -1124,8 +1123,9 @@
             statusDiv.className = 'status-message';
 
             try {
-                const response = await fetch('/api/admin/maintenance/run-cleanup', {
-                    method: 'POST'
+                const response = await fetch('/admin/maintenance/run-cleanup', {
+                    method: 'POST',
+                    credentials: 'include'
                 });
 
                 const data = await response.json();
@@ -1183,8 +1183,9 @@
             statusDiv.className = 'status-message';
 
             try {
-                const response = await fetch('/api/admin/surlink/purge', {
+                const response = await fetch('/admin/surlink/purge', {
                     method: 'POST',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json'
                     },
@@ -1218,7 +1219,9 @@
         // Cron Jobs Management Functions
         async function loadCronSettings() {
             try {
-                const response = await fetch('/api/admin/cron/settings');
+                const response = await fetch('/admin/cron/settings', {
+                    credentials: 'include'
+                });
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -1270,8 +1273,9 @@
                 statusDiv.textContent = 'Guardando configuración...';
                 statusDiv.className = 'status-message';
 
-                const response = await fetch('/api/admin/cron/settings', {
+                const response = await fetch('/admin/cron/settings', {
                     method: 'PUT',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json'
                     },
@@ -1316,8 +1320,9 @@
                 statusDiv.textContent = `Ejecutando ${label}...`;
                 statusDiv.className = 'status-message';
 
-                const response = await fetch(`/api/admin/cron/${jobName}/run`, {
-                    method: 'POST'
+                const response = await fetch(`/admin/cron/${jobName}/run`, {
+                    method: 'POST',
+                    credentials: 'include'
                 });
 
                 const data = await response.json();
@@ -1353,65 +1358,3 @@
             }
         }
 
-        // Pricing Settings Functions
-        async function loadPricingSettings() {
-            try {
-                const response = await fetch('/api/admin/pricing/settings');
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || 'Error al cargar configuración');
-                }
-
-                const settings = data.settings;
-                document.getElementById('usdToUyu').value = settings.usdToUyu;
-                document.getElementById('premiumMonthly').value = settings.premiumMonthly;
-                document.getElementById('premiumYearly').value = settings.premiumYearly;
-                document.getElementById('proMonthly').value = settings.proMonthly;
-                document.getElementById('proYearly').value = settings.proYearly;
-            } catch (error) {
-                console.error('Error loading pricing settings:', error);
-                const statusDiv = document.getElementById('pricingSettingsStatus');
-                statusDiv.className = 'status-message error';
-                statusDiv.textContent = `Error: ${error.message}`;
-            }
-        }
-
-        async function savePricingSettings() {
-            try {
-                const settings = {
-                    usdToUyu: parseFloat(document.getElementById('usdToUyu').value),
-                    premiumMonthly: parseFloat(document.getElementById('premiumMonthly').value),
-                    premiumYearly: parseFloat(document.getElementById('premiumYearly').value),
-                    proMonthly: parseFloat(document.getElementById('proMonthly').value),
-                    proYearly: parseFloat(document.getElementById('proYearly').value)
-                };
-
-                const response = await fetch('/api/admin/pricing/settings', {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(settings)
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || 'Error al guardar configuración');
-                }
-
-                const statusDiv = document.getElementById('pricingSettingsStatus');
-                statusDiv.className = 'status-message success';
-                statusDiv.textContent = '✅ Precios guardados correctamente';
-
-                setTimeout(() => {
-                    statusDiv.textContent = '';
-                }, 3000);
-            } catch (error) {
-                console.error('Error saving pricing settings:', error);
-                const statusDiv = document.getElementById('pricingSettingsStatus');
-                statusDiv.className = 'status-message error';
-                statusDiv.textContent = `❌ Error: ${error.message}`;
-            }
-        }

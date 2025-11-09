@@ -62,7 +62,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const logoutLinks = document.querySelectorAll('a[href="/logout"]');
     logoutLinks.forEach(link => {
         link.addEventListener('click', function(e) {
-            // Limpiar storage local antes del logout
+            // Limpiar storage local antes del logout (incluyendo JWT tokens)
+            // Note: Ya no guardamos preferencias en localStorage, solo tokens de sesión
             localStorage.clear();
             sessionStorage.clear();
 

@@ -4,7 +4,7 @@
  * and localStorage fallback for guests
  */
 (() => {
-  const API_BASE = '/api/preferences';
+  const API_BASE = '/preferences';
   const DEBOUNCE_MS = 500;
 
   // Estado interno
@@ -29,37 +29,38 @@
 
     state.initPromise = (async () => {
       try {
-        // Check if user is authenticated
-        const jwt = localStorage.getItem('jwt');
-        state.isAuthenticated = !!jwt;
-        console.log(`[PreferencesService] Initializing... Authenticated: ${state.isAuthenticated}`);
+        // Check if user is authenticated by trying to load preferences
+        console.log(`[PreferencesService] Initializing...`);
 
-        if (state.isAuthenticated) {
-          try {
-            await loadFromAPI();
-            console.log('[PreferencesService] Loaded preferences from API');
-
-            // Auto-migrate from localStorage if not done yet
-            if (!state.migrated && shouldMigrate()) {
-              await migrateFromLocalStorage();
-            }
-          } catch (error) {
-            console.error('[PreferencesService] Error loading from API, falling back to localStorage:', error);
-            // Fallback to localStorage
-            loadFromLocalStorage();
-          }
-        } else {
-          // Guest user - use localStorage
-          console.log('[PreferencesService] Guest mode - using localStorage');
-          loadFromLocalStorage();
+        try {
+          await loadFromAPI();
+          state.isAuthenticated = true;
+          console.log('[PreferencesService] Loaded preferences from API - User authenticated');
+        } catch (error) {
+          // If API call fails, user is not authenticated (guest mode)
+          state.isAuthenticated = false;
+          console.log('[PreferencesService] Guest mode - using defaults only');
+          state.preferences = {
+            favorites: { construccion: [], academy: [], financial: [], listings: [] },
+            navigation: {
+              surlinkActiveCategory: 'construccion',
+              surlinkActiveConstruccionTab: 'proyectos',
+              surlinkActiveAcademyTab: 'universidades',
+              surlinkActiveFinancialTab: 'bancos'
+            },
+            welcomeModals: {
+              surlinkWelcomeShown: false,
+              centinelWelcomeShown: false,
+              forumWelcomeShown: false
+            },
+            ui: { theme: 'auto' }
+          };
         }
 
         state.initialized = true;
         console.log('[PreferencesService] Initialization complete. Preferences:', state.preferences);
       } catch (error) {
         console.error('Error initializing preferences:', error);
-        // Fallback to localStorage in case of any error
-        loadFromLocalStorage();
         state.initialized = true;
       }
     })();
@@ -71,14 +72,8 @@
    * Load preferences from API
    */
   const loadFromAPI = async () => {
-    const jwt = localStorage.getItem('jwt');
-    if (!jwt) return;
-
     const response = await fetch(API_BASE, {
-      headers: {
-        'Authorization': `Bearer ${jwt}`,
-        'Content-Type': 'application/json'
-      }
+      credentials: 'include'
     });
 
     if (!response.ok) {
@@ -90,129 +85,6 @@
     return state.preferences;
   };
 
-  /**
-   * Load preferences from localStorage (guest mode or fallback)
-   */
-  const loadFromLocalStorage = () => {
-    state.preferences = {
-      favorites: {
-        construccion: getLocalStorageArray('construccionFavorites'),
-        academy: getLocalStorageArray('academyFavorites'),
-        financial: getLocalStorageArray('financialFavorites'),
-        listings: []
-      },
-      navigation: {
-        surlinkActiveCategory: localStorage.getItem('surlinkActiveCategory') || 'casas',
-        surlinkActiveConstruccionTab: localStorage.getItem('surlinkActiveConstruccionTab') || 'proyectos',
-        surlinkActiveAcademyTab: localStorage.getItem('surlinkActiveAcademyTab') || 'universidades',
-        surlinkActiveFinancialTab: localStorage.getItem('surlinkActiveFinancialTab') || 'bancos'
-      },
-      welcomeModals: {
-        surlinkWelcomeShown: localStorage.getItem('surlinkWelcomeShown') === 'true',
-        centinelWelcomeShown: localStorage.getItem('centinelWelcomeShown') === 'true',
-        forumWelcomeShown: localStorage.getItem('forumWelcomeSeen') === 'true'
-      },
-      ui: {
-        theme: localStorage.getItem('vortex-theme') || 'auto'
-      }
-    };
-  };
-
-  /**
-   * Get array from localStorage
-   */
-  const getLocalStorageArray = (key) => {
-    try {
-      const value = localStorage.getItem(key);
-      return value ? JSON.parse(value) : [];
-    } catch {
-      return [];
-    }
-  };
-
-  /**
-   * Check if we should migrate data
-   */
-  const shouldMigrate = () => {
-    // Check if there's any data in localStorage worth migrating
-    const hasFavorites =
-      localStorage.getItem('construccionFavorites') ||
-      localStorage.getItem('academyFavorites') ||
-      localStorage.getItem('financialFavorites');
-
-    const hasSettings =
-      localStorage.getItem('surlinkActiveCategory') ||
-      localStorage.getItem('vortex-theme');
-
-    return !!(hasFavorites || hasSettings);
-  };
-
-  /**
-   * Migrate data from localStorage to database
-   */
-  const migrateFromLocalStorage = async () => {
-    const jwt = localStorage.getItem('jwt');
-    if (!jwt) return;
-
-    const localData = {
-      construccionFavorites: localStorage.getItem('construccionFavorites'),
-      academyFavorites: localStorage.getItem('academyFavorites'),
-      financialFavorites: localStorage.getItem('financialFavorites'),
-      surlinkActiveCategory: localStorage.getItem('surlinkActiveCategory'),
-      surlinkActiveConstruccionTab: localStorage.getItem('surlinkActiveConstruccionTab'),
-      surlinkActiveAcademyTab: localStorage.getItem('surlinkActiveAcademyTab'),
-      surlinkActiveFinancialTab: localStorage.getItem('surlinkActiveFinancialTab'),
-      surlinkWelcomeShown: localStorage.getItem('surlinkWelcomeShown'),
-      centinelWelcomeShown: localStorage.getItem('centinelWelcomeShown'),
-      forumWelcomeSeen: localStorage.getItem('forumWelcomeSeen'),
-      'vortex-theme': localStorage.getItem('vortex-theme')
-    };
-
-    try {
-      const response = await fetch(`${API_BASE}/migrate`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${jwt}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ localStorage: localData })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        state.preferences = data.preferences;
-        state.migrated = true;
-
-        // Clean up localStorage (except JWT tokens)
-        cleanupLocalStorage();
-
-        console.log('✓ Preferences migrated to database');
-      }
-    } catch (error) {
-      console.error('Error migrating preferences:', error);
-    }
-  };
-
-  /**
-   * Clean up localStorage after successful migration
-   */
-  const cleanupLocalStorage = () => {
-    const keysToRemove = [
-      'construccionFavorites',
-      'academyFavorites',
-      'financialFavorites',
-      'surlinkActiveCategory',
-      'surlinkActiveConstruccionTab',
-      'surlinkActiveAcademyTab',
-      'surlinkActiveFinancialTab',
-      'surlinkWelcomeShown',
-      'centinelWelcomeShown',
-      'forumWelcomeSeen',
-      'vortex-theme'
-    ];
-
-    keysToRemove.forEach(key => localStorage.removeItem(key));
-  };
 
   /**
    * Update API with debouncing
@@ -227,16 +99,13 @@
 
     // Set new timer
     state.debounceTimers[debounceKey] = setTimeout(async () => {
-      const jwt = localStorage.getItem('jwt');
-      if (!jwt) return;
-
       try {
         await fetch(endpoint, {
           method: 'PUT',
           headers: {
-            'Authorization': `Bearer ${jwt}`,
             'Content-Type': 'application/json'
           },
+          credentials: 'include',
           body: JSON.stringify(body)
         });
       } catch (error) {
@@ -274,24 +143,20 @@
 
       if (state.isAuthenticated) {
         // Update API
-        const jwt = localStorage.getItem('jwt');
         try {
           await fetch(`${API_BASE}/favorites/${category}`, {
             method: 'PUT',
             headers: {
-              'Authorization': `Bearer ${jwt}`,
               'Content-Type': 'application/json'
             },
+            credentials: 'include',
             body: JSON.stringify({ action: 'add', itemId })
           });
         } catch (error) {
           console.error('Error adding favorite:', error);
         }
-      } else {
-        // Guest: update localStorage
-        const key = `${category}Favorites`;
-        localStorage.setItem(key, JSON.stringify(favorites));
       }
+      // Note: Guests cannot save favorites (requires authentication)
     }
 
     return favorites;
@@ -311,24 +176,20 @@
 
       if (state.isAuthenticated) {
         // Update API
-        const jwt = localStorage.getItem('jwt');
         try {
           await fetch(`${API_BASE}/favorites/${category}`, {
             method: 'PUT',
             headers: {
-              'Authorization': `Bearer ${jwt}`,
               'Content-Type': 'application/json'
             },
+            credentials: 'include',
             body: JSON.stringify({ action: 'remove', itemId })
           });
         } catch (error) {
           console.error('Error removing favorite:', error);
         }
-      } else {
-        // Guest: update localStorage
-        const key = `${category}Favorites`;
-        localStorage.setItem(key, JSON.stringify(favorites));
       }
+      // Note: Guests cannot save favorites (requires authentication)
     }
 
     return favorites;
@@ -337,24 +198,38 @@
   /**
    * Set navigation preference
    */
-  const setNavigation = (key, value) => {
+  const setNavigation = async (key, value) => {
+    // Ensure service is initialized
+    if (!state.initialized) {
+      await init();
+    }
+
     if (!state.preferences) return;
 
     state.preferences.navigation[key] = value;
 
     if (state.isAuthenticated) {
+      console.log(`[PreferencesService] Saving navigation ${key} = ${value} to API`);
       updateAPI(`${API_BASE}/navigation`, { [key]: value }, `nav-${key}`);
-    } else {
-      localStorage.setItem(key, value);
     }
+    // Note: Guests cannot save navigation (requires authentication)
   };
 
   /**
    * Get navigation preference
+   * If key is provided, returns that specific value
+   * If no key provided, returns the entire navigation object
    */
-  const getNavigation = (key) => {
-    if (!state.preferences) return null;
-    return state.preferences.navigation[key];
+  const getNavigation = async (key) => {
+    // Ensure service is initialized
+    if (!state.initialized) {
+      await init();
+    }
+
+    if (!state.preferences) return key ? null : {};
+    const result = key ? state.preferences.navigation[key] : state.preferences.navigation;
+    console.log(`[PreferencesService] Get navigation ${key || 'all'} =`, result);
+    return result;
   };
 
   /**
@@ -373,12 +248,8 @@
     if (state.isAuthenticated) {
       console.log(`[PreferencesService] Saving ${modalName} = ${seen} to API`);
       updateAPI(`${API_BASE}/welcome-modals`, { [modalName]: seen }, `modal-${modalName}`);
-    } else {
-      // Map to localStorage keys
-      const localKey = modalName === 'forumWelcomeShown' ? 'forumWelcomeSeen' : modalName;
-      localStorage.setItem(localKey, seen.toString());
-      console.log(`[PreferencesService] Saved ${modalName} = ${seen} to localStorage (${localKey})`);
     }
+    // Note: Guests cannot save welcome modal state (requires authentication)
   };
 
   /**
@@ -406,9 +277,8 @@
 
     if (state.isAuthenticated) {
       updateAPI(`${API_BASE}/theme`, { theme }, 'theme');
-    } else {
-      localStorage.setItem('vortex-theme', theme);
     }
+    // Note: Guests cannot save theme (requires authentication)
   };
 
   /**
@@ -425,9 +295,8 @@
   const refresh = async () => {
     if (state.isAuthenticated) {
       await loadFromAPI();
-    } else {
-      loadFromLocalStorage();
     }
+    // Note: Guests use in-memory defaults, no refresh needed
   };
 
   /**

@@ -27,7 +27,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadDashboardData() {
     try {
-        const response = await fetch('/api/dashboard/data');
+        const response = await fetch('/dashboard/data', {
+            credentials: 'include'
+        });
         const result = await response.json();
 
         if (result.success) {
@@ -201,8 +203,9 @@ function renderNotifications(notifications) {
 
 async function markNotificationAsRead(notificationId) {
     try {
-        const response = await fetch(`/api/dashboard/notifications/${notificationId}/read`, {
-            method: 'PATCH'
+        const response = await fetch(`/dashboard/notifications/${notificationId}/read`, {
+            method: 'PATCH',
+            credentials: 'include'
         });
 
         if (response.ok) {
@@ -218,8 +221,9 @@ async function markNotificationAsRead(notificationId) {
 
 async function markAllAsRead() {
     try {
-        const response = await fetch('/api/dashboard/notifications/read-all', {
-            method: 'POST'
+        const response = await fetch('/dashboard/notifications/read-all', {
+            method: 'POST',
+            credentials: 'include'
         });
 
         if (response.ok) {

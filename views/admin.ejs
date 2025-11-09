@@ -118,29 +118,6 @@
                 </div>
             </div>
 
-            <!-- News Controls -->
-            <div class="news-controls">
-                <h2>📰 Control de Noticias RSS</h2>
-
-                <div class="control-group">
-                    <p style="color: var(--text-secondary); margin: 0;">
-                        Las noticias se filtran automáticamente por palabras clave de seguridad configuradas en el sistema.
-                        Solo se indexarán noticias relacionadas con: homicidio, rapiña, hurto, violencia, narcotráfico, etc.
-                    </p>
-                </div>
-
-                <div class="button-group">
-                    <button class="btn btn-primary" onclick="loadNews()" id="loadNewsBtn">
-                        📥 Cargar Noticias de Seguridad
-                    </button>
-                    <button class="btn btn-danger" onclick="clearNews()" id="clearNewsBtn">
-                        🗑️ Limpiar Todas las Noticias
-                    </button>
-                </div>
-
-                <div id="newsStatus" class="status-message"></div>
-            </div>
-
             <!-- Forum Management -->
             <div class="surlink-controls">
                 <h2>💬 Gestión del Foro Vortex</h2>
@@ -557,16 +534,21 @@
                     <div style="display: grid; gap: 1.5rem;">
                         <!-- News Ingestion -->
                         <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px;">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                                <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; gap: 0.5rem; flex-wrap: wrap;">
+                                <div style="flex: 1; min-width: 250px;">
                                     <h4 style="margin: 0 0 0.5rem 0;">📰 Ingesta de Noticias</h4>
                                     <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0 0 1rem 0;">
                                         Carga automática de noticias desde feeds RSS configurados.
                                     </p>
                                 </div>
-                                <button class="btn btn-secondary" onclick="runCronJobManually('newsIngestion')" style="white-space: nowrap;">
-                                    ▶️ Ejecutar ahora
-                                </button>
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    <button class="btn btn-secondary" onclick="runCronJobManually('newsIngestion')" style="white-space: nowrap;">
+                                        ▶️ Ejecutar ahora
+                                    </button>
+                                    <button class="btn btn-danger" onclick="clearNews()" id="clearNewsBtn" style="white-space: nowrap;">
+                                        🗑️ Limpiar Noticias
+                                    </button>
+                                </div>
                             </div>
                             <label for="cronNewsIngestion" style="display: block; font-weight: 600; margin-bottom: 0.5rem;">
                                 Expresión Cron
@@ -650,79 +632,6 @@
                 </div>
             </div>
 
-            <!-- Pricing Management -->
-            <div class="surlink-controls">
-                <h2>💰 Gestión de Precios</h2>
-                <p>
-                    Configura los precios de cada plan y el valor del dólar para conversión a pesos UYU.
-                </p>
-
-                <div id="pricingSettingsContainer" style="margin-top: 1.5rem;">
-                    <h3 style="margin-bottom: 1rem;">⚙️ Configuración de Precios</h3>
-
-                    <!-- Exchange Rate -->
-                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                        <h4 style="margin-bottom: 1rem;">💱 Tipo de Cambio</h4>
-                        <div class="control-group">
-                            <label for="usdToUyu">
-                                Dólar a Peso Uruguayo (USD → UYU)
-                                <small>Valor actual del dólar en pesos uruguayos</small>
-                            </label>
-                            <input type="number" id="usdToUyu" min="1" step="0.01" placeholder="44" />
-                        </div>
-                    </div>
-
-                    <!-- Premium Plan -->
-                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
-                        <h4 style="margin-bottom: 1rem;">Plan Premium</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-                            <div class="control-group">
-                                <label for="premiumMonthly">
-                                    Precio Mensual (USD)
-                                </label>
-                                <input type="number" id="premiumMonthly" min="0" step="0.01" placeholder="2" />
-                            </div>
-                            <div class="control-group">
-                                <label for="premiumYearly">
-                                    Precio Anual (USD)
-                                    <small>Sugerido: mensual × 12 × 0.9</small>
-                                </label>
-                                <input type="number" id="premiumYearly" min="0" step="0.01" placeholder="22" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Pro Plan -->
-                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;">
-                        <h4 style="margin-bottom: 1rem;">Plan Pro</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-                            <div class="control-group">
-                                <label for="proMonthly">
-                                    Precio Mensual (USD)
-                                </label>
-                                <input type="number" id="proMonthly" min="0" step="0.01" placeholder="5" />
-                            </div>
-                            <div class="control-group">
-                                <label for="proYearly">
-                                    Precio Anual (USD)
-                                </label>
-                                <input type="number" id="proYearly" min="0" step="0.01" placeholder="54" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="button-group">
-                        <button class="btn btn-primary" onclick="savePricingSettings()">
-                            💾 Guardar Precios
-                        </button>
-                        <button class="btn btn-secondary" onclick="loadPricingSettings()">
-                            🔄 Recargar
-                        </button>
-                    </div>
-
-                    <div id="pricingSettingsStatus" class="status-message"></div>
-                </div>
-            </div>
         </div>
     </div>
 

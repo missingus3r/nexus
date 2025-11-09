@@ -236,3 +236,70 @@
         font-size: 1rem;
     }
 }
+
+/* Incident Popup Styles */
+.maplibregl-popup-content {
+    max-height: 500px;
+    overflow-y: auto;
+    background: #ffffff !important;
+}
+
+.incident-popup .maplibregl-popup-content {
+    padding: 16px;
+}
+
+/* Force all text elements to be black regardless of theme */
+.maplibregl-popup-content,
+.maplibregl-popup-content h3,
+.maplibregl-popup-content p,
+.maplibregl-popup-content div,
+.maplibregl-popup-content strong,
+.maplibregl-popup-content small,
+.maplibregl-popup-content span,
+.maplibregl-popup-content button {
+    color: #333333 !important;
+}
+
+.incident-popup h3 {
+    text-transform: uppercase !important;
+}
+
+.maplibregl-popup-content a {
+    color: #2196f3 !important;
+}
+
+/* Close button styling */
+.maplibregl-popup-close-button {
+    font-size: 28px !important;
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    color: #333333 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.maplibregl-popup-close-button:hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    color: #000000 !important;
+}
+
+/* Scrollbar styling for popup */
+.maplibregl-popup-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.maplibregl-popup-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.maplibregl-popup-content::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.maplibregl-popup-content::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

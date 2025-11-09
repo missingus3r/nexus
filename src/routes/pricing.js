@@ -4,7 +4,7 @@ import { PricingSettings } from '../models/index.js';
 const router = express.Router();
 
 /**
- * @route GET /api/pricing/plans
+ * @route GET /pricing/plans
  * @desc Get all available plans (read-only, for display purposes)
  * @access Public
  */
@@ -65,7 +65,7 @@ router.get('/plans', async (req, res) => {
 });
 
 /**
- * @route GET /api/pricing/settings
+ * @route GET /pricing/settings
  * @desc Get current pricing settings
  * @access Public
  */

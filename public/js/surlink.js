@@ -1,6 +1,6 @@
 (() => {
   const config = window.surlinkConfig || {};
-  const API_BASE = '/api/surlink';
+  const API_BASE = '/surlink';
   const PAGE_SIZE = 9;
 
   const DEFAULT_FILTERS = {
@@ -34,6 +34,21 @@
   const DEFAULT_OPTIONS = {
     operations: ['Venta', 'Alquiler', 'Temporario'],
     modalities: ['Presencial', 'Online', 'Híbrida']
+  };
+
+  // Helper to handle favicon errors - replace with default SVG
+  window.handleFaviconError = function(img) {
+    const svg = `<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: #667eea; opacity: 0.6;">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>`;
+
+    const wrapper = img.parentElement;
+    wrapper.innerHTML = svg;
+    wrapper.style.display = 'flex';
+    wrapper.style.alignItems = 'center';
+    wrapper.style.justifyContent = 'center';
   };
 
   const elements = {
@@ -88,31 +103,44 @@
     activeConstruccionTab: 'proyectos',
     activeAcademyTab: 'universidades',
     activeFinancialTab: 'bancos',
+    activeTrabajosTab: 'ofertas',
     filters: {
       casas: DEFAULT_FILTERS.casas(),
       academy: DEFAULT_FILTERS.academy(),
       autos: DEFAULT_FILTERS.autos(),
-      financial: DEFAULT_FILTERS.financial()
+      financial: DEFAULT_FILTERS.financial(),
+      trabajos: {
+        search: '',
+        jobType: '',
+        experienceLevel: '',
+        city: '',
+        remote: false
+      }
     },
     pagination: {
       casas: { page: 1, totalPages: 1 },
       academy: { page: 1, totalPages: 1 },
       autos: { page: 1, totalPages: 1 },
-      financial: { page: 1, totalPages: 1 }
+      financial: { page: 1, totalPages: 1 },
+      trabajos: { page: 1, totalPages: 1 }
     },
     loaded: {
       casas: false,
       academy: false,
       autos: false,
       financial: false,
-      construccion: false
+      construccion: false,
+      trabajos: false
     },
     facets: {
       casas: {},
       academy: {},
       autos: {},
-      financial: {}
+      financial: {},
+      trabajos: {}
     },
+    cv: null,
+    cvGenerating: false,
     construccionSites: {
       proyectos: [],
       contenedores: [],
@@ -644,7 +672,7 @@
       headers: {
         'Content-Type': 'application/json'
       },
-      credentials: 'same-origin',
+      credentials: 'include',
       ...options
     });
 
@@ -809,7 +837,7 @@
       <article class="construccion-site-card" data-site-id="${site.id}">
         <div class="construccion-card-header">
           <div class="construccion-card-logo">
-            <img src="${escapeHtml(site.logo)}" alt="${escapeHtml(site.name)}" loading="lazy" onerror="this.style.display='none'">
+            <img src="${escapeHtml(site.logo)}" alt="${escapeHtml(site.name)}" loading="lazy" onerror="handleFaviconError(this)">
           </div>
           <button type="button" class="surlink-like-btn construccion-like-btn" data-action="like-construccion" data-site-id="${site.id}" data-liked="${isLiked ? 'true' : 'false'}" title="${escapeHtml(likeLabel)}">
             <span class="surlink-like-icon">♥</span>
@@ -961,7 +989,7 @@
       <article class="construccion-site-card" data-site-id="${site.id}">
         <div class="construccion-card-header">
           <div class="construccion-card-logo">
-            <img src="${escapeHtml(site.logo)}" alt="${escapeHtml(site.name)}" loading="lazy" onerror="this.style.display='none'">
+            <img src="${escapeHtml(site.logo)}" alt="${escapeHtml(site.name)}" loading="lazy" onerror="handleFaviconError(this)">
           </div>
           <div style="display: flex; align-items: center; gap: 0.5rem;">
             <button type="button" class="surlink-like-btn construccion-like-btn" data-action="like-academy" data-site-id="${site.id}" data-liked="${isLiked ? 'true' : 'false'}" title="${escapeHtml(likeLabel)}">
@@ -1122,7 +1150,7 @@
       <article class="construccion-site-card" data-site-id="${site.id}">
         <div class="construccion-card-header">
           <div class="construccion-card-logo">
-            <img src="${escapeHtml(site.logo)}" alt="${escapeHtml(site.name)}" loading="lazy" onerror="this.style.display='none'">
+            <img src="${escapeHtml(site.logo)}" alt="${escapeHtml(site.name)}" loading="lazy" onerror="handleFaviconError(this)">
           </div>
           <div style="display: flex; align-items: center; gap: 0.5rem;">
             <button type="button" class="surlink-like-btn construccion-like-btn" data-action="like-financial" data-site-id="${site.id}" data-liked="${isLiked ? 'true' : 'false'}" title="${escapeHtml(likeLabel)}">
@@ -1491,7 +1519,7 @@
       <div class="surlink-modal-hero">
         <div class="surlink-card-header">
           <div class="construccion-card-logo" style="margin-bottom: 1rem;">
-            <img src="${escapeHtml(site.logo)}" alt="${escapeHtml(site.name)}" style="width: 64px; height: 64px;" onerror="this.style.display='none'">
+            <img src="${escapeHtml(site.logo)}" alt="${escapeHtml(site.name)}" style="width: 64px; height: 64px;" onerror="handleFaviconError(this)">
           </div>
           <div>
             <h3>${escapeHtml(site.name)}</h3>
@@ -1664,6 +1692,13 @@
           if (!state.loaded[category]) {
             state.loaded[category] = true;
             setActiveFinancialTab('bancos');
+          }
+        } else if (category === 'trabajos') {
+          // Handle trabajos separately
+          setActiveCategory(category);
+          if (!state.loaded[category]) {
+            state.loaded[category] = true;
+            setActiveTrabajosTab('ofertas');
           }
         } else {
           const form = elements.forms[category];
@@ -1860,6 +1895,552 @@
         closeSiteModal();
       }
     });
+
+    // Attach trabajos events
+    attachTrabajosEvents();
+  };
+
+  // ============================================
+  // TRABAJOS (JOBS) FUNCTIONALITY
+  // ============================================
+
+  const trabajosTabs = document.querySelectorAll('[data-trabajos-tab]');
+  const trabajosTabContents = document.querySelectorAll('[data-trabajos-content]');
+
+  // Switch between trabajos tabs (ofertas, mis-trabajos, mi-cv)
+  const setActiveTrabajosTab = (tab) => {
+    state.activeTrabajosTab = tab;
+
+    trabajosTabs.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.trabajosTab === tab);
+    });
+
+    trabajosTabContents.forEach(content => {
+      const shouldShow = content.dataset.trabajosContent === tab;
+      content.hidden = !shouldShow;
+      if (shouldShow) content.classList.add('active');
+      else content.classList.remove('active');
+    });
+
+    // Load data based on tab
+    if (tab === 'ofertas' && state.activeCategory === 'trabajos') {
+      loadTrabajos({ force: true });
+    } else if (tab === 'mis-trabajos') {
+      loadMisTrabajosGuardados();
+    } else if (tab === 'mi-cv') {
+      loadCV();
+    }
+
+    // Save to localStorage
+    try {
+      localStorage.setItem('surlinkActiveTrabajosTab', tab);
+    } catch (e) {
+      console.error('Error saving to localStorage:', e);
+    }
+  };
+
+  // Load job offers
+  const loadTrabajos = async ({ force = false } = {}) => {
+    setActiveCategory('trabajos');
+    hideFeedback('trabajos');
+
+    if (state.loaded.trabajos && !force) return;
+
+    setLoading('trabajos', true);
+
+    try {
+      const params = new URLSearchParams({
+        limit: PAGE_SIZE,
+        page: state.pagination.trabajos.page
+      });
+
+      // Add filters
+      Object.entries(state.filters.trabajos).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+      });
+
+      const data = await request(`${API_BASE}/trabajos/listings?${params.toString()}`);
+
+      renderTrabajos(data.results);
+      renderPagination('trabajos', data.pagination);
+
+      state.pagination.trabajos = data.pagination || { page: 1, totalPages: 1 };
+      state.loaded.trabajos = true;
+    } catch (error) {
+      showFeedback('trabajos', error.message, 'error');
+    } finally {
+      setLoading('trabajos', false);
+    }
+  };
+
+  // Render job cards
+  const renderTrabajos = (jobs) => {
+    const container = document.getElementById('trabajosResults');
+    if (!container) return;
+
+    if (!jobs || jobs.length === 0) {
+      container.innerHTML = `
+        <div class="surlink-empty-state">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+          </svg>
+          <p>No se encontraron ofertas laborales</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = jobs.map(job => `
+      <article class="trabajos-card" data-job="${job.id}">
+        <div class="trabajos-card-header">
+          ${job.companyLogo ?
+            `<img src="${job.companyLogo}" alt="${job.company}" class="company-logo">` :
+            `<div class="company-initials">${job.company.substring(0, 2).toUpperCase()}</div>`
+          }
+          <div class="trabajos-card-info">
+            <h3>${job.title}</h3>
+            <p class="company-name">${job.company}</p>
+          </div>
+          <button class="surlink-like-btn ${job.isLiked ? 'liked' : ''}" data-action="like-job" data-id="${job.id}" ${!config.isAuthenticated ? 'disabled title="Inicia sesión para guardar"' : ''}>
+            <span class="surlink-like-icon">♥</span>
+            <span>${job.metrics.likes}</span>
+          </button>
+        </div>
+        <p class="job-summary">${job.summary}</p>
+        <div class="job-tags">
+          <span class="job-tag">${formatJobType(job.jobType)}</span>
+          <span class="job-tag">${job.location.city || 'Sin especificar'}</span>
+          ${job.location.remote ? '<span class="job-tag remote">🌐 Remoto</span>' : ''}
+          ${job.salary && job.salary.min ? `<span class="job-tag salary">💰 ${formatSalary(job.salary)}</span>` : ''}
+        </div>
+        ${job.tags && job.tags.length > 0 ? `
+          <div class="job-skills">
+            ${job.tags.slice(0, 5).map(tag => `<span class="skill-badge">${tag}</span>`).join('')}
+            ${job.tags.length > 5 ? `<span class="skill-badge">+${job.tags.length - 5}</span>` : ''}
+          </div>
+        ` : ''}
+        <button class="btn btn-primary btn-block" data-action="view-job" data-id="${job.id}">
+          Ver detalles
+        </button>
+      </article>
+    `).join('');
+
+    // Attach event listeners
+    container.querySelectorAll('[data-action="like-job"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleJobLike(btn.dataset.id);
+      });
+    });
+
+    container.querySelectorAll('[data-action="view-job"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        viewJobDetails(btn.dataset.id);
+      });
+    });
+  };
+
+  // Toggle job like
+  const toggleJobLike = async (jobId) => {
+    if (!config.isAuthenticated) {
+      toastWarning('Iniciá sesión para guardar trabajos.');
+      return;
+    }
+
+    try {
+      const data = await request(`${API_BASE}/trabajos/listings/${jobId}/like`, {
+        method: 'POST'
+      });
+
+      // Update UI
+      const btns = document.querySelectorAll(`[data-id="${jobId}"][data-action="like-job"]`);
+      btns.forEach(btn => {
+        btn.classList.toggle('liked', data.liked);
+        const countSpan = btn.querySelector('span:last-child');
+        if (countSpan) countSpan.textContent = data.likes;
+      });
+
+      toastSuccess(data.liked ? 'Trabajo guardado' : 'Trabajo eliminado de guardados');
+    } catch (error) {
+      toastError(error.message);
+    }
+  };
+
+  // View job details
+  const viewJobDetails = async (jobId) => {
+    try {
+      const job = await request(`${API_BASE}/trabajos/listings/${jobId}`);
+
+      const modal = elements.modal;
+      const body = elements.modalBody;
+
+      body.innerHTML = `
+        <div class="job-detail">
+          <div class="job-detail-header">
+            ${job.companyLogo ?
+              `<img src="${job.companyLogo}" alt="${job.company}" class="company-logo-large">` :
+              `<div class="company-initials-large">${job.company.substring(0, 2).toUpperCase()}</div>`
+            }
+            <div>
+              <h2>${job.title}</h2>
+              <p class="company-name-large">${job.company}</p>
+              <div class="job-meta">
+                <span>${formatJobType(job.jobType)}</span>
+                <span>•</span>
+                <span>${formatExperienceLevel(job.experienceLevel)}</span>
+                <span>•</span>
+                <span>${job.location.city || 'Sin ubicación'}</span>
+                ${job.location.remote ? '<span>• 🌐 Remoto</span>' : ''}
+              </div>
+            </div>
+            <button class="surlink-like-btn ${job.isLiked ? 'liked' : ''}" data-action="like-job-modal" data-id="${job.id}">
+              <span class="surlink-like-icon">♥</span>
+              <span>${job.metrics.likes}</span>
+            </button>
+          </div>
+
+          ${job.salary && job.salary.min ? `
+            <div class="job-salary">
+              <strong>Salario:</strong> ${formatSalary(job.salary)}
+            </div>
+          ` : ''}
+
+          <div class="job-description">
+            <h3>Descripción</h3>
+            <p>${job.description.replace(/\n/g, '<br>')}</p>
+          </div>
+
+          ${job.requirements && job.requirements.length > 0 ? `
+            <div class="job-requirements">
+              <h3>Requisitos</h3>
+              <ul>
+                ${job.requirements.map(req => `<li>${req}</li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+
+          ${job.responsibilities && job.responsibilities.length > 0 ? `
+            <div class="job-responsibilities">
+              <h3>Responsabilidades</h3>
+              <ul>
+                ${job.responsibilities.map(resp => `<li>${resp}</li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+
+          ${job.benefits && job.benefits.length > 0 ? `
+            <div class="job-benefits">
+              <h3>Beneficios</h3>
+              <ul>
+                ${job.benefits.map(ben => `<li>${ben}</li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+
+          ${job.tags && job.tags.length > 0 ? `
+            <div class="job-tags-detail">
+              <h3>Habilidades requeridas</h3>
+              <div class="job-skills">
+                ${job.tags.map(tag => `<span class="skill-badge">${tag}</span>`).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          ${job.contact && (job.contact.email || job.contact.applyUrl) ? `
+            <div class="job-apply">
+              <h3>Cómo aplicar</h3>
+              ${job.contact.email ? `<p>Email: <a href="mailto:${job.contact.email}">${job.contact.email}</a></p>` : ''}
+              ${job.contact.applyUrl ? `<p><a href="${job.contact.applyUrl}" target="_blank" class="btn btn-primary">Aplicar ahora</a></p>` : ''}
+            </div>
+          ` : ''}
+        </div>
+      `;
+
+      // Like button listener
+      const likeBtn = body.querySelector('[data-action="like-job-modal"]');
+      if (likeBtn) {
+        likeBtn.addEventListener('click', () => toggleJobLike(job.id));
+      }
+
+      modal.classList.add('is-open');
+      modal.setAttribute('aria-hidden', 'false');
+      modal.dataset.listingId = job.id;
+      modal.dataset.category = 'trabajos';
+    } catch (error) {
+      toastError('Error al cargar detalles del trabajo');
+    }
+  };
+
+  // Load saved jobs
+  const loadMisTrabajosGuardados = async () => {
+    if (!config.isAuthenticated) {
+      const container = document.getElementById('misTrabajosResults');
+      container.innerHTML = `
+        <div class="surlink-empty-state">
+          <p>Inicia sesión para ver tus trabajos guardados</p>
+        </div>
+      `;
+      return;
+    }
+
+    try {
+      const data = await request(`${API_BASE}/trabajos/favorites`);
+
+      const container = document.getElementById('misTrabajosResults');
+      if (!data.favorites || data.favorites.length === 0) {
+        container.innerHTML = `
+          <div class="surlink-empty-state">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+            <p>No tenés trabajos guardados aún</p>
+          </div>
+        `;
+        return;
+      }
+
+      renderTrabajos(data.favorites);
+    } catch (error) {
+      showFeedback('mis-trabajos', error.message, 'error');
+    }
+  };
+
+  // Helper functions
+  const formatJobType = (type) => {
+    const types = {
+      'full-time': 'Tiempo completo',
+      'part-time': 'Medio tiempo',
+      'freelance': 'Freelance',
+      'internship': 'Pasantía',
+      'contract': 'Contrato'
+    };
+    return types[type] || type;
+  };
+
+  const formatExperienceLevel = (level) => {
+    const levels = {
+      'entry': 'Junior',
+      'mid': 'Semi-senior',
+      'senior': 'Senior',
+      'executive': 'Ejecutivo'
+    };
+    return levels[level] || level;
+  };
+
+  const formatSalary = (salary) => {
+    if (!salary || (!salary.min && !salary.max)) return '';
+
+    const currency = salary.currency === 'USD' ? 'USD' : '$';
+    const min = salary.min ? `${currency} ${salary.min.toLocaleString()}` : '';
+    const max = salary.max ? `${currency} ${salary.max.toLocaleString()}` : '';
+
+    if (min && max) return `${min} - ${max}`;
+    if (min) return `Desde ${min}`;
+    if (max) return `Hasta ${max}`;
+    return '';
+  };
+
+  // ============================================
+  // CV BUILDER FUNCTIONALITY
+  // ============================================
+
+  const loadCV = async () => {
+    if (!config.isAuthenticated) {
+      document.getElementById('cvQuestionsForm').innerHTML = `
+        <div class="surlink-empty-state">
+          <p>Inicia sesión para crear tu CV con IA</p>
+        </div>
+      `;
+      return;
+    }
+
+    try {
+      const data = await request(`${API_BASE}/cv`);
+      state.cv = data.cv;
+
+      // Show preview if CV exists
+      if (data.cv && data.cv.professionalSummary) {
+        showCVPreview(data.cv);
+      }
+    } catch (error) {
+      console.error('Error loading CV:', error);
+    }
+  };
+
+  const showCVPreview = (cv) => {
+    document.getElementById('cvQuestionsForm').hidden = true;
+    document.getElementById('cvPreview').hidden = false;
+
+    const content = document.getElementById('cvContent');
+    content.innerHTML = `
+      <div class="cv-preview-content">
+        <div class="cv-section">
+          <h3>Resumen Profesional</h3>
+          <p>${cv.professionalSummary}</p>
+        </div>
+
+        ${cv.experience && cv.experience.length > 0 ? `
+          <div class="cv-section">
+            <h3>Experiencia Laboral</h3>
+            ${cv.experience.map(exp => `
+              <div class="cv-experience-item">
+                <h4>${exp.title}</h4>
+                <p class="cv-company">${exp.company}</p>
+                <p class="cv-description">${exp.description}</p>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${cv.skills && cv.skills.length > 0 ? `
+          <div class="cv-section">
+            <h3>Habilidades</h3>
+            <div class="cv-skills">
+              ${cv.skills.map(skill => `<span class="cv-skill-badge">${skill}</span>`).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        ${cv.education && cv.education.length > 0 ? `
+          <div class="cv-section">
+            <h3>Formación Académica</h3>
+            ${cv.education.map(edu => `
+              <div class="cv-education-item">
+                <h4>${edu.degree}</h4>
+                <p class="cv-institution">${edu.institution}</p>
+                ${edu.description ? `<p class="cv-description">${edu.description}</p>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        ${cv.languages && cv.languages.length > 0 ? `
+          <div class="cv-section">
+            <h3>Idiomas</h3>
+            ${cv.languages.map(lang => `
+              <p><strong>${lang.name}:</strong> ${lang.level}</p>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  };
+
+  // Handle CV generation
+  const handleCVGeneration = async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const answers = {
+      currentRole: formData.get('currentRole'),
+      topSkills: formData.get('topSkills'),
+      targetPosition: formData.get('targetPosition'),
+      achievements: formData.get('achievements'),
+      education: formData.get('education'),
+      additional: formData.get('additional')
+    };
+
+    // Show loading
+    document.getElementById('cvQuestionsForm').hidden = true;
+    document.getElementById('cvLoading').hidden = false;
+
+    try {
+      const data = await request(`${API_BASE}/cv/generate`, {
+        method: 'POST',
+        body: JSON.stringify({ answers })
+      });
+
+      state.cv = data.cv;
+
+      // Hide loading, show preview
+      document.getElementById('cvLoading').hidden = true;
+      showCVPreview(data.cv);
+
+      toastSuccess(`CV generado exitosamente! Te quedan ${data.generationsRemaining} generaciones hoy.`);
+    } catch (error) {
+      document.getElementById('cvLoading').hidden = true;
+      document.getElementById('cvQuestionsForm').hidden = false;
+      toastError(error.message);
+    }
+  };
+
+  // Export CV as PDF
+  const exportCVPDF = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/cv/export/pdf`, {
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Error al exportar PDF');
+      }
+
+      // Download file
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `CV_${config.username || 'usuario'}_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toastSuccess('CV exportado exitosamente');
+    } catch (error) {
+      toastError(error.message);
+    }
+  };
+
+  // Event listeners for trabajos
+  const attachTrabajosEvents = () => {
+    // Tab switching
+    trabajosTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        setActiveTrabajosTab(tab.dataset.trabajosTab);
+      });
+    });
+
+    // Filter form
+    const filterForm = document.getElementById('trabajosFilterForm');
+    if (filterForm) {
+      filterForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const formData = new FormData(filterForm);
+        state.filters.trabajos = {
+          search: formData.get('search') || '',
+          jobType: formData.get('jobType') || '',
+          experienceLevel: formData.get('experienceLevel') || '',
+          city: formData.get('city') || '',
+          remote: formData.get('remote') === 'on'
+        };
+        state.pagination.trabajos.page = 1;
+        loadTrabajos({ force: true });
+      });
+    }
+
+    // CV form
+    const cvForm = document.getElementById('cvQuestionsFormElement');
+    if (cvForm) {
+      cvForm.addEventListener('submit', handleCVGeneration);
+    }
+
+    // Export PDF button
+    const exportBtn = document.getElementById('exportPDFBtn');
+    if (exportBtn) {
+      exportBtn.addEventListener('click', exportCVPDF);
+    }
+
+    // Regenerate CV button
+    const regenerateBtn = document.getElementById('regenerateCVBtn');
+    if (regenerateBtn) {
+      regenerateBtn.addEventListener('click', () => {
+        document.getElementById('cvPreview').hidden = true;
+        document.getElementById('cvQuestionsForm').hidden = false;
+      });
+    }
   };
 
   const boot = () => {
@@ -1870,17 +2451,20 @@
     let savedConstruccionTab = 'proyectos';
     let savedAcademyTab = 'universidades';
     let savedFinancialTab = 'bancos';
+    let savedTrabajosTab = 'ofertas';
 
     try {
       const storedCategory = localStorage.getItem('surlinkActiveCategory');
       const storedConstruccionTab = localStorage.getItem('surlinkActiveConstruccionTab');
       const storedAcademyTab = localStorage.getItem('surlinkActiveAcademyTab');
       const storedFinancialTab = localStorage.getItem('surlinkActiveFinancialTab');
+      const storedTrabajosTab = localStorage.getItem('surlinkActiveTrabajosTab');
 
       if (storedCategory) savedCategory = storedCategory;
       if (storedConstruccionTab) savedConstruccionTab = storedConstruccionTab;
       if (storedAcademyTab) savedAcademyTab = storedAcademyTab;
       if (storedFinancialTab) savedFinancialTab = storedFinancialTab;
+      if (storedTrabajosTab) savedTrabajosTab = storedTrabajosTab;
     } catch (e) {
       console.error('Error reading from localStorage:', e);
     }
@@ -1912,6 +2496,12 @@
         state.loaded[savedCategory] = true;
       }
       setActiveFinancialTab(savedFinancialTab);
+    } else if (savedCategory === 'trabajos') {
+      setActiveCategory(savedCategory);
+      if (!state.loaded[savedCategory]) {
+        state.loaded[savedCategory] = true;
+      }
+      setActiveTrabajosTab(savedTrabajosTab);
     } else {
       loadCategory(savedCategory, { force: true });
     }

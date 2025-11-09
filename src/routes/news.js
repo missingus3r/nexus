@@ -1,6 +1,6 @@
 import express from 'express';
 import { NewsEvent } from '../models/index.js';
-import { checkJwt } from '../middleware/auth.js';
+import { verifyApiAuth } from '../middleware/apiAuth.js';
 
 const router = express.Router();
 
@@ -9,7 +9,7 @@ const router = express.Router();
  * Fetch news events within a bounding box or near a location
  * Query params: bbox, lat, lon, radius, from, to, category, country, showAll
  */
-router.get('/', checkJwt, async (req, res, next) => {
+router.get('/', verifyApiAuth, async (req, res, next) => {
   try {
     const { bbox, lat, lon, radius, from, to, category, country, showAll } = req.query;
 
@@ -111,7 +111,7 @@ router.get('/', checkJwt, async (req, res, next) => {
  * GET /news/:id
  * Get news event details
  */
-router.get('/:id', checkJwt, async (req, res, next) => {
+router.get('/:id', verifyApiAuth, async (req, res, next) => {
   try {
     const newsEvent = await NewsEvent.findById(req.params.id);
     if (!newsEvent || newsEvent.hidden) {

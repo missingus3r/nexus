@@ -18,7 +18,7 @@ async function openUserProfileModal(userId) {
     const token = await window.authUtils.getAuthToken();
     const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-    const response = await fetch(`/api/forum/users/${userId}/profile`, { headers });
+    const response = await fetch(`/forum/users/${userId}/profile`, { headers });
 
     if (response.ok) {
       const data = await response.json();

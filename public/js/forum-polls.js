@@ -138,7 +138,6 @@ function renderPoll(poll, userVotes = [], threadId) {
 
   const totalVotes = poll.totalVotes || 0;
   const hasExpired = poll.expiresAt && new Date(poll.expiresAt) <= new Date();
-  const token = localStorage.getItem('jwt');
   const hasVoted = userVotes && userVotes.length > 0;
 
   let html = `
@@ -172,7 +171,7 @@ function renderPoll(poll, userVotes = [], threadId) {
 
           return `
             <div class="poll-option ${isSelected ? 'selected' : ''}" data-option-id="${option.id}">
-              ${!hasVoted && !hasExpired && token ? `
+              ${!hasVoted && !hasExpired ? `
                 <input
                   type="${poll.allowMultiple ? 'checkbox' : 'radio'}"
                   name="poll-vote-${threadId}"
@@ -208,7 +207,7 @@ function renderPoll(poll, userVotes = [], threadId) {
           ${totalVotes} ${totalVotes === 1 ? 'voto' : 'votos'}
         </div>
 
-        ${!hasVoted && !hasExpired && token ? `
+        ${!hasVoted && !hasExpired ? `
           <button class="btn btn-primary btn-sm" onclick="submitPollVote('${threadId}')">
             Votar
           </button>
@@ -220,12 +219,6 @@ function renderPoll(poll, userVotes = [], threadId) {
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
             Ya votaste
-          </div>
-        ` : ''}
-
-        ${!token && !hasExpired ? `
-          <div class="poll-login-prompt" style="font-size: 0.875rem; color: var(--text-secondary);">
-            <a href="/login" style="color: var(--primary-color);">Inicia sesión</a> para votar
           </div>
         ` : ''}
       </div>
@@ -243,13 +236,6 @@ function handlePollVoteChange(threadId, optionId) {
 
 // Submit poll vote
 async function submitPollVote(threadId) {
-  const token = localStorage.getItem('jwt');
-  if (!token) {
-    toastWarning('Debes iniciar sesión para votar');
-    window.location.href = '/login';
-    return;
-  }
-
   const pollContainer = document.querySelector(`.poll-container[data-thread-id="${threadId}"]`);
   if (!pollContainer) return;
 
@@ -263,12 +249,12 @@ async function submitPollVote(threadId) {
   }
 
   try {
-    const response = await fetch(`/api/forum/threads/${threadId}/vote`, {
+    const response = await fetch(`/forum/threads/${threadId}/vote`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'application/json'
       },
+      credentials: 'include',
       body: JSON.stringify({ optionIds: selectedOptions })
     });
 

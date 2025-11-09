@@ -126,7 +126,9 @@ router.get('/enlacesminterior', (req, res) => {
 router.get('/surlink', checkMaintenance('surlink'), (req, res) => {
   res.render('surlink', {
     title: 'VORTEX Surlink - Ecosistema inmobiliario, académico y automotriz',
-    page: 'surlink'
+    page: 'surlink',
+    isAuthenticated: !!req.session?.user,
+    user: req.session?.user || null
   });
 });
 

@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import session from 'express-session';
+import MongoStore from 'connect-mongo';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -69,16 +70,23 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Session middleware
+// Session middleware with MongoDB store
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   name: 'vortex.sid', // Custom cookie name
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGO_URI,
+    collectionName: 'sessions',
+    ttl: 24 * 60 * 60, // 24 hours in seconds
+    autoRemove: 'native', // Use MongoDB's native TTL index
+    touchAfter: 24 * 3600 // Only update session once per 24 hours (unless modified)
+  }),
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' required for cross-site Auth0 redirects in production
     path: '/', // Ensure cookie is sent for all paths
     domain: process.env.COOKIE_DOMAIN || undefined // Set domain for production (e.g., '.yourdomain.com')
@@ -141,19 +149,19 @@ app.use((req, res, next) => {
 app.use(trackPageVisit);
 
 // API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/map/incidents', incidentRoutes);
-app.use('/api/heatmap', heatmapRoutes);
-app.use('/api/neighborhoods', neighborhoodRoutes);
-app.use('/api/news', newsRoutes);
-app.use('/api/enlacesminterior', enlacesminteriorRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/surlink', surlinkRoutes);
-app.use('/api/pricing', pricingRoutes);
-app.use('/api/forum', forumRoutes);
-app.use('/api/reports', reportsRoutes);
-app.use('/api/preferences', preferencesRoutes);
+app.use('/auth', authRoutes);
+app.use('/map/incidents', incidentRoutes);
+app.use('/heatmap', heatmapRoutes);
+app.use('/neighborhoods', neighborhoodRoutes);
+app.use('/news', newsRoutes);
+app.use('/enlacesminterior', enlacesminteriorRoutes);
+app.use('/admin', adminRoutes);
+app.use('/notifications', notificationRoutes);
+app.use('/surlink', surlinkRoutes);
+app.use('/pricing', pricingRoutes);
+app.use('/forum', forumRoutes);
+app.use('/reports', reportsRoutes);
+app.use('/preferences', preferencesRoutes);
 
 // Dashboard routes (includes both view and API routes)
 app.use('/', dashboardRoutes);

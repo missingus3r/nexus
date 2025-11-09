@@ -34,8 +34,8 @@ function initializeMap() {
     window.map = map;
 
     map.on('load', () => {
-        addNeighborhoodsLayer();
         addIncidentsLayer();
+        addNeighborhoodsLayer();
         addHeatmapLayer();
 
         // Load map data immediately
@@ -420,21 +420,19 @@ function addNeighborhoodsLayer() {
 
 async function loadMapData() {
     try {
-        const token = await window.authUtils.getAuthToken();
-
         // Get current map bounds
         const bounds = map.getBounds();
         const bbox = `${bounds.getWest()},${bounds.getSouth()},${bounds.getEast()},${bounds.getNorth()}`;
 
         // Load incidents
         const typeFilter = document.getElementById('typeFilter')?.value || '';
-        let incidentsUrl = `/api/map/incidents?bbox=${bbox}`;
+        let incidentsUrl = `/map/incidents?bbox=${bbox}`;
         if (typeFilter && typeFilter !== 'todos') {
             incidentsUrl += `&type=${typeFilter}`;
         }
 
         const incidentsResponse = await fetch(incidentsUrl, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            credentials: 'include'
         });
         const incidentsData = await incidentsResponse.json();
 
@@ -445,8 +443,8 @@ async function loadMapData() {
         }
 
         // Load heatmap
-        const heatmapResponse = await fetch(`/api/heatmap?bbox=${bbox}&precision=7`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+        const heatmapResponse = await fetch(`/heatmap?bbox=${bbox}&precision=7`, {
+            credentials: 'include'
         });
         const heatmapData = await heatmapResponse.json();
         if (heatmapSource) {
@@ -454,8 +452,8 @@ async function loadMapData() {
         }
 
         // Load neighborhoods (only those with incidents)
-        const neighborhoodsResponse = await fetch(`/api/neighborhoods?withIncidents=true`, {
-            headers: { 'Authorization': `Bearer ${token}` }
+        const neighborhoodsResponse = await fetch(`/neighborhoods?withIncidents=true`, {
+            credentials: 'include'
         });
         const neighborhoodsData = await neighborhoodsResponse.json();
 
@@ -811,8 +809,7 @@ function cancelLocationSelection() {
 async function handleReportSubmit(e) {
     e.preventDefault();
 
-    const token = await window.authUtils.getAuthToken();
-    if (!token || !window.authUtils.isAuthenticated()) {
+    if (!window.authConfig?.isAuthenticated) {
         toastWarning('Debes iniciar sesión para reportar incidentes');
         window.location.href = '/login';
         return;
@@ -856,12 +853,9 @@ async function handleReportSubmit(e) {
     }
 
     try {
-        const response = await fetch('/api/map/incidents', {
+        const response = await fetch('/map/incidents', {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`
-                // Don't set Content-Type - let browser set it with boundary
-            },
+            credentials: 'include',
             body: submitData
         });
 
@@ -890,11 +884,8 @@ window.cancelLocationSelection = cancelLocationSelection;
  */
 async function fetchIncidentDetails(incidentId) {
     try {
-        const token = await window.authUtils.getAuthToken();
-        const response = await fetch(`/api/map/incidents/${incidentId}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
+        const response = await fetch(`/map/incidents/${incidentId}`, {
+            credentials: 'include'
         });
 
         if (response.ok) {
@@ -979,14 +970,14 @@ function createIncidentPopupHTML(incident) {
                 </div>
                 ${props.sourceNews.map(news => `
                     <div style="margin: 6px 0; padding: 6px; background: white; border-radius: 4px;">
-                        <div style="font-size: 0.9em; color: #555; margin-bottom: 4px;">
+                        <div style="font-size: 0.9em; margin-bottom: 4px;">
                             <strong>${news.source}</strong>
                         </div>
-                        <div style="font-size: 0.85em; color: #666; margin-bottom: 4px;">
+                        <div style="font-size: 0.85em; margin-bottom: 4px;">
                             ${news.title}
                         </div>
                         <a href="${news.url}" target="_blank" rel="noopener noreferrer"
-                           style="font-size: 0.8em; color: #2196f3; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                           style="font-size: 0.8em; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
                             Ver noticia completa →
                         </a>
                     </div>
@@ -996,7 +987,7 @@ function createIncidentPopupHTML(incident) {
     }
 
     // Check if user is authenticated (not guest)
-    const isAuthenticated = window.authUtils.isAuthenticated();
+    const isAuthenticated = window.authConfig?.isAuthenticated || false;
     let actionsHTML = '';
 
     if (isAuthenticated && status === 'pending') {
@@ -1035,7 +1026,7 @@ function createIncidentPopupHTML(incident) {
     let locationHTML = '';
     if (props.locationType === 'approximate' && props.approximateRadius) {
         locationHTML = `
-            <p style="margin: 4px 0; color: #666; font-size: 0.9em;">
+            <p style="margin: 4px 0; font-size: 0.9em;">
                 <strong>📍 Ubicación:</strong> Zona aproximada (~${props.approximateRadius}m de radio)
             </p>
         `;
@@ -1043,14 +1034,14 @@ function createIncidentPopupHTML(incident) {
 
     return `
         <div style="font-family: system-ui, -apple-system, sans-serif;">
-            <h3 style="margin: 0 0 8px 0; color: #333;">${props.type}</h3>
-            <p style="margin: 4px 0; color: #666;">
+            <h3 style="margin: 0 0 8px 0;">${props.type}</h3>
+            <p style="margin: 4px 0;">
                 <strong>Severidad:</strong> ${props.severity}/5
             </p>
             ${locationHTML}
-            ${props.description ? `<p style="margin: 8px 0; color: #555;">${props.description}</p>` : ''}
+            ${props.description ? `<p style="margin: 8px 0;">${props.description}</p>` : ''}
             ${mediaHTML}
-            <p style="margin: 4px 0; font-size: 0.9em; color: #999;">
+            <p style="margin: 4px 0; font-size: 0.9em;">
                 ${new Date(props.createdAt).toLocaleString('es-UY')}
             </p>
             ${validationHTML}
@@ -1117,18 +1108,16 @@ async function validateIncident(incidentId, vote) {
     if (invalidBtn) invalidBtn.disabled = true;
 
     try {
-        const token = await window.authUtils.getAuthToken();
-
-        if (!token || !window.authUtils.isAuthenticated()) {
+        if (!window.authConfig?.isAuthenticated) {
             showValidationMessage('Debes iniciar sesión para validar', 'error');
             return;
         }
 
-        const response = await fetch(`/api/map/incidents/${incidentId}/validate`, {
+        const response = await fetch(`/map/incidents/${incidentId}/validate`, {
             method: 'POST',
+            credentials: 'include',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 vote: vote, // 1 = valid, -1 = invalid

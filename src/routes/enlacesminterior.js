@@ -39,6 +39,11 @@ router.get('/mi', (req, res) => {
         name: 'Denuncia Acoso Sexual en Transporte Público',
         url: 'https://tramites.montevideo.gub.uy/tramite/acoso-sexual-en-transporte-publico',
         description: 'Información sobre cómo denunciar situaciones de acoso sexual en el transporte público. Incluye protocolos de actuación para víctimas y choferes, y acceso al sistema de denuncias online.'
+      },
+      {
+        name: 'Estadísticas de Criminalidad - AECA',
+        url: 'https://www.gub.uy/ministerio-interior/tematica/area-estadistica-criminologia-aplicada-aeca',
+        description: 'Área de Estadística y Criminología Aplicada del Ministerio del Interior. Datos oficiales sobre criminalidad, seguridad pública y análisis estadístico del delito en Uruguay.'
       }
     ],
     disclaimer: 'Estos enlaces son proporcionados para acceso a información oficial. Vortex no almacena ni procesa datos de personas procesadas.'

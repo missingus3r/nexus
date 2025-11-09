@@ -63,7 +63,7 @@ async function loadMyPosts() {
       return;
     }
 
-    const response = await fetch(`/api/forum/my-threads?page=${myPostsPage}&sort=${myPostsSort}`, {
+    const response = await fetch(`/forum/my-threads?page=${myPostsPage}&sort=${myPostsSort}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -189,7 +189,7 @@ async function loadMyReports() {
       params.append('status', myReportsStatus);
     }
 
-    const response = await fetch(`/api/reports/my-reports?${params}`, {
+    const response = await fetch(`/reports/my-reports?${params}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -300,7 +300,7 @@ async function loadNotifications() {
       return;
     }
 
-    const response = await fetch('/api/notifications', {
+    const response = await fetch('/notifications', {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -349,7 +349,7 @@ async function handleNotificationClick(notifId, threadId, commentId) {
   // Mark as read
   try {
     const token = await window.authUtils.getAuthToken();
-    await fetch(`/api/notifications/${notifId}/read`, {
+    await fetch(`/notifications/${notifId}/read`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -369,7 +369,7 @@ async function handleNotificationClick(notifId, threadId, commentId) {
 async function markAllNotificationsAsRead() {
   try {
     const token = await window.authUtils.getAuthToken();
-    const response = await fetch('/api/notifications/read-all', {
+    const response = await fetch('/notifications/read-all', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -402,7 +402,7 @@ async function checkNotifications() {
   const token = await window.authUtils.getAuthToken();
   if (!token) return;
 
-  fetch('/api/notifications?unread=true&limit=1', {
+  fetch('/notifications?unread=true&limit=1', {
     headers: {
       'Authorization': `Bearer ${token}`
     }

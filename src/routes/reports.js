@@ -1,12 +1,12 @@
 import express from 'express';
 import { Report, ForumThread, ForumComment, User } from '../models/index.js';
 import { REPORT_REASONS } from '../models/Report.js';
-import { checkJwt, attachUser } from '../middleware/auth.js';
+import { verifyApiAuth, requireAuth } from '../middleware/apiAuth.js';
 
 const router = express.Router();
 
 // Combined authentication middleware
-const authenticate = [checkJwt, attachUser, (req, res, next) => {
+const authenticate = [verifyApiAuth, requireAuth, (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });
   }
@@ -34,7 +34,7 @@ const requireAdmin = (req, res, next) => {
 };
 
 /**
- * GET /api/reports/reasons
+ * GET /reports/reasons
  * Get all available report reasons
  */
 router.get('/reasons', (req, res) => {
@@ -46,7 +46,7 @@ router.get('/reasons', (req, res) => {
 });
 
 /**
- * POST /api/reports
+ * POST /reports
  * Create a new report (authenticated users only)
  */
 router.post('/', authenticate, async (req, res) => {
@@ -154,7 +154,7 @@ router.post('/', authenticate, async (req, res) => {
 });
 
 /**
- * GET /api/reports/my-reports
+ * GET /reports/my-reports
  * Get reports created by authenticated user
  */
 router.get('/my-reports', authenticate, async (req, res) => {
@@ -227,7 +227,7 @@ router.get('/my-reports', authenticate, async (req, res) => {
 });
 
 /**
- * GET /api/reports
+ * GET /reports
  * Get all reports (admin only)
  */
 router.get('/', authenticate, requireAdmin, async (req, res) => {
@@ -316,7 +316,7 @@ router.get('/', authenticate, requireAdmin, async (req, res) => {
 });
 
 /**
- * GET /api/reports/:id
+ * GET /reports/:id
  * Get a specific report with full details (admin only)
  */
 router.get('/:id', authenticate, requireAdmin, async (req, res) => {
@@ -378,7 +378,7 @@ router.get('/:id', authenticate, requireAdmin, async (req, res) => {
 });
 
 /**
- * PUT /api/reports/:id
+ * PUT /reports/:id
  * Update report status (admin only)
  */
 router.put('/:id', authenticate, requireAdmin, async (req, res) => {
@@ -422,7 +422,7 @@ router.put('/:id', authenticate, requireAdmin, async (req, res) => {
 });
 
 /**
- * DELETE /api/reports/:id
+ * DELETE /reports/:id
  * Delete a report (admin only)
  */
 router.delete('/:id', authenticate, requireAdmin, async (req, res) => {

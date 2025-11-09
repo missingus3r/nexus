@@ -1,6 +1,6 @@
 import express from 'express';
 import { Neighborhood } from '../models/index.js';
-import { checkJwt } from '../middleware/auth.js';
+import { verifyApiAuth } from '../middleware/apiAuth.js';
 import { updateNeighborhoodHeatmap, updateAllNeighborhoodsHeatmap } from '../services/neighborhoodService.js';
 import logger from '../utils/logger.js';
 
@@ -11,7 +11,7 @@ const router = express.Router();
  * Get all neighborhoods with heatmap data
  * Returns GeoJSON FeatureCollection
  */
-router.get('/', checkJwt, async (req, res, next) => {
+router.get('/', verifyApiAuth, async (req, res, next) => {
   try {
     const { withIncidents } = req.query;
 
@@ -40,7 +40,7 @@ router.get('/', checkJwt, async (req, res, next) => {
  * GET /neighborhoods/:id
  * Get specific neighborhood by ID
  */
-router.get('/:id', checkJwt, async (req, res, next) => {
+router.get('/:id', verifyApiAuth, async (req, res, next) => {
   try {
     const neighborhood = await Neighborhood.findOne({ id_barrio: parseInt(req.params.id) });
 
@@ -59,7 +59,7 @@ router.get('/:id', checkJwt, async (req, res, next) => {
  * Manually trigger heatmap update for a specific neighborhood
  * Admin only
  */
-router.post('/:id/update-heatmap', checkJwt, async (req, res, next) => {
+router.post('/:id/update-heatmap', verifyApiAuth, async (req, res, next) => {
   try {
     const neighborhoodId = parseInt(req.params.id);
     const neighborhood = await updateNeighborhoodHeatmap(neighborhoodId);
@@ -82,7 +82,7 @@ router.post('/:id/update-heatmap', checkJwt, async (req, res, next) => {
  * Manually trigger heatmap update for all neighborhoods
  * Admin only
  */
-router.post('/update-all-heatmaps', checkJwt, async (req, res, next) => {
+router.post('/update-all-heatmaps', verifyApiAuth, async (req, res, next) => {
   try {
     const result = await updateAllNeighborhoodsHeatmap();
 

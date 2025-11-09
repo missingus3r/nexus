@@ -1,11 +1,13 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import { SurlinkListing, SiteLike } from '../models/index.js';
+import { SurlinkListing, SiteLike, JobListing, CVDocument } from '../models/index.js';
 import SiteComment from '../models/SiteComment.js';
 import logger from '../utils/logger.js';
 import construccionSites, { getSitesByCategory as getConstruccionSitesByCategory, getAllSites as getAllConstruccionSites, getSiteById as getConstruccionSiteById } from '../data/construccion-sites.js';
 import academySites, { getSitesByCategory as getAcademySitesByCategory, getAllSites as getAllAcademySites, getSiteById as getAcademySiteById } from '../data/academy-sites.js';
 import financialSites, { getSitesByCategory as getFinancialSitesByCategory, getAllSites as getAllFinancialSites, getSiteById as getFinancialSiteById } from '../data/financial-sites.js';
+import { generateCV } from '../services/cvGeneratorService.js';
+import { generateCVPDF } from '../services/pdfService.js';
 
 const router = express.Router();
 
@@ -1118,6 +1120,426 @@ router.post('/sites/:siteId/comments/:commentId/replies', requireLogin, async (r
   } catch (error) {
     logger.error('Error creating reply', { error });
     res.status(500).json({ error: 'Error al crear respuesta' });
+  }
+});
+
+/**
+ * ====================================
+ * JOB LISTINGS ROUTES (Surlink Trabajos)
+ * ====================================
+ */
+
+/**
+ * GET /surlink/trabajos/listings
+ * List job offers with filters
+ */
+router.get('/trabajos/listings', async (req, res) => {
+  try {
+    const {
+      search,
+      jobType,
+      experienceLevel,
+      city,
+      remote,
+      minSalary,
+      maxSalary,
+      tags,
+      page = 1,
+      limit = 9
+    } = req.query;
+
+    const query = { status: 'active' };
+
+    // Text search
+    if (search && search.trim()) {
+      query.$text = { $search: search.trim() };
+    }
+
+    // Job type filter
+    if (jobType) {
+      query.jobType = jobType;
+    }
+
+    // Experience level filter
+    if (experienceLevel) {
+      query.experienceLevel = experienceLevel;
+    }
+
+    // City filter
+    if (city) {
+      query['location.city'] = new RegExp(city, 'i');
+    }
+
+    // Remote filter
+    if (remote === 'true') {
+      query['location.remote'] = true;
+    }
+
+    // Salary range filter
+    if (minSalary || maxSalary) {
+      query.$or = [];
+      if (minSalary) {
+        query.$or.push({ 'salary.min': { $gte: Number(minSalary) } });
+        query.$or.push({ 'salary.max': { $gte: Number(minSalary) } });
+      }
+      if (maxSalary) {
+        query.$or.push({ 'salary.max': { $lte: Number(maxSalary) } });
+        query.$or.push({ 'salary.min': { $lte: Number(maxSalary) } });
+      }
+    }
+
+    // Tags filter
+    if (tags) {
+      const tagArray = Array.isArray(tags) ? tags : [tags];
+      query.tags = { $in: tagArray };
+    }
+
+    const pageNumber = Math.max(parseInt(page, 10) || 1, 1);
+    const pageSize = Math.min(parseInt(limit, 10) || 9, 50);
+    const skip = (pageNumber - 1) * pageSize;
+
+    const projection = {};
+    let sort = {
+      createdAt: -1
+    };
+
+    if (query.$text) {
+      projection.score = { $meta: 'textScore' };
+      sort = {
+        score: { $meta: 'textScore' },
+        createdAt: -1
+      };
+    }
+
+    const [total, jobs] = await Promise.all([
+      JobListing.countDocuments(query),
+      JobListing.find(query, projection)
+        .sort(sort)
+        .skip(skip)
+        .limit(pageSize)
+    ]);
+
+    const currentUid = req.session?.user?.uid || null;
+
+    const formatted = jobs.map(job => ({
+      id: job._id.toString(),
+      title: job.title,
+      company: job.company,
+      companyLogo: job.companyLogo,
+      summary: job.summary || job.description.substring(0, 150) + '...',
+      location: job.location,
+      jobType: job.jobType,
+      experienceLevel: job.experienceLevel,
+      salary: job.salary,
+      tags: job.tags,
+      status: job.status,
+      isLiked: currentUid ? job.likedBy.includes(currentUid) : false,
+      metrics: job.metrics,
+      createdAt: job.createdAt
+    }));
+
+    res.json({
+      results: formatted,
+      pagination: {
+        total,
+        page: pageNumber,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize) || 1
+      }
+    });
+  } catch (error) {
+    logger.error('Error listing job offers', { error });
+    res.status(500).json({ error: 'Error al obtener ofertas laborales' });
+  }
+});
+
+/**
+ * GET /surlink/trabajos/listings/:id
+ * Get single job offer details
+ */
+router.get('/trabajos/listings/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: 'ID inválido' });
+    }
+
+    const job = await JobListing.findById(id);
+
+    if (!job) {
+      return res.status(404).json({ error: 'Oferta no encontrada' });
+    }
+
+    // Increment views
+    await JobListing.findByIdAndUpdate(id, {
+      $inc: { 'metrics.views': 1 }
+    });
+
+    const currentUid = req.session?.user?.uid || null;
+
+    res.json({
+      id: job._id.toString(),
+      title: job.title,
+      company: job.company,
+      companyLogo: job.companyLogo,
+      description: job.description,
+      summary: job.summary,
+      location: job.location,
+      jobType: job.jobType,
+      experienceLevel: job.experienceLevel,
+      salary: job.salary,
+      benefits: job.benefits,
+      requirements: job.requirements,
+      responsibilities: job.responsibilities,
+      tags: job.tags,
+      contact: job.contact,
+      status: job.status,
+      expiresAt: job.expiresAt,
+      postedBy: job.postedBy,
+      isLiked: currentUid ? job.likedBy.includes(currentUid) : false,
+      metrics: job.metrics,
+      createdAt: job.createdAt,
+      updatedAt: job.updatedAt
+    });
+  } catch (error) {
+    logger.error('Error getting job details', { error });
+    res.status(500).json({ error: 'Error al obtener detalles de la oferta' });
+  }
+});
+
+/**
+ * POST /surlink/trabajos/listings/:id/like
+ * Toggle like on job offer
+ */
+router.post('/trabajos/listings/:id/like', requireLogin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.session.user.uid;
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: 'ID inválido' });
+    }
+
+    const job = await JobListing.findById(id);
+
+    if (!job) {
+      return res.status(404).json({ error: 'Oferta no encontrada' });
+    }
+
+    const isLiked = job.likedBy.includes(userId);
+
+    if (isLiked) {
+      // Unlike
+      await JobListing.findByIdAndUpdate(id, {
+        $pull: { likedBy: userId },
+        $inc: { 'metrics.likes': -1 }
+      });
+    } else {
+      // Like
+      await JobListing.findByIdAndUpdate(id, {
+        $addToSet: { likedBy: userId },
+        $inc: { 'metrics.likes': 1 }
+      });
+    }
+
+    const updatedJob = await JobListing.findById(id);
+
+    res.json({
+      liked: !isLiked,
+      likes: updatedJob.metrics.likes
+    });
+  } catch (error) {
+    logger.error('Error toggling job like', { error });
+    res.status(500).json({ error: 'Error al marcar favorito' });
+  }
+});
+
+/**
+ * GET /surlink/trabajos/favorites
+ * Get user's favorited jobs
+ */
+router.get('/trabajos/favorites', requireLogin, async (req, res) => {
+  try {
+    const userId = req.session.user.uid;
+
+    const jobs = await JobListing.find({
+      likedBy: userId,
+      status: 'active'
+    }).sort({ createdAt: -1 });
+
+    const formatted = jobs.map(job => ({
+      id: job._id.toString(),
+      title: job.title,
+      company: job.company,
+      companyLogo: job.companyLogo,
+      summary: job.summary || job.description.substring(0, 150) + '...',
+      location: job.location,
+      jobType: job.jobType,
+      experienceLevel: job.experienceLevel,
+      salary: job.salary,
+      tags: job.tags,
+      isLiked: true,
+      metrics: job.metrics,
+      createdAt: job.createdAt
+    }));
+
+    res.json({ favorites: formatted });
+  } catch (error) {
+    logger.error('Error getting favorited jobs', { error });
+    res.status(500).json({ error: 'Error al obtener trabajos guardados' });
+  }
+});
+
+/**
+ * ====================================
+ * CV BUILDER ROUTES
+ * ====================================
+ */
+
+/**
+ * GET /surlink/cv
+ * Get user's CV
+ */
+router.get('/cv', requireLogin, async (req, res) => {
+  try {
+    const userId = req.session.user.uid;
+
+    let cv = await CVDocument.findOne({ userId });
+
+    if (!cv) {
+      // Create empty CV document
+      cv = new CVDocument({
+        userId,
+        personalInfo: {
+          fullName: req.session.user.name || '',
+          email: req.session.user.email || ''
+        }
+      });
+      await cv.save();
+    }
+
+    res.json({ cv });
+  } catch (error) {
+    logger.error('Error getting CV', { error });
+    res.status(500).json({ error: 'Error al obtener CV' });
+  }
+});
+
+/**
+ * POST /surlink/cv/generate
+ * Generate CV with Gemini AI
+ */
+router.post('/cv/generate', requireLogin, async (req, res) => {
+  try {
+    const userId = req.session.user.uid;
+    const { answers } = req.body;
+
+    if (!answers || !answers.currentRole || !answers.topSkills) {
+      return res.status(400).json({ error: 'Faltan respuestas requeridas' });
+    }
+
+    let cv = await CVDocument.findOne({ userId });
+
+    if (!cv) {
+      cv = new CVDocument({
+        userId,
+        personalInfo: {
+          fullName: req.session.user.name || '',
+          email: req.session.user.email || ''
+        }
+      });
+    }
+
+    // Check generation limit
+    if (!cv.canGenerate()) {
+      return res.status(429).json({
+        error: 'Has alcanzado el límite de 5 generaciones por día. Intenta mañana.'
+      });
+    }
+
+    // Store questions/answers
+    cv.questionsAnswers = answers;
+
+    // Generate CV with Gemini AI
+    const generatedCV = await generateCV(answers);
+
+    cv.professionalSummary = generatedCV.professionalSummary;
+    cv.experience = generatedCV.experience;
+    cv.skills = generatedCV.skills;
+    cv.education = generatedCV.education;
+    cv.languages = generatedCV.languages || [];
+    cv.generatedContent = JSON.stringify(generatedCV);
+
+    // Increment generation count
+    cv.incrementGeneration();
+
+    // Save version
+    cv.versions.push({
+      content: JSON.stringify(generatedCV),
+      createdAt: new Date()
+    });
+
+    await cv.save();
+
+    res.json({
+      cv,
+      message: 'CV generado exitosamente',
+      generationsRemaining: 5 - cv.generationCount
+    });
+  } catch (error) {
+    logger.error('Error generating CV', { error });
+    res.status(500).json({ error: 'Error al generar CV' });
+  }
+});
+
+/**
+ * PATCH /surlink/cv
+ * Update CV manually
+ */
+router.patch('/cv', requireLogin, async (req, res) => {
+  try {
+    const userId = req.session.user.uid;
+    const updates = req.body;
+
+    const cv = await CVDocument.findOneAndUpdate(
+      { userId },
+      { $set: updates },
+      { new: true, upsert: true }
+    );
+
+    res.json({ cv, message: 'CV actualizado exitosamente' });
+  } catch (error) {
+    logger.error('Error updating CV', { error });
+    res.status(500).json({ error: 'Error al actualizar CV' });
+  }
+});
+
+/**
+ * GET /surlink/cv/export/pdf
+ * Export CV as PDF
+ */
+router.get('/cv/export/pdf', requireLogin, async (req, res) => {
+  try {
+    const userId = req.session.user.uid;
+
+    const cv = await CVDocument.findOne({ userId });
+
+    if (!cv) {
+      return res.status(404).json({ error: 'No tienes un CV creado' });
+    }
+
+    if (!cv.professionalSummary && (!cv.experience || cv.experience.length === 0)) {
+      return res.status(400).json({ error: 'Primero debes generar tu CV con la IA' });
+    }
+
+    // Generate and stream PDF
+    generateCVPDF(cv, res);
+  } catch (error) {
+    logger.error('Error exporting CV', { error });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Error al exportar CV' });
+    }
   }
 });
 

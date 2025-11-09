@@ -42,13 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
 async function handleReportSubmit(e) {
   e.preventDefault();
 
-  const token = localStorage.getItem('jwt');
-  if (!token) {
-    alert('Debes iniciar sesión para reportar contenido');
-    window.location.href = '/login';
-    return;
-  }
-
   const formData = new FormData(e.target);
   const reportData = {
     reportedType: formData.get('reportedType'),
@@ -64,12 +57,12 @@ async function handleReportSubmit(e) {
   }
 
   try {
-    const response = await fetch('/api/reports', {
+    const response = await fetch('/reports', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'application/json'
       },
+      credentials: 'include',
       body: JSON.stringify(reportData)
     });
 

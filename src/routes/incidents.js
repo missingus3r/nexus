@@ -1,6 +1,6 @@
 import express from 'express';
 import { Incident, Validation, Notification } from '../models/index.js';
-import { checkJwt, attachUser } from '../middleware/auth.js';
+import { verifyApiAuth, requireAuth } from '../middleware/apiAuth.js';
 import { writeRateLimiter } from '../middleware/rateLimiter.js';
 import { validateIncident } from '../services/validationService.js';
 import { updateHeatmapForIncident } from '../services/heatmapService.js';
@@ -17,7 +17,7 @@ const router = express.Router();
  * Fetch incidents within a bounding box
  * Query params: bbox (lon1,lat1,lon2,lat2), from, to, type, status, limit
  */
-router.get('/', checkJwt, async (req, res, next) => {
+router.get('/', verifyApiAuth, async (req, res, next) => {
   try {
     const { bbox, from, to, type, status, limit } = req.query;
 
@@ -83,7 +83,7 @@ router.get('/', checkJwt, async (req, res, next) => {
  * Requires: authenticated user
  * Body: multipart/form-data with fields: type, severity, location, description, photos (optional)
  */
-router.post('/', checkJwt, attachUser, writeRateLimiter, uploadIncidentPhotos, handleUploadErrors, async (req, res, next) => {
+router.post('/', verifyApiAuth, requireAuth, writeRateLimiter, uploadIncidentPhotos, handleUploadErrors, async (req, res, next) => {
   try {
     // Check if user is authenticated
     if (!req.user) {
@@ -216,7 +216,7 @@ router.post('/', checkJwt, attachUser, writeRateLimiter, uploadIncidentPhotos, h
  * Validate (vote on) an incident
  * Requires: authenticated user
  */
-router.post('/:id/validate', checkJwt, attachUser, writeRateLimiter, async (req, res, next) => {
+router.post('/:id/validate', verifyApiAuth, requireAuth, writeRateLimiter, async (req, res, next) => {
   try {
     // Check if user is authenticated
     if (!req.user) {
@@ -345,7 +345,7 @@ router.post('/:id/validate', checkJwt, attachUser, writeRateLimiter, async (req,
  * Add photos to an existing incident
  * Requires: authenticated user and must be the reporter
  */
-router.post('/:id/photos', checkJwt, attachUser, writeRateLimiter, uploadIncidentPhotos, handleUploadErrors, async (req, res, next) => {
+router.post('/:id/photos', verifyApiAuth, requireAuth, writeRateLimiter, uploadIncidentPhotos, handleUploadErrors, async (req, res, next) => {
   try {
     if (!req.user) {
       // Clean up uploaded files if auth fails
@@ -454,7 +454,7 @@ router.post('/:id/photos', checkJwt, attachUser, writeRateLimiter, uploadInciden
  * GET /map/incidents/:id
  * Get incident details
  */
-router.get('/:id', checkJwt, async (req, res, next) => {
+router.get('/:id', verifyApiAuth, async (req, res, next) => {
   try {
     const incident = await Incident.findById(req.params.id);
     if (!incident || incident.hidden) {

@@ -2,7 +2,9 @@
 
         async function loadProfile() {
             try {
-                const response = await fetch('/api/auth/profile');
+                const response = await fetch('/api/auth/profile', {
+                    credentials: 'include'
+                });
                 const data = await response.json();
 
                 if (!response.ok) {
@@ -267,7 +269,9 @@
             `;
 
             try {
-                const response = await fetch('/api/surlink/favorites');
+                const response = await fetch('/surlink/favorites', {
+                    credentials: 'include'
+                });
 
                 if (!response.ok) {
                     throw new Error('Error al cargar favoritos');
@@ -307,7 +311,9 @@
             `;
 
             try {
-                const response = await fetch('/api/surlink/comments');
+                const response = await fetch('/surlink/comments', {
+                    credentials: 'include'
+                });
 
                 if (!response.ok) {
                     throw new Error('Error al cargar comentarios');
@@ -347,7 +353,9 @@
             `;
 
             try {
-                const response = await fetch('/api/surlink/responses');
+                const response = await fetch('/surlink/responses', {
+                    credentials: 'include'
+                });
 
                 if (!response.ok) {
                     throw new Error('Error al cargar respuestas');
@@ -494,8 +502,9 @@
             if (!confirm('¿Eliminar este favorito?')) return;
 
             try {
-                const response = await fetch(`/api/surlink/favorites/${favoriteId}`, {
+                const response = await fetch(`/surlink/favorites/${favoriteId}`, {
                     method: 'DELETE',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json'
                     }
@@ -556,6 +565,7 @@
             try {
                 const response = await fetch('/api/auth/settings', {
                     method: 'PUT',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json'
                     },
@@ -610,6 +620,7 @@
             try {
                 const response = await fetch('/api/auth/delete-account', {
                     method: 'DELETE',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json'
                     }
@@ -725,6 +736,7 @@
 
                 const response = await fetch('/api/auth/upload-photo', {
                     method: 'POST',
+                    credentials: 'include',
                     body: formData
                 });
 
@@ -763,6 +775,7 @@
             try {
                 const response = await fetch('/api/auth/remove-photo', {
                     method: 'DELETE',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json'
                     }

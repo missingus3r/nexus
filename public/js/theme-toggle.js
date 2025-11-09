@@ -1,31 +1,27 @@
 (function () {
-    const STORAGE_KEY = 'vortex-theme';
     const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
 
     const safeStorage = {
         get() {
             try {
-                // Try PreferencesService first (for authenticated users)
+                // Use PreferencesService only (database-backed)
                 if (window.PreferencesService) {
                     return window.PreferencesService.getTheme();
                 }
-                // Fallback to localStorage for guests or if service not ready
-                return localStorage.getItem(STORAGE_KEY);
+                return null;
             } catch (error) {
                 return null;
             }
         },
         set(value) {
             try {
-                // Save to PreferencesService if available
+                // Save to PreferencesService only (database-backed)
                 if (window.PreferencesService) {
                     window.PreferencesService.setTheme(value);
-                } else {
-                    // Fallback to localStorage for guests
-                    localStorage.setItem(STORAGE_KEY, value);
                 }
+                // Note: Theme changes require authentication
             } catch (error) {
-                // Ignore write errors (e.g., private mode)
+                // Ignore write errors
             }
         }
     };

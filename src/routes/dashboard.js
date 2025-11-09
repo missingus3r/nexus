@@ -29,7 +29,7 @@ router.get('/dashboard', requireAuth, async (req, res, next) => {
  * API endpoint to get dashboard data
  * Returns latest alerts, surlink posts, forum threads, and notifications
  */
-router.get('/api/dashboard/data', requireAuth, async (req, res, next) => {
+router.get('/dashboard/data', requireAuth, async (req, res, next) => {
   try {
     // Get authenticated user from either OIDC or Express session
     const authUser = await getAuthenticatedUser(req);
@@ -151,7 +151,7 @@ router.get('/api/dashboard/data', requireAuth, async (req, res, next) => {
 /**
  * Mark notification as read
  */
-router.patch('/api/dashboard/notifications/:id/read', requireAuth, async (req, res, next) => {
+router.patch('/dashboard/notifications/:id/read', requireAuth, async (req, res, next) => {
   try {
     const authUser = await getAuthenticatedUser(req);
     const notificationId = req.params.id;
@@ -187,7 +187,7 @@ router.patch('/api/dashboard/notifications/:id/read', requireAuth, async (req, r
 /**
  * Mark all notifications as read
  */
-router.post('/api/dashboard/notifications/read-all', requireAuth, async (req, res, next) => {
+router.post('/dashboard/notifications/read-all', requireAuth, async (req, res, next) => {
   try {
     const authUser = await getAuthenticatedUser(req);
 

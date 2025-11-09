@@ -75,7 +75,6 @@ async function reverseGeocode(lat, lon) {
 
 async function loadNews() {
     try {
-        const token = await window.authUtils.getAuthToken();
         const showAll = document.getElementById('showAllToggle').checked;
         const radius = document.getElementById('radiusSelect').value;
 
@@ -97,7 +96,7 @@ async function loadNews() {
         }
 
         const response = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${token}` }
+            credentials: 'include'
         });
 
         const data = await response.json();

@@ -244,9 +244,8 @@ async function loadIncidentsList() {
     content.innerHTML = '<p class="text-center">Cargando incidentes...</p>';
 
     try {
-        const token = await window.authUtils.getAuthToken();
         const response = await fetch('/api/map/incidents?limit=20', {
-            headers: { 'Authorization': `Bearer ${token}` }
+            credentials: 'include'
         });
 
         const data = await response.json();

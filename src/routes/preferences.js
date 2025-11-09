@@ -1,14 +1,15 @@
 import express from 'express';
 import { UserPreferences } from '../models/index.js';
-import { checkJwt } from '../middleware/auth.js';
+import { verifyApiAuth, requireAuth } from '../middleware/apiAuth.js';
 
 const router = express.Router();
 
 // Todos los endpoints requieren autenticación
-router.use(checkJwt);
+router.use(verifyApiAuth);
+router.use(requireAuth); // All preference routes require authentication
 
 /**
- * GET /api/preferences
+ * GET /preferences
  * Obtener todas las preferencias del usuario
  */
 router.get('/', async (req, res, next) => {
@@ -39,7 +40,7 @@ router.get('/', async (req, res, next) => {
 });
 
 /**
- * PUT /api/preferences/favorites/:category
+ * PUT /preferences/favorites/:category
  * Actualizar favoritos de una categoría específica
  * Body: { action: 'add' | 'remove', itemId: string }
  */
@@ -101,7 +102,7 @@ router.put('/favorites/:category', async (req, res, next) => {
 });
 
 /**
- * PUT /api/preferences/navigation
+ * PUT /preferences/navigation
  * Actualizar preferencias de navegación
  * Body: { key: value } donde key puede ser surlinkActiveCategory, etc.
  */
@@ -148,7 +149,7 @@ router.put('/navigation', async (req, res, next) => {
 });
 
 /**
- * PUT /api/preferences/welcome-modals
+ * PUT /preferences/welcome-modals
  * Actualizar flags de modales de bienvenida
  * Body: { modalName: true/false }
  */
@@ -194,7 +195,7 @@ router.put('/welcome-modals', async (req, res, next) => {
 });
 
 /**
- * PUT /api/preferences/theme
+ * PUT /preferences/theme
  * Actualizar tema de la UI
  * Body: { theme: 'light' | 'dark' | 'auto' }
  */
@@ -231,7 +232,7 @@ router.put('/theme', async (req, res, next) => {
 });
 
 /**
- * POST /api/preferences/migrate
+ * POST /preferences/migrate
  * Migrar datos de localStorage a la base de datos
  * Body: { localStorage: {...} } - objeto con todos los datos de localStorage
  */

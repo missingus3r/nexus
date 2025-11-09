@@ -1,6 +1,6 @@
 import express from 'express';
 import { HeatCell } from '../models/index.js';
-import { checkJwt } from '../middleware/auth.js';
+import { verifyApiAuth } from '../middleware/apiAuth.js';
 import geohash from 'ngeohash';
 
 const router = express.Router();
@@ -10,7 +10,7 @@ const router = express.Router();
  * Get heatmap cells within a bounding box
  * Query params: bbox (lon1,lat1,lon2,lat2), precision (default 7)
  */
-router.get('/', checkJwt, async (req, res, next) => {
+router.get('/', verifyApiAuth, async (req, res, next) => {
   try {
     const { bbox, precision = 7 } = req.query;
 

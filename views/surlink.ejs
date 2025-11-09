@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
           crossorigin=""/>
+    <script src="/js/preferences-service.js"></script>
     <script src="/js/theme-toggle.js" defer></script>
     <!-- Leaflet JS for maps -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -51,6 +52,10 @@
                     <button type="button" class="surlink-quick-link" data-surlink-quick="autos">
                         <span>Surlink Autos</span>
                         <small>Autos, utilitarios y movilidad</small>
+                    </button>
+                    <button type="button" class="surlink-quick-link" data-surlink-quick="trabajos">
+                        <span>Surlink Trabajos</span>
+                        <small>Ofertas laborales y CV con IA</small>
                     </button>
                 </div>
             </section>
@@ -123,6 +128,174 @@
                             <p style="font-size: 1rem; color: #888; max-width: 500px;">
                                 A la brevedad estaremos publicando ofertas verificadas de autos, camionetas y utilitarios.
                             </p>
+                        </div>
+                    </section>
+
+                    <section class="surlink-section" data-surlink-section="trabajos" role="tabpanel" aria-hidden="true">
+                        <header class="surlink-section-header">
+                            <h2>Surlink Trabajos</h2>
+                            <p>Encuentra oportunidades laborales y crea tu CV profesional con inteligencia artificial.</p>
+                        </header>
+
+                        <div class="trabajos-tabs">
+                            <button type="button" class="trabajos-tab active" data-trabajos-tab="ofertas">
+                                Ofertas Laborales
+                            </button>
+                            <button type="button" class="trabajos-tab" data-trabajos-tab="mis-trabajos">
+                                Mis Trabajos Guardados
+                            </button>
+                            <button type="button" class="trabajos-tab" data-trabajos-tab="mi-cv">
+                                Mi CV (IA)
+                            </button>
+                        </div>
+
+                        <!-- Tab 1: Job Listings -->
+                        <div class="trabajos-tab-content active" data-trabajos-content="ofertas">
+                            <form id="trabajosFilterForm" class="surlink-filters">
+                                <div class="surlink-filter-group">
+                                    <label for="trabajosSearch">Búsqueda</label>
+                                    <input type="text" id="trabajosSearch" name="search" placeholder="Cargo, empresa, habilidad...">
+                                </div>
+                                <div class="surlink-filter-group">
+                                    <label for="trabajosTipo">Tipo de trabajo</label>
+                                    <select id="trabajosTipo" name="jobType">
+                                        <option value="">Todos</option>
+                                        <option value="full-time">Tiempo completo</option>
+                                        <option value="part-time">Medio tiempo</option>
+                                        <option value="freelance">Freelance</option>
+                                        <option value="internship">Pasantía</option>
+                                        <option value="contract">Contrato</option>
+                                    </select>
+                                </div>
+                                <div class="surlink-filter-group">
+                                    <label for="trabajosNivel">Nivel de experiencia</label>
+                                    <select id="trabajosNivel" name="experienceLevel">
+                                        <option value="">Todos</option>
+                                        <option value="entry">Junior</option>
+                                        <option value="mid">Semi-senior</option>
+                                        <option value="senior">Senior</option>
+                                        <option value="executive">Ejecutivo</option>
+                                    </select>
+                                </div>
+                                <div class="surlink-filter-group">
+                                    <label for="trabajosCiudad">Ciudad</label>
+                                    <input type="text" id="trabajosCiudad" name="city" placeholder="Ej: Montevideo">
+                                </div>
+                                <div class="surlink-filter-group">
+                                    <label>
+                                        <input type="checkbox" id="trabajosRemoto" name="remote">
+                                        Solo trabajo remoto
+                                    </label>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Buscar</button>
+                                <button type="button" class="btn btn-secondary" data-surlink-reset="trabajos">Limpiar</button>
+                            </form>
+
+                            <div class="surlink-feedback" data-feedback="trabajos" hidden></div>
+                            <div class="surlink-results trabajos-grid" id="trabajosResults"></div>
+                            <div class="surlink-pagination" data-pagination="trabajos"></div>
+                        </div>
+
+                        <!-- Tab 2: My Saved Jobs -->
+                        <div class="trabajos-tab-content" data-trabajos-content="mis-trabajos" hidden>
+                            <div class="mis-trabajos-container">
+                                <div class="surlink-feedback" data-feedback="mis-trabajos" hidden></div>
+                                <div class="surlink-results trabajos-grid" id="misTrabajosResults"></div>
+                            </div>
+                        </div>
+
+                        <!-- Tab 3: CV Builder -->
+                        <div class="trabajos-tab-content" data-trabajos-content="mi-cv" hidden>
+                            <div class="cv-builder-container">
+                                <!-- CV Questions Form -->
+                                <div id="cvQuestionsForm" class="cv-questions-form">
+                                    <h3>Crea tu CV con Inteligencia Artificial</h3>
+                                    <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+                                        Responde estas 6 preguntas y nuestra IA generará un CV profesional para ti.
+                                    </p>
+
+                                    <form id="cvQuestionsFormElement">
+                                        <div class="cv-question">
+                                            <label>1. ¿Cuál es tu rol actual o más reciente?</label>
+                                            <input type="text" name="currentRole" placeholder="Ej: Desarrollador Full Stack" required>
+                                        </div>
+
+                                        <div class="cv-question">
+                                            <label>2. ¿Cuáles son tus 3 habilidades principales?</label>
+                                            <input type="text" name="topSkills" placeholder="Ej: JavaScript, React, Node.js" required>
+                                        </div>
+
+                                        <div class="cv-question">
+                                            <label>3. ¿Qué tipo de posición estás buscando?</label>
+                                            <input type="text" name="targetPosition" placeholder="Ej: Frontend Developer en startup tecnológica" required>
+                                        </div>
+
+                                        <div class="cv-question">
+                                            <label>4. ¿Cuáles son tus logros profesionales más destacados?</label>
+                                            <textarea name="achievements" rows="3" placeholder="Ej: Lideré equipo de 5 desarrolladores, implementé sistema que redujo costos en 30%..." required></textarea>
+                                        </div>
+
+                                        <div class="cv-question">
+                                            <label>5. ¿Cuál es tu formación académica?</label>
+                                            <input type="text" name="education" placeholder="Ej: Ingeniería en Sistemas - Universidad ORT" required>
+                                        </div>
+
+                                        <div class="cv-question">
+                                            <label>6. Información adicional (certificaciones, idiomas, etc.)</label>
+                                            <textarea name="additional" rows="3" placeholder="Ej: Inglés avanzado, AWS Certified, cursos de IA..."></textarea>
+                                        </div>
+
+                                        <div class="cv-question-actions">
+                                            <button type="submit" class="btn btn-primary btn-large" id="generateCVBtn">
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                                                    <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                                    <path d="M2 17l10 5 10-5"></path>
+                                                    <path d="M2 12l10 5 10-5"></path>
+                                                </svg>
+                                                Generar CV con IA
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <!-- CV Preview -->
+                                <div id="cvPreview" class="cv-preview" hidden>
+                                    <div class="cv-actions">
+                                        <button class="btn btn-secondary" id="editCVBtn">Editar manualmente</button>
+                                        <button class="btn btn-primary" id="regenerateCVBtn">Regenerar con IA</button>
+                                        <button class="btn btn-success" id="exportPDFBtn">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="7 10 12 15 17 10"></polyline>
+                                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                                            </svg>
+                                            Exportar como PDF
+                                        </button>
+                                    </div>
+                                    <div class="cv-content" id="cvContent"></div>
+                                </div>
+
+                                <!-- Loading state -->
+                                <div id="cvLoading" class="cv-loading" hidden>
+                                    <div class="loading-spinner"></div>
+                                    <p>Generando tu CV con inteligencia artificial...</p>
+                                </div>
+
+                                <!-- CV Editor (hidden by default) -->
+                                <div id="cvEditor" class="cv-editor" hidden>
+                                    <h3>Editar CV</h3>
+                                    <form id="cvEditorForm">
+                                        <div class="cv-editor-section">
+                                            <label>Resumen Profesional</label>
+                                            <textarea id="editSummary" rows="3"></textarea>
+                                        </div>
+                                        <div class="cv-editor-actions">
+                                            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                                            <button type="button" class="btn btn-secondary" id="cancelEditBtn">Cancelar</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </section>
 

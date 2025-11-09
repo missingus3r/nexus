@@ -1,73 +1,11 @@
 import express from 'express';
-import { generateGuestToken, generateUserToken } from '../middleware/auth.js';
 import { User, Incident, Validation, ForumThread, ForumComment } from '../models/index.js';
 import logger from '../utils/logger.js';
 import { getAuthenticatedUser } from '../config/auth0.js';
 
 const router = express.Router();
 
-/**
- * POST /auth/guest-token
- * Generate a guest JWT for anonymous users (read-only access)
- */
-router.post('/guest-token', (req, res) => {
-  try {
-    const token = generateGuestToken();
-    res.json({
-      token,
-      type: 'guest',
-      expiresIn: 86400, // 24 hours in seconds
-      permissions: []
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to generate guest token' });
-  }
-});
-
-/**
- * POST /auth/user-token
- * Generate a user JWT for authenticated users
- */
-router.post('/user-token', async (req, res) => {
-  try {
-    const sessionUser = await getAuthenticatedUser(req);
-
-    if (!sessionUser) {
-      return res.status(401).json({ error: 'No autenticado' });
-    }
-
-    // Get user from database
-    const user = await User.findOne({ uid: sessionUser.uid });
-    if (!user) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    }
-
-    // Generate token with user data
-    const token = generateUserToken(user.uid, [], {
-      email: user.email,
-      name: user.name,
-      picture: user.picture
-    });
-
-    res.json({
-      token,
-      type: 'user',
-      expiresIn: 604800, // 7 days in seconds
-      user: {
-        uid: user.uid,
-        email: user.email,
-        name: user.name,
-        picture: user.picture,
-        role: user.role
-      }
-    });
-  } catch (error) {
-    logger.error('Error generating user token:', error);
-    res.status(500).json({ error: 'Failed to generate user token' });
-  }
-});
-
-// Ruta de callback eliminada - Auth0 maneja /callback automáticamente
+// JWT token generation routes removed - now using session-based auth + API tokens
 
 /**
  * GET /auth/profile

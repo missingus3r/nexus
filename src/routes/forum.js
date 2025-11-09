@@ -2,7 +2,7 @@ import express from 'express';
 import sanitizeHtml from 'sanitize-html';
 import { ForumThread, ForumComment, ForumSettings, User } from '../models/index.js';
 import { ALLOWED_HASHTAGS } from '../models/ForumThread.js';
-import { checkJwt, attachUser } from '../middleware/auth.js';
+import { verifyApiAuth, requireAuth } from '../middleware/apiAuth.js';
 import { uploadForumImages, handleUploadErrors } from '../middleware/upload.js';
 import { processMentions, createMentionNotifications } from '../utils/forumHelpers.js';
 import crypto from 'crypto';
@@ -28,10 +28,10 @@ const sanitizeConfig = {
 };
 
 // Optional authentication (doesn't fail if not authenticated)
-const optionalAuth = [checkJwt, attachUser];
+const optionalAuth = [verifyApiAuth, requireAuth];
 
 // Combined authentication middleware (requires authenticated user)
-const authenticate = [checkJwt, attachUser, (req, res, next) => {
+const authenticate = [verifyApiAuth, requireAuth, (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required' });
   }
@@ -101,7 +101,7 @@ const checkCommentRateLimit = async (req, res, next) => {
 };
 
 /**
- * GET /api/forum/hashtags
+ * GET /forum/hashtags
  * Get all allowed hashtags
  */
 router.get('/hashtags', (req, res) => {
@@ -109,7 +109,7 @@ router.get('/hashtags', (req, res) => {
 });
 
 /**
- * GET /api/forum/users/search
+ * GET /forum/users/search
  * Search users by name for mentions autocomplete
  */
 router.get('/users/search', optionalAuth, async (req, res) => {
@@ -136,7 +136,7 @@ router.get('/users/search', optionalAuth, async (req, res) => {
 });
 
 /**
- * GET /api/forum/threads
+ * GET /forum/threads
  * Get all forum threads with pagination and sorting
  */
 router.get('/threads', optionalAuth, async (req, res) => {
@@ -196,7 +196,7 @@ router.get('/threads', optionalAuth, async (req, res) => {
 });
 
 /**
- * POST /api/forum/threads
+ * POST /forum/threads
  * Create a new forum thread (authenticated users only)
  */
 router.post('/threads', authenticate, checkThreadRateLimit, uploadForumImages, handleUploadErrors, async (req, res) => {
@@ -342,7 +342,7 @@ router.post('/threads', authenticate, checkThreadRateLimit, uploadForumImages, h
 });
 
 /**
- * GET /api/forum/threads/:id
+ * GET /forum/threads/:id
  * Get a specific thread with all its comments
  */
 router.get('/threads/:id', optionalAuth, async (req, res) => {
@@ -446,7 +446,7 @@ router.get('/threads/:id', optionalAuth, async (req, res) => {
 });
 
 /**
- * POST /api/forum/threads/:id/like
+ * POST /forum/threads/:id/like
  * Toggle like on a thread
  */
 router.post('/threads/:id/like', authenticate, async (req, res) => {
@@ -472,7 +472,7 @@ router.post('/threads/:id/like', authenticate, async (req, res) => {
 });
 
 /**
- * POST /api/forum/threads/:id/vote
+ * POST /forum/threads/:id/vote
  * Vote in a poll thread
  */
 router.post('/threads/:id/vote', authenticate, async (req, res) => {
@@ -520,7 +520,7 @@ router.post('/threads/:id/vote', authenticate, async (req, res) => {
 });
 
 /**
- * POST /api/forum/threads/:id/comments
+ * POST /forum/threads/:id/comments
  * Add a comment to a thread
  */
 router.post('/threads/:id/comments', authenticate, checkCommentRateLimit, uploadForumImages, handleUploadErrors, async (req, res) => {
@@ -602,7 +602,7 @@ router.post('/threads/:id/comments', authenticate, checkCommentRateLimit, upload
 });
 
 /**
- * POST /api/forum/comments/:id/like
+ * POST /forum/comments/:id/like
  * Toggle like on a comment
  */
 router.post('/comments/:id/like', authenticate, async (req, res) => {
@@ -628,7 +628,7 @@ router.post('/comments/:id/like', authenticate, async (req, res) => {
 });
 
 /**
- * PUT /api/forum/threads/:id
+ * PUT /forum/threads/:id
  * Edit a thread (author only, within 5 minutes)
  */
 router.put('/threads/:id', authenticate, uploadForumImages, handleUploadErrors, async (req, res) => {
@@ -713,7 +713,7 @@ router.put('/threads/:id', authenticate, uploadForumImages, handleUploadErrors, 
 });
 
 /**
- * DELETE /api/forum/threads/:id
+ * DELETE /forum/threads/:id
  * Delete a thread (author only, within 5 minutes)
  * - Admin: always delete permanently (hard delete)
  * - User: If no comments: delete completely, If has comments: replace with [ELIMINADO]
@@ -784,7 +784,7 @@ router.delete('/threads/:id', authenticate, async (req, res) => {
 });
 
 /**
- * PUT /api/forum/comments/:id
+ * PUT /forum/comments/:id
  * Edit a comment (author only, within 5 minutes)
  */
 router.put('/comments/:id', authenticate, uploadForumImages, handleUploadErrors, async (req, res) => {
@@ -841,7 +841,7 @@ router.put('/comments/:id', authenticate, uploadForumImages, handleUploadErrors,
 });
 
 /**
- * DELETE /api/forum/comments/:id
+ * DELETE /forum/comments/:id
  * Delete a comment (author only, within 5 minutes)
  * - Admin: always delete permanently (hard delete) including all replies
  * - User: If no replies: delete completely, If has replies: replace with [ELIMINADO]
@@ -942,7 +942,7 @@ router.delete('/comments/:id', authenticate, async (req, res) => {
 });
 
 /**
- * GET /api/forum/users/:id/profile
+ * GET /forum/users/:id/profile
  * Get user profile with forum statistics
  */
 router.get('/users/:id/profile', optionalAuth, async (req, res) => {
@@ -993,7 +993,7 @@ router.get('/users/:id/profile', optionalAuth, async (req, res) => {
 });
 
 /**
- * GET /api/forum/my-threads
+ * GET /forum/my-threads
  * Get threads created by authenticated user
  */
 router.get('/my-threads', authenticate, async (req, res) => {

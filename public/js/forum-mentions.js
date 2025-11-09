@@ -50,9 +50,8 @@ function handleMentionTrigger(quill) {
 // Search for users
 async function searchUsers(query, quill) {
   try {
-    const token = localStorage.getItem('jwt');
-    const response = await fetch(`/api/forum/users/search?q=${encodeURIComponent(query)}`, {
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    const response = await fetch(`/forum/users/search?q=${encodeURIComponent(query)}`, {
+      credentials: 'include'
     });
 
     if (!response.ok) {

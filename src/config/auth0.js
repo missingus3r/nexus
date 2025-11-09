@@ -179,12 +179,12 @@ export const requireAuth = (req, res, next) => {
   }
 
   // No autenticado: redirigir según tipo de ruta
-  if (req.path.startsWith('/api/')) {
+  if (req.path.startsWith('/api/') || req.path.startsWith('/admin/') || req.path.startsWith('/dashboard/') || req.path.startsWith('/preferences/') || req.path.startsWith('/reports/')) {
     return res.status(401).json({ error: 'No autenticado' });
   }
 
-  logger.info(`Acceso no autorizado a ${req.path}, redirigiendo a login`);
-  return res.redirect('/login');
+  logger.info(`Acceso no autorizado a ${req.path}, redirigiendo a landing page`);
+  return res.redirect('/');
 };
 
 /**

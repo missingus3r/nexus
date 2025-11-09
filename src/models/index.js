@@ -16,3 +16,6 @@ export { default as SystemSettings } from './SystemSettings.js';
 export { default as UserPreferences } from './UserPreferences.js';
 export { default as SiteLike } from './SiteLike.js';
 export { default as Report } from './Report.js';
+export { default as ApiToken } from './ApiToken.js';
+export { default as JobListing } from './JobListing.js';
+export { default as CVDocument } from './CVDocument.js';

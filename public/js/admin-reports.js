@@ -5,43 +5,7 @@ let currentReportStatusFilter = 'pending';
 let currentReportTypeFilter = '';
 let currentReportId = null;
 
-// Initialize JWT token for authenticated admin user
-async function initializeAdminAuth() {
-  try {
-    // Check if we already have a valid token
-    const existingToken = localStorage.getItem('jwt');
-    if (existingToken) {
-      // Verify if it's not a guest token
-      const payload = JSON.parse(atob(existingToken.split('.')[1]));
-      if (payload.sub !== 'guest' && payload.type !== 'guest') {
-        console.log('Using existing JWT token');
-        return; // Token is valid
-      }
-    }
-
-    // Get a new token from the server for the authenticated user
-    console.log('Requesting user JWT token...');
-    const response = await fetch('/auth/user-token', {
-      method: 'POST',
-      credentials: 'include' // Include session cookie
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      localStorage.setItem('jwt', data.token);
-      console.log('JWT token obtained successfully for role:', data.user.role);
-    } else {
-      console.error('Failed to get user token:', response.status);
-      // Keep using existing token (might be guest)
-    }
-  } catch (error) {
-    console.error('Error initializing admin auth:', error);
-  }
-}
-
 document.addEventListener('DOMContentLoaded', async () => {
-  // First, ensure we have a valid JWT token
-  await initializeAdminAuth();
 
   // Initialize reports management
   loadReportsStats();
@@ -83,11 +47,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Load reports statistics
 async function loadReportsStats() {
   try {
-    const token = localStorage.getItem('jwt');
-    const response = await fetch('/api/reports?limit=1', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+    const response = await fetch('/reports?limit=1', {
+      credentials: 'include'
     });
 
     if (response.ok) {
@@ -112,7 +73,6 @@ async function loadReports() {
   tbody.innerHTML = '<tr><td colspan="7" style="padding: 2rem; text-align: center; color: var(--text-secondary);">Cargando reportes...</td></tr>';
 
   try {
-    const token = localStorage.getItem('jwt');
     const params = new URLSearchParams({
       page: currentReportsPage,
       limit: 20
@@ -125,10 +85,8 @@ async function loadReports() {
       params.append('type', currentReportTypeFilter);
     }
 
-    const response = await fetch(`/api/reports?${params}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+    const response = await fetch(`/reports?${params}`, {
+      credentials: 'include'
     });
 
     if (response.ok) {
@@ -225,11 +183,8 @@ async function viewReportDetails(reportId) {
   content.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Cargando...</p>';
 
   try {
-    const token = localStorage.getItem('jwt');
-    const response = await fetch(`/api/reports/${reportId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+    const response = await fetch(`/reports/${reportId}`, {
+      credentials: 'include'
     });
 
     if (response.ok) {
@@ -362,13 +317,12 @@ async function updateReportStatus(status) {
   }
 
   try {
-    const token = localStorage.getItem('jwt');
-    const response = await fetch(`/api/reports/${currentReportId}`, {
+    const response = await fetch(`/reports/${currentReportId}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'application/json'
       },
+      credentials: 'include',
       body: JSON.stringify({ status, resolution })
     });
 
@@ -396,12 +350,9 @@ async function deleteReport() {
   }
 
   try {
-    const token = localStorage.getItem('jwt');
-    const response = await fetch(`/api/reports/${currentReportId}`, {
+    const response = await fetch(`/reports/${currentReportId}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      credentials: 'include'
     });
 
     if (response.ok) {

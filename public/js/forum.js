@@ -118,7 +118,9 @@ function initThreadQuillEditor() {
 // Load available hashtags from API
 async function loadHashtags() {
   try {
-    const response = await fetch('/api/forum/hashtags');
+    const response = await fetch('/forum/hashtags', {
+      credentials: 'include'
+    });
     const data = await response.json();
     availableHashtags = data.hashtags || [];
   } catch (error) {
@@ -206,13 +208,12 @@ window.clearHashtagFilter = clearHashtagFilter;
 
 async function loadThreads() {
   try {
-    const token = await window.authUtils.getAuthToken();
-    let url = `/api/forum/threads?page=${currentPage}&limit=20&sort=${currentSort}`;
+    let url = `/forum/threads?page=${currentPage}&limit=20&sort=${currentSort}`;
     if (currentHashtag) {
       url += `&hashtag=${currentHashtag}`;
     }
     const response = await fetch(url, {
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      credentials: 'include'
     });
 
     const data = await response.json();
@@ -226,7 +227,6 @@ async function loadThreads() {
 
 async function displayThreads(threads) {
   const container = document.getElementById('threadsList');
-  const token = await window.authUtils.getAuthToken();
 
   if (!threads || threads.length === 0) {
     container.innerHTML = `
@@ -288,7 +288,7 @@ async function displayThreads(threads) {
       </div>
 
       <div class="thread-actions">
-        ${token ? `
+        ${thread.isAuthenticated ? `
           <button class="like-btn ${thread.isLiked ? 'liked' : ''}" onclick="toggleThreadLike('${thread._id}', event)">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="${thread.isLiked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -338,13 +338,6 @@ function goToPage(page) {
 async function handleNewThreadSubmit(e) {
   e.preventDefault();
 
-  const token = await window.authUtils.getAuthToken();
-  if (!token) {
-    toastWarning('Debes iniciar sesión');
-    window.location.href = '/login';
-    return;
-  }
-
   // Get HTML content from Quill
   const htmlContent = threadQuillEditor.root.innerHTML;
 
@@ -387,11 +380,9 @@ async function handleNewThreadSubmit(e) {
   }
 
   try {
-    const response = await fetch('/api/forum/threads', {
+    const response = await fetch('/forum/threads', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
+      credentials: 'include',
       body: formData
     });
 
@@ -484,9 +475,8 @@ function initThreadView() {
 
 async function loadThread() {
   try {
-    const token = await window.authUtils.getAuthToken();
-    const response = await fetch(`/api/forum/threads/${currentThreadId}`, {
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    const response = await fetch(`/forum/threads/${currentThreadId}`, {
+      credentials: 'include'
     });
 
     const data = await response.json();
@@ -501,19 +491,17 @@ async function loadThread() {
 async function displayThread(thread) {
   const container = document.getElementById('threadContent');
 
-  // Check if user can edit/delete
-  const token = await window.authUtils.getAuthToken();
-  const isAuthor = token && thread.author._id === getUserIdFromToken(token);
-  const isAdmin = token && isUserAdmin(token);
-  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-  const canEdit = isAuthor && new Date(thread.createdAt) > fiveMinutesAgo;
-  const canDelete = isAdmin || (isAuthor && new Date(thread.createdAt) > fiveMinutesAgo);
+  // Check if user can edit/delete (now passed from server)
+  const isAuthenticated = thread.isAuthenticated || false;
+  const canEdit = thread.canEdit || false;
+  const canDelete = thread.canDelete || false;
+  const isAuthor = thread.isAuthor || false;
 
   container.innerHTML = `
     <div class="thread-detail">
       <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
         <h1 style="margin: 0;">${escapeHtml(thread.title)}</h1>
-        ${canEdit || canDelete || token ? `
+        ${canEdit || canDelete || isAuthenticated ? `
           <div style="display: flex; gap: 0.5rem;">
             ${canEdit ? `
               <button onclick="openEditThreadModal('${thread._id}')" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
@@ -522,10 +510,10 @@ async function displayThread(thread) {
             ` : ''}
             ${canDelete ? `
               <button onclick="deleteThread('${thread._id}')" class="btn" style="padding: 0.5rem 1rem; font-size: 0.875rem; background: var(--danger-color); color: white;">
-                ${isAdmin ? 'Eliminar (Admin)' : 'Eliminar'}
+                ${thread.isAdmin ? 'Eliminar (Admin)' : 'Eliminar'}
               </button>
             ` : ''}
-            ${token && !isAuthor ? `
+            ${isAuthenticated && !isAuthor ? `
               <button onclick="openReportModal('thread', '${thread._id}')" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem; background: transparent; border: 1px solid var(--border-color);" title="Reportar thread">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
                   <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
@@ -571,7 +559,7 @@ async function displayThread(thread) {
       ` : ''}
 
       <div class="thread-actions" style="display: flex; gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-        ${token ? `
+        ${isAuthenticated ? `
           <button class="like-btn ${thread.isLiked ? 'liked' : ''}" onclick="toggleThreadLike('${thread._id}', event)">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="${thread.isLiked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -604,20 +592,17 @@ async function displayComments(comments) {
     return;
   }
 
-  // Get token once and pass to renderComment
-  const token = await window.authUtils.getAuthToken();
-  container.innerHTML = comments.map(comment => renderComment(comment, 0, token)).join('');
+  container.innerHTML = comments.map(comment => renderComment(comment, 0)).join('');
 }
 
-function renderComment(comment, depth = 0, token = null) {
+function renderComment(comment, depth = 0) {
   const marginLeft = Math.min(depth * 2, 10); // Max 10rem indentation
 
-  // Check if user can edit/delete
-  const isAuthor = token && comment.author._id === getUserIdFromToken(token);
-  const isAdmin = token && isUserAdmin(token);
-  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-  const canEdit = isAuthor && new Date(comment.createdAt) > fiveMinutesAgo;
-  const canDelete = isAdmin || (isAuthor && new Date(comment.createdAt) > fiveMinutesAgo);
+  // Check if user can edit/delete (now passed from server)
+  const isAuthenticated = comment.isAuthenticated || false;
+  const canEdit = comment.canEdit || false;
+  const canDelete = comment.canDelete || false;
+  const isAuthor = comment.isAuthor || false;
 
   return `
     <div class="comment" data-comment-id="${comment._id}" style="margin-left: ${marginLeft}rem; margin-bottom: 1rem; padding: 1rem; background: var(--surface); border-radius: 8px; border-left: 3px solid var(--primary-color);">
@@ -630,7 +615,7 @@ function renderComment(comment, depth = 0, token = null) {
             ${comment.updatedAt && comment.updatedAt !== comment.createdAt ? '<span style="color: var(--text-secondary); font-size: 0.875rem; font-style: italic; margin-left: 0.5rem;">(editado)</span>' : ''}
           </div>
         </div>
-        ${canEdit || canDelete || (token && !isAuthor) ? `
+        ${canEdit || canDelete || (isAuthenticated && !isAuthor) ? `
           <div style="display: flex; gap: 0.5rem;">
             ${canEdit ? `
               <button onclick="openEditCommentModal('${comment._id}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: var(--surface-elevated); border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; color: var(--text-primary);">
@@ -639,10 +624,10 @@ function renderComment(comment, depth = 0, token = null) {
             ` : ''}
             ${canDelete ? `
               <button onclick="deleteComment('${comment._id}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: var(--danger-color); border: none; border-radius: 4px; cursor: pointer; color: white;">
-                ${isAdmin ? 'Eliminar (Admin)' : 'Eliminar'}
+                ${comment.isAdmin ? 'Eliminar (Admin)' : 'Eliminar'}
               </button>
             ` : ''}
-            ${token && !isAuthor ? `
+            ${isAuthenticated && !isAuthor ? `
               <button onclick="openReportModal('comment', '${comment._id}')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: transparent; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; color: var(--text-secondary);" title="Reportar comentario">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;">
                   <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
@@ -668,7 +653,7 @@ function renderComment(comment, depth = 0, token = null) {
       ` : ''}
 
       <div class="comment-actions" style="display: flex; gap: 1rem; align-items: center;">
-        ${token ? `
+        ${isAuthenticated ? `
           <button class="like-btn small ${comment.isLiked ? 'liked' : ''}" onclick="toggleCommentLike('${comment._id}', event)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="${comment.isLiked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -688,7 +673,7 @@ function renderComment(comment, depth = 0, token = null) {
 
       ${comment.replies && comment.replies.length > 0 ? `
         <div class="comment-replies" style="margin-top: 1rem;">
-          ${comment.replies.map(reply => renderComment(reply, depth + 1, token)).join('')}
+          ${comment.replies.map(reply => renderComment(reply, depth + 1)).join('')}
         </div>
       ` : ''}
     </div>
@@ -708,20 +693,12 @@ function countAllComments(comments) {
 async function handleNewCommentSubmit(e) {
   e.preventDefault();
 
-  const token = await window.authUtils.getAuthToken();
-  if (!token) {
-    toastWarning('Debes iniciar sesión');
-    return;
-  }
-
   const formData = new FormData(e.target);
 
   try {
-    const response = await fetch(`/api/forum/threads/${currentThreadId}/comments`, {
+    const response = await fetch(`/forum/threads/${currentThreadId}/comments`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
+      credentials: 'include',
       body: formData
     });
 
@@ -748,13 +725,6 @@ async function handleNewCommentSubmit(e) {
 }
 
 async function openReplyModal(commentId) {
-  const token = await window.authUtils.getAuthToken();
-  if (!token) {
-    toastWarning('Debes iniciar sesión');
-    window.location.href = '/login';
-    return;
-  }
-
   document.getElementById('parentCommentId').value = commentId;
   document.getElementById('replyModal').classList.add('active');
 }
@@ -773,20 +743,12 @@ window.closeReplyModal = closeReplyModal;
 async function handleReplySubmit(e) {
   e.preventDefault();
 
-  const token = await window.authUtils.getAuthToken();
-  if (!token) {
-    toastWarning('Debes iniciar sesión');
-    return;
-  }
-
   const formData = new FormData(e.target);
 
   try {
-    const response = await fetch(`/api/forum/threads/${currentThreadId}/comments`, {
+    const response = await fetch(`/forum/threads/${currentThreadId}/comments`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
+      credentials: 'include',
       body: formData
     });
 
@@ -816,22 +778,13 @@ async function toggleThreadLike(threadId, event) {
   event.preventDefault();
   event.stopPropagation();
 
-  const token = await window.authUtils.getAuthToken();
-  if (!token) {
-    toastWarning('Debes iniciar sesión para dar like');
-    window.location.href = '/login';
-    return;
-  }
-
   const button = event.currentTarget;
   button.disabled = true;
 
   try {
-    const response = await fetch(`/api/forum/threads/${threadId}/like`, {
+    const response = await fetch(`/forum/threads/${threadId}/like`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      credentials: 'include'
     });
 
     const data = await response.json();
@@ -862,21 +815,13 @@ async function toggleCommentLike(commentId, event) {
   event.preventDefault();
   event.stopPropagation();
 
-  const token = await window.authUtils.getAuthToken();
-  if (!token) {
-    toastWarning('Debes iniciar sesión para dar like');
-    return;
-  }
-
   const button = event.currentTarget;
   button.disabled = true;
 
   try {
-    const response = await fetch(`/api/forum/comments/${commentId}/like`, {
+    const response = await fetch(`/forum/comments/${commentId}/like`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      credentials: 'include'
     });
 
     const data = await response.json();
@@ -1017,41 +962,12 @@ let editThreadQuillEditor = null;
 let currentThreadData = null;
 let currentCommentData = null;
 
-// Get user ID from JWT token
-function getUserIdFromToken(token) {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.sub;
-  } catch (error) {
-    return null;
-  }
-}
-
-function getUserRoleFromToken(token) {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.role || 'user';
-  } catch (error) {
-    return 'user';
-  }
-}
-
-function isUserAdmin(token) {
-  return getUserRoleFromToken(token) === 'admin';
-}
-
 // Open edit thread modal
 async function openEditThreadModal(threadId) {
-  const token = await window.authUtils.getAuthToken();
-  if (!token) {
-    toastWarning('Debes iniciar sesión');
-    return;
-  }
-
   try {
     // Fetch thread data
-    const response = await fetch(`/api/forum/threads/${threadId}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+    const response = await fetch(`/forum/threads/${threadId}`, {
+      credentials: 'include'
     });
     const data = await response.json();
     currentThreadData = data.thread;
@@ -1106,12 +1022,6 @@ window.closeEditThreadModal = closeEditThreadModal;
 async function handleEditThreadSubmit(e) {
   e.preventDefault();
 
-  const token = await window.authUtils.getAuthToken();
-  if (!token) {
-    toastWarning('Debes iniciar sesión');
-    return;
-  }
-
   const threadId = document.getElementById('editThreadId').value;
   const title = document.getElementById('editThreadTitle').value;
   const content = editThreadQuillEditor.root.innerHTML;
@@ -1121,11 +1031,9 @@ async function handleEditThreadSubmit(e) {
   formData.set('content', content);
 
   try {
-    const response = await fetch(`/api/forum/threads/${threadId}`, {
+    const response = await fetch(`/forum/threads/${threadId}`, {
       method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
+      credentials: 'include',
       body: formData
     });
 
@@ -1146,29 +1054,14 @@ async function handleEditThreadSubmit(e) {
 
 // Delete thread
 async function deleteThread(threadId) {
-  const token = await window.authUtils.getAuthToken();
-  if (!token) {
-    toastWarning('Debes iniciar sesión');
-    return;
-  }
-
-  const isAdmin = isUserAdmin(token);
-
-  // Different confirmation message for admins
-  const confirmMessage = isAdmin
-    ? '⚠️ ADMIN: ¿Estás seguro de que quieres eliminar permanentemente este thread?\n\nEsto eliminará el thread y TODOS sus comentarios de forma PERMANENTE.\n\nEsta acción NO se puede deshacer.'
-    : '¿Estás seguro de que quieres eliminar este thread?';
-
-  if (!confirm(confirmMessage)) {
+  if (!confirm('¿Estás seguro de que quieres eliminar este thread?')) {
     return;
   }
 
   try {
-    const response = await fetch(`/api/forum/threads/${threadId}`, {
+    const response = await fetch(`/forum/threads/${threadId}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      credentials: 'include'
     });
 
     const data = await response.json();
@@ -1176,7 +1069,7 @@ async function deleteThread(threadId) {
     if (response.ok) {
       if (data.type === 'hard') {
         // Completely deleted - redirect to forum
-        toastSuccess(isAdmin ? 'Thread y todos sus comentarios eliminados permanentemente por admin' : 'Thread eliminado completamente');
+        toastSuccess(data.isAdmin ? 'Thread y todos sus comentarios eliminados permanentemente por admin' : 'Thread eliminado completamente');
         setTimeout(() => {
           window.location.href = '/forum-vortex';
         }, 600);
@@ -1198,12 +1091,6 @@ window.deleteThread = deleteThread;
 
 // Open edit comment modal
 async function openEditCommentModal(commentId) {
-  const token = await window.authUtils.getAuthToken();
-  if (!token) {
-    toastWarning('Debes iniciar sesión');
-    return;
-  }
-
   try {
     // Find comment in current thread data
     const findComment = (comments) => {
@@ -1218,8 +1105,8 @@ async function openEditCommentModal(commentId) {
     };
 
     // Get thread data to find comment
-    const response = await fetch(`/api/forum/threads/${currentThreadId}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+    const response = await fetch(`/forum/threads/${currentThreadId}`, {
+      credentials: 'include'
     });
     const data = await response.json();
     const comment = findComment(data.comments);
@@ -1263,12 +1150,6 @@ window.closeEditCommentModal = closeEditCommentModal;
 async function handleEditCommentSubmit(e) {
   e.preventDefault();
 
-  const token = await window.authUtils.getAuthToken();
-  if (!token) {
-    toastWarning('Debes iniciar sesión');
-    return;
-  }
-
   const commentId = document.getElementById('editCommentId').value;
   const content = document.getElementById('editCommentContent').value;
 
@@ -1276,11 +1157,9 @@ async function handleEditCommentSubmit(e) {
   formData.set('content', `<p>${escapeHtml(content)}</p>`);
 
   try {
-    const response = await fetch(`/api/forum/comments/${commentId}`, {
+    const response = await fetch(`/forum/comments/${commentId}`, {
       method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      },
+      credentials: 'include',
       body: formData
     });
 
@@ -1301,35 +1180,20 @@ async function handleEditCommentSubmit(e) {
 
 // Delete comment
 async function deleteComment(commentId) {
-  const token = await window.authUtils.getAuthToken();
-  if (!token) {
-    toastWarning('Debes iniciar sesión');
-    return;
-  }
-
-  const isAdmin = isUserAdmin(token);
-
-  // Different confirmation message for admins
-  const confirmMessage = isAdmin
-    ? '⚠️ ADMIN: ¿Estás seguro de que quieres eliminar permanentemente este comentario?\n\nEsto eliminará el comentario y TODAS sus respuestas anidadas de forma PERMANENTE.\n\nEsta acción NO se puede deshacer.'
-    : '¿Estás seguro de que quieres eliminar este comentario?';
-
-  if (!confirm(confirmMessage)) {
+  if (!confirm('¿Estás seguro de que quieres eliminar este comentario?')) {
     return;
   }
 
   try {
-    const response = await fetch(`/api/forum/comments/${commentId}`, {
+    const response = await fetch(`/forum/comments/${commentId}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      credentials: 'include'
     });
 
     const data = await response.json();
 
     if (response.ok) {
-      const message = isAdmin
+      const message = data.isAdmin
         ? (data.type === 'hard' ? 'Comentario y todas sus respuestas eliminados permanentemente por admin' : 'Contenido del comentario eliminado')
         : (data.type === 'hard' ? 'Comentario eliminado completamente' : 'Contenido del comentario eliminado');
 

@@ -1,6 +1,6 @@
 import express from 'express';
 import { Notification, AdminPost } from '../models/index.js';
-import { checkJwt, attachUser } from '../middleware/auth.js';
+import { verifyApiAuth, requireAuth } from '../middleware/apiAuth.js';
 import logger from '../utils/logger.js';
 
 const router = express.Router();
@@ -10,7 +10,7 @@ const router = express.Router();
  * Get user notifications
  * Query params: unread (boolean), limit, offset
  */
-router.get('/', checkJwt, attachUser, async (req, res, next) => {
+router.get('/', verifyApiAuth, requireAuth, async (req, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -49,7 +49,7 @@ router.get('/', checkJwt, attachUser, async (req, res, next) => {
  * POST /notifications/:id/read
  * Mark notification as read
  */
-router.post('/:id/read', checkJwt, attachUser, async (req, res, next) => {
+router.post('/:id/read', verifyApiAuth, requireAuth, async (req, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -79,7 +79,7 @@ router.post('/:id/read', checkJwt, attachUser, async (req, res, next) => {
  * POST /notifications/read-all
  * Mark all notifications as read
  */
-router.post('/read-all', checkJwt, attachUser, async (req, res, next) => {
+router.post('/read-all', verifyApiAuth, requireAuth, async (req, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -99,7 +99,7 @@ router.post('/read-all', checkJwt, attachUser, async (req, res, next) => {
  * GET /notifications/admin-posts
  * Get admin posts (announcements)
  */
-router.get('/admin-posts', checkJwt, attachUser, async (req, res, next) => {
+router.get('/admin-posts', verifyApiAuth, requireAuth, async (req, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -135,7 +135,7 @@ router.get('/admin-posts', checkJwt, attachUser, async (req, res, next) => {
  * POST /notifications/admin-posts/:id/like
  * Toggle like on admin post
  */
-router.post('/admin-posts/:id/like', checkJwt, attachUser, async (req, res, next) => {
+router.post('/admin-posts/:id/like', verifyApiAuth, requireAuth, async (req, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
@@ -171,7 +171,7 @@ router.post('/admin-posts/:id/like', checkJwt, attachUser, async (req, res, next
  * POST /notifications/admin-posts/:id/view
  * Mark admin post as viewed
  */
-router.post('/admin-posts/:id/view', checkJwt, attachUser, async (req, res, next) => {
+router.post('/admin-posts/:id/view', verifyApiAuth, requireAuth, async (req, res, next) => {
   try {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });

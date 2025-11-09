@@ -2,7 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import Incident from '../models/Incident.js';
 import NewsEvent from '../models/NewsEvent.js';
-import { AdminPost, Notification, User, SurlinkListing, ForumThread, ForumComment, ForumSettings, PricingSettings, PageVisit, SystemSettings } from '../models/index.js';
+import { AdminPost, Notification, User, SurlinkListing, ForumThread, ForumComment, ForumSettings, PricingSettings, PageVisit, SystemSettings, ApiToken } from '../models/index.js';
 import { runNewsIngestion } from '../jobs/newsIngestion.js';
 import { runScheduledCleanup, reloadCronJobs } from '../jobs/index.js';
 import logger from '../utils/logger.js';
@@ -1568,6 +1568,192 @@ router.post('/cron/:job/run', requireAdmin, async (req, res) => {
     logger.error(`Error running cron job manually: ${req.params.job}`, error);
     res.status(500).json({
       error: `Error al ejecutar trabajo ${req.params.job}`,
+      details: error.message
+    });
+  }
+});
+
+// ============================================================================
+// API TOKENS MANAGEMENT
+// ============================================================================
+
+/**
+ * GET /admin/api-tokens
+ * List all API tokens
+ */
+router.get('/api-tokens', requireAdmin, async (req, res) => {
+  try {
+    const tokens = await ApiToken.find()
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Populate user info
+    const tokensWithUsers = await Promise.all(tokens.map(async (token) => {
+      const user = await User.findOne({ uid: token.userId }).select('name email picture').lean();
+      return {
+        ...token,
+        user
+      };
+    }));
+
+    res.json({
+      success: true,
+      tokens: tokensWithUsers
+    });
+  } catch (error) {
+    logger.error('Error fetching API tokens:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener tokens API'
+    });
+  }
+});
+
+/**
+ * POST /admin/api-tokens
+ * Generate a new API token
+ */
+router.post('/api-tokens', requireAdmin, async (req, res) => {
+  try {
+    const { name, description, permissions, tokenBytes, expiresInDays } = req.body;
+
+    // Validation
+    if (!name || name.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'El nombre del token es requerido'
+      });
+    }
+
+    // Calculate expiration if provided
+    let expiresAt = null;
+    if (expiresInDays && expiresInDays > 0) {
+      expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + parseInt(expiresInDays));
+    }
+
+    // Create token
+    const token = await ApiToken.createToken({
+      userId: req.user.uid,
+      name: name.trim(),
+      description: description?.trim() || '',
+      permissions: permissions || ['all'],
+      tokenBytes: tokenBytes || 32,
+      expiresAt
+    });
+
+    logger.info(`API Token created: ${name} by ${req.user.email}`);
+
+    res.json({
+      success: true,
+      message: 'Token API creado exitosamente',
+      token: {
+        _id: token._id,
+        token: token.token, // IMPORTANT: Only show the actual token on creation!
+        name: token.name,
+        description: token.description,
+        permissions: token.permissions,
+        createdAt: token.createdAt,
+        expiresAt: token.expiresAt
+      }
+    });
+  } catch (error) {
+    logger.error('Error creating API token:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al crear token API',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * DELETE /admin/api-tokens/:id
+ * Revoke/delete an API token
+ */
+router.delete('/api-tokens/:id', requireAdmin, async (req, res) => {
+  try {
+    const token = await ApiToken.findById(req.params.id);
+
+    if (!token) {
+      return res.status(404).json({
+        success: false,
+        error: 'Token no encontrado'
+      });
+    }
+
+    // Revoke the token
+    await token.revoke(req.user.uid);
+
+    logger.info(`API Token revoked: ${token.name} by ${req.user.email}`);
+
+    res.json({
+      success: true,
+      message: 'Token API revocado exitosamente'
+    });
+  } catch (error) {
+    logger.error('Error revoking API token:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al revocar token API',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * PUT /admin/api-tokens/:id
+ * Update API token (name, description, permissions, expiration)
+ */
+router.put('/api-tokens/:id', requireAdmin, async (req, res) => {
+  try {
+    const { name, description, permissions, expiresInDays } = req.body;
+
+    const token = await ApiToken.findById(req.params.id);
+
+    if (!token) {
+      return res.status(404).json({
+        success: false,
+        error: 'Token no encontrado'
+      });
+    }
+
+    if (token.isRevoked) {
+      return res.status(400).json({
+        success: false,
+        error: 'No se puede actualizar un token revocado'
+      });
+    }
+
+    // Update fields
+    if (name) token.name = name.trim();
+    if (description !== undefined) token.description = description.trim();
+    if (permissions) token.permissions = permissions;
+
+    if (expiresInDays !== undefined) {
+      if (expiresInDays === null || expiresInDays === 0) {
+        token.expiresAt = null;
+      } else {
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + parseInt(expiresInDays));
+        token.expiresAt = expiresAt;
+      }
+    }
+
+    await token.save();
+
+    logger.info(`API Token updated: ${token.name} by ${req.user.email}`);
+
+    res.json({
+      success: true,
+      message: 'Token API actualizado exitosamente',
+      token
+    });
+  } catch (error) {
+    logger.error('Error updating API token:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al actualizar token API',
       details: error.message
     });
   }
