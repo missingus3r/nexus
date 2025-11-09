@@ -6,12 +6,23 @@ const router = express.Router();
 
 /**
  * GET /news
- * Fetch news events within a bounding box or near a location
- * Query params: bbox, lat, lon, radius, from, to, category, country, showAll
+ * Render news page view or fetch news events (API)
+ * If no query params: render view
+ * Query params for API: bbox, lat, lon, radius, from, to, category, country, showAll
  */
-router.get('/', verifyApiAuth, async (req, res, next) => {
-  try {
-    const { bbox, lat, lon, radius, from, to, category, country, showAll } = req.query;
+router.get('/', async (req, res, next) => {
+  // If no query params, render the view instead of returning JSON
+  if (Object.keys(req.query).length === 0) {
+    return res.render('news', {
+      title: 'Noticias Geolocalizadas - Vortex',
+      page: 'news'
+    });
+  }
+
+  // API request - verify auth and return JSON
+  verifyApiAuth(req, res, async () => {
+    try {
+      const { bbox, lat, lon, radius, from, to, category, country, showAll } = req.query;
 
     const query = { hidden: false };
 
@@ -102,9 +113,10 @@ router.get('/', verifyApiAuth, async (req, res, next) => {
     };
 
     res.json(featureCollection);
-  } catch (error) {
-    next(error);
-  }
+    } catch (error) {
+      next(error);
+    }
+  });
 });
 
 /**

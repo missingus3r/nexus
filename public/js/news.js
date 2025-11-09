@@ -78,7 +78,7 @@ async function loadNews() {
         const showAll = document.getElementById('showAllToggle').checked;
         const radius = document.getElementById('radiusSelect').value;
 
-        let url = '/api/news?';
+        let url = '/news?';
 
         // Use proximity search if location is available and not showing all
         if (userLocation && !showAll) {

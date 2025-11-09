@@ -71,14 +71,8 @@ router.get('/centinel', checkMaintenance('centinel'), (req, res) => {
 });
 
 /**
- * News page
+ * News page - now handled by news.js router
  */
-router.get('/news', (req, res) => {
-  res.render('news', {
-    title: 'Noticias Geolocalizadas - Vortex',
-    page: 'news'
-  });
-});
 
 /**
  * Forum page
