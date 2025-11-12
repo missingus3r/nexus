@@ -227,6 +227,157 @@ showHeatmapMobile?.addEventListener('change', (e) => {
     if (showHeatmap) showHeatmap.checked = e.target.checked;
 });
 
+/**
+ * ============================================
+ * BUS LAYER CONTROLS SYNCHRONIZATION
+ * ============================================
+ */
+
+// Master toggle for buses
+const showBuses = document.getElementById('showBuses');
+const showBusesMobile = document.getElementById('showBusesMobile');
+const busSubControls = document.getElementById('busSubControls');
+const busSubControlsMobile = document.getElementById('busSubControlsMobile');
+
+// Sync master toggle desktop -> mobile
+showBuses?.addEventListener('change', (e) => {
+    if (showBusesMobile) showBusesMobile.checked = e.target.checked;
+
+    // Show/hide sub-controls
+    if (busSubControls) {
+        busSubControls.classList.toggle('hidden', !e.target.checked);
+    }
+    if (busSubControlsMobile) {
+        busSubControlsMobile.classList.toggle('hidden', !e.target.checked);
+    }
+
+    // Toggle all bus layers
+    if (window.toggleBusLayers) {
+        window.toggleBusLayers(e.target.checked);
+    }
+});
+
+// Sync master toggle mobile -> desktop
+showBusesMobile?.addEventListener('change', (e) => {
+    if (showBuses) showBuses.checked = e.target.checked;
+
+    // Show/hide sub-controls
+    if (busSubControls) {
+        busSubControls.classList.toggle('hidden', !e.target.checked);
+    }
+    if (busSubControlsMobile) {
+        busSubControlsMobile.classList.toggle('hidden', !e.target.checked);
+    }
+
+    // Toggle all bus layers
+    if (window.toggleBusLayers) {
+        window.toggleBusLayers(e.target.checked);
+    }
+});
+
+// Bus stops toggle
+const showBusStops = document.getElementById('showBusStops');
+const showBusStopsMobile = document.getElementById('showBusStopsMobile');
+
+showBusStops?.addEventListener('change', (e) => {
+    if (showBusStopsMobile) showBusStopsMobile.checked = e.target.checked;
+    if (window.toggleBusStops) {
+        window.toggleBusStops(e.target.checked);
+    }
+});
+
+showBusStopsMobile?.addEventListener('change', (e) => {
+    if (showBusStops) showBusStops.checked = e.target.checked;
+    if (window.toggleBusStops) {
+        window.toggleBusStops(e.target.checked);
+    }
+});
+
+// Bus vehicles toggle
+const showBusVehicles = document.getElementById('showBusVehicles');
+const showBusVehiclesMobile = document.getElementById('showBusVehiclesMobile');
+
+showBusVehicles?.addEventListener('change', (e) => {
+    if (showBusVehiclesMobile) showBusVehiclesMobile.checked = e.target.checked;
+    if (window.toggleBusVehicles) {
+        window.toggleBusVehicles(e.target.checked);
+    }
+});
+
+showBusVehiclesMobile?.addEventListener('change', (e) => {
+    if (showBusVehicles) showBusVehicles.checked = e.target.checked;
+    if (window.toggleBusVehicles) {
+        window.toggleBusVehicles(e.target.checked);
+    }
+});
+
+// Bus line filter
+const busLineFilter = document.getElementById('busLineFilter');
+const busLineFilterMobile = document.getElementById('busLineFilterMobile');
+
+busLineFilter?.addEventListener('change', (e) => {
+    if (busLineFilterMobile) busLineFilterMobile.value = e.target.value;
+    if (window.filterBusByLine) {
+        window.filterBusByLine(e.target.value);
+    }
+});
+
+busLineFilterMobile?.addEventListener('change', (e) => {
+    if (busLineFilter) busLineFilter.value = e.target.value;
+    if (window.filterBusByLine) {
+        window.filterBusByLine(e.target.value);
+    }
+});
+
+// Auto-refresh toggle
+const autoBusRefresh = document.getElementById('autoBusRefresh');
+const autoBusRefreshMobile = document.getElementById('autoBusRefreshMobile');
+
+autoBusRefresh?.addEventListener('change', (e) => {
+    if (autoBusRefreshMobile) autoBusRefreshMobile.checked = e.target.checked;
+    if (window.toggleBusAutoRefresh) {
+        window.toggleBusAutoRefresh(e.target.checked);
+    }
+});
+
+autoBusRefreshMobile?.addEventListener('change', (e) => {
+    if (autoBusRefresh) autoBusRefresh.checked = e.target.checked;
+    if (window.toggleBusAutoRefresh) {
+        window.toggleBusAutoRefresh(e.target.checked);
+    }
+});
+
+// Initialize bus controls state on load
+document.addEventListener('DOMContentLoaded', () => {
+    // Set initial state of sub-controls
+    const busesEnabled = showBuses?.checked || false;
+    if (busSubControls) {
+        busSubControls.classList.toggle('hidden', !busesEnabled);
+    }
+    if (busSubControlsMobile) {
+        busSubControlsMobile.classList.toggle('hidden', !busesEnabled);
+    }
+});
+
+/**
+ * Sync count badges between desktop and mobile
+ */
+function updateBusCountBadges(stopCount, vehicleCount) {
+    const stopBadges = document.querySelectorAll('#busStopCount, #busStopCountMobile');
+    const vehicleBadges = document.querySelectorAll('#busVehicleCount, #busVehicleCountMobile');
+
+    stopBadges.forEach(badge => {
+        if (badge) badge.textContent = stopCount;
+    });
+
+    vehicleBadges.forEach(badge => {
+        if (badge) badge.textContent = vehicleCount;
+    });
+}
+
+// Expose globally
+window.updateBusCountBadges = updateBusCountBadges;
+
 // Incidents List Modal
 function openIncidentsListModal() {
     const modal = document.getElementById('incidentsListModal');

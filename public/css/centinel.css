@@ -303,3 +303,209 @@
 .maplibregl-popup-content::-webkit-scrollbar-thumb:hover {
     background: #555;
 }
+
+/* ============================================
+   BUS LAYER STYLES
+   ============================================ */
+
+/* Bus Controls Container */
+.bus-controls,
+.bus-controls-mobile {
+    margin-top: 1rem;
+    padding-top: 1rem;
+}
+
+.bus-controls h4,
+.bus-controls-mobile h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.75rem;
+}
+
+/* Master Toggle */
+.bus-master-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.bus-master-toggle:hover {
+    background: var(--hover-background);
+    border-color: var(--primary-color);
+}
+
+.bus-master-toggle input[type="checkbox"] {
+    cursor: pointer;
+}
+
+/* Sub Controls */
+.bus-sub-controls {
+    padding-left: 1rem;
+    border-left: 3px solid var(--primary-color);
+    margin-top: 0.75rem;
+    transition: opacity 0.3s ease, max-height 0.3s ease;
+}
+
+.bus-sub-controls.hidden {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Count Badge */
+.count-badge {
+    display: inline-block;
+    background: var(--primary-color);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 0.125rem 0.5rem;
+    border-radius: 12px;
+    margin-left: 0.5rem;
+    min-width: 24px;
+    text-align: center;
+}
+
+/* Bus Popup Styles */
+.bus-popup {
+    font-family: inherit;
+    min-width: 250px;
+}
+
+.bus-popup .popup-header {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.bus-popup .popup-content {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.bus-popup .popup-content p {
+    margin: 0.5rem 0;
+    color: var(--text-color);
+}
+
+.bus-popup .popup-content strong {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+/* Bus Line Filter */
+#busLineFilter,
+#busLineFilterMobile {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--card-background);
+    color: var(--text-color);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+#busLineFilter:hover,
+#busLineFilterMobile:hover {
+    border-color: var(--primary-color);
+}
+
+#busLineFilter:focus,
+#busLineFilterMobile:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Bus info in incident popup */
+.nearby-buses {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.nearby-buses h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.nearby-buses ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nearby-buses li {
+    padding: 0.5rem;
+    margin: 0.25rem 0;
+    background: var(--hover-background);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nearby-buses .bus-line {
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.nearby-buses .bus-distance {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* Loading state for buses */
+.bus-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--hover-background);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.bus-loading::before {
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .bus-popup {
+        min-width: 200px;
+        max-width: 280px;
+    }
+
+    .count-badge {
+        font-size: 0.7rem;
+        padding: 0.1rem 0.4rem;
+    }
+}

@@ -32,6 +32,7 @@ import forumRoutes from './src/routes/forum.js';
 import reportsRoutes from './src/routes/reports.js';
 import dashboardRoutes from './src/routes/dashboard.js';
 import preferencesRoutes from './src/routes/preferences.js';
+import busesRoutes from './src/routes/buses.js';
 
 // View Routes
 import viewRoutes from './src/routes/views.js';
@@ -52,6 +53,9 @@ import { startCronJobs } from './src/jobs/index.js';
 
 // Logger
 import logger from './src/utils/logger.js';
+
+// Montevideo Transport API Token Manager
+import tokenManager from './src/services/montevideoTokenManager.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -162,6 +166,7 @@ app.use('/pricing', pricingRoutes);
 app.use('/forum', forumRoutes);
 app.use('/reports', reportsRoutes);
 app.use('/preferences', preferencesRoutes);
+app.use('/api/buses', busesRoutes);
 
 // Dashboard routes (includes both view and API routes)
 app.use('/', dashboardRoutes);
@@ -187,6 +192,11 @@ initializeSocketHandlers(io);
 // Start cron jobs
 startCronJobs(io);
 
+// Initialize Montevideo Transport API Token Manager
+tokenManager.initialize().catch(err => {
+  logger.error('Failed to initialize Montevideo API token manager:', err);
+});
+
 // Start server
 const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {
@@ -197,6 +207,7 @@ httpServer.listen(PORT, () => {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully');
+  tokenManager.stop();
   httpServer.close(() => {
     logger.info('HTTP server closed');
   });

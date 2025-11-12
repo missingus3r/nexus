@@ -3,6 +3,7 @@ let socket;
 let incidentsSource;
 let heatmapSource;
 let neighborhoodsSource;
+let busLayerManager; // Bus layer manager
 
 // Location selection state
 let isSelectingLocation = false;
@@ -25,7 +26,27 @@ function initializeMap() {
     // Initialize MapLibre GL map with default center
     map = new maplibregl.Map({
         container: 'map',
-        style: 'https://tiles.openfreemap.org/styles/liberty', // OSM-based style
+        style: {
+            version: 8,
+            sources: {
+                'osm': {
+                    type: 'raster',
+                    tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    tileSize: 256,
+                    attribution: '© OpenStreetMap contributors'
+                }
+            },
+            layers: [
+                {
+                    id: 'osm',
+                    type: 'raster',
+                    source: 'osm',
+                    minzoom: 0,
+                    maxzoom: 22
+                }
+            ],
+            glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf'
+        },
         center: [defaultCenterLon, defaultCenterLat],
         zoom: defaultZoom
     });
@@ -37,6 +58,9 @@ function initializeMap() {
         addIncidentsLayer();
         addNeighborhoodsLayer();
         addHeatmapLayer();
+
+        // Initialize bus layer manager
+        initializeBusLayer();
 
         // Load map data immediately
         loadMapData();
@@ -247,6 +271,8 @@ function addIncidentsLayer() {
         // Setup validation button listeners after popup is added
         setTimeout(() => {
             setupValidationButtons(incidentId);
+            // Load nearby buses
+            loadNearbyBuses(e.lngLat.lat, e.lngLat.lng);
         }, 100);
     });
 
@@ -269,6 +295,8 @@ function addIncidentsLayer() {
         // Setup validation button listeners after popup is added
         setTimeout(() => {
             setupValidationButtons(incidentId);
+            // Load nearby buses
+            loadNearbyBuses(e.lngLat.lat, e.lngLat.lng);
         }, 100);
     });
 
@@ -1032,6 +1060,19 @@ function createIncidentPopupHTML(incident) {
         `;
     }
 
+    // Nearby buses section (placeholder, will be populated async)
+    let nearbyBusesHTML = `
+        <div id="nearby-buses-section" style="margin-top: 10px; padding: 10px; background: #e8f5e9; border-left: 3px solid #4caf50; border-radius: 4px;">
+            <div style="font-weight: 600; color: #2e7d32; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <span>🚌</span>
+                <span>Transporte Público Cercano:</span>
+            </div>
+            <div id="nearby-buses-content" class="bus-loading">
+                Cargando buses cercanos...
+            </div>
+        </div>
+    `;
+
     return `
         <div style="font-family: system-ui, -apple-system, sans-serif;">
             <h3 style="margin: 0 0 8px 0;">${props.type}</h3>
@@ -1046,6 +1087,7 @@ function createIncidentPopupHTML(incident) {
             </p>
             ${validationHTML}
             ${newsSourcesHTML}
+            ${nearbyBusesHTML}
             ${actionsHTML}
         </div>
     `;
@@ -1064,6 +1106,80 @@ function setupValidationButtons(incidentId) {
 
     if (invalidBtn) {
         invalidBtn.onclick = () => validateIncident(incidentId, -1);
+    }
+}
+
+/**
+ * Load and display nearby buses for incident popup
+ */
+async function loadNearbyBuses(lat, lng) {
+    const contentEl = document.getElementById('nearby-buses-content');
+    if (!contentEl) return;
+
+    try {
+        // Check if bus layer is enabled
+        const busesEnabled = document.getElementById('showBuses')?.checked;
+        if (!busesEnabled) {
+            contentEl.innerHTML = `
+                <div style="padding: 8px; font-size: 0.9em; color: #666; text-align: center;">
+                    <p>Activa la capa de Transporte Público para ver buses cercanos</p>
+                </div>
+            `;
+            return;
+        }
+
+        const nearbyBuses = await getNearbyBuses(lat, lng, 500);
+
+        if (!nearbyBuses || nearbyBuses.length === 0) {
+            contentEl.innerHTML = `
+                <div style="padding: 8px; font-size: 0.9em; color: #666; text-align: center;">
+                    No hay buses en un radio de 500m
+                </div>
+            `;
+            return;
+        }
+
+        // Group buses by line
+        const busesByLine = {};
+        nearbyBuses.forEach(bus => {
+            const line = bus.line || 'N/A';
+            if (!busesByLine[line]) {
+                busesByLine[line] = [];
+            }
+            busesByLine[line].push(bus);
+        });
+
+        // Create HTML for buses
+        let html = '<ul style="list-style: none; padding: 0; margin: 0;">';
+        Object.keys(busesByLine).sort((a, b) => {
+            const numA = parseInt(a) || 999;
+            const numB = parseInt(b) || 999;
+            return numA - numB;
+        }).forEach(line => {
+            const buses = busesByLine[line];
+            const minDistance = Math.min(...buses.map(b => b.distance));
+
+            html += `
+                <li style="padding: 6px; margin: 4px 0; background: white; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong style="color: #2e7d32;">Línea ${line}</strong>
+                        <br>
+                        <span style="font-size: 0.85em; color: #666;">${buses.length} bus${buses.length > 1 ? 'es' : ''}</span>
+                    </div>
+                    <span style="font-size: 0.85em; color: #999;">${minDistance}m</span>
+                </li>
+            `;
+        });
+        html += '</ul>';
+
+        contentEl.innerHTML = html;
+    } catch (error) {
+        console.error('[Map] Error loading nearby buses for popup:', error);
+        contentEl.innerHTML = `
+            <div style="padding: 8px; font-size: 0.9em; color: #d32f2f; text-align: center;">
+                Error al cargar buses cercanos
+            </div>
+        `;
     }
 }
 
@@ -1088,6 +1204,8 @@ window.showIncidentPopup = async function(lon, lat, incidentId) {
         // Setup validation button listeners after popup is added
         setTimeout(() => {
             setupValidationButtons(incidentId);
+            // Load nearby buses
+            loadNearbyBuses(lat, lon);
         }, 100);
     } catch (error) {
         console.error('Error showing incident popup:', error);
@@ -1195,3 +1313,104 @@ function isGuestToken(token) {
         return true; // Assume guest if error
     }
 }
+
+/**
+ * ============================================
+ * BUS LAYER FUNCTIONS
+ * ============================================
+ */
+
+/**
+ * Initialize bus layer manager
+ */
+async function initializeBusLayer() {
+    try {
+        if (typeof BusLayerManager === 'undefined') {
+            console.warn('[Map] BusLayerManager not loaded, skipping bus layer initialization');
+            return;
+        }
+
+        busLayerManager = new BusLayerManager(map);
+        await busLayerManager.initialize();
+
+        console.log('[Map] Bus layer initialized successfully');
+
+        // Expose globally for centinel.js
+        window.busLayerManager = busLayerManager;
+    } catch (error) {
+        console.error('[Map] Error initializing bus layer:', error);
+    }
+}
+
+/**
+ * Toggle bus stops visibility
+ */
+function toggleBusStops(visible) {
+    if (busLayerManager) {
+        busLayerManager.toggleStops(visible);
+    }
+}
+
+/**
+ * Toggle bus vehicles visibility
+ */
+function toggleBusVehicles(visible) {
+    if (busLayerManager) {
+        busLayerManager.toggleBuses(visible);
+    }
+}
+
+/**
+ * Toggle all bus layers
+ */
+function toggleBusLayers(visible) {
+    if (busLayerManager) {
+        busLayerManager.toggleAll(visible);
+    }
+}
+
+/**
+ * Filter buses by line
+ */
+function filterBusByLine(lineId) {
+    if (busLayerManager) {
+        busLayerManager.filterByLine(lineId);
+    }
+}
+
+/**
+ * Toggle bus auto-refresh
+ */
+function toggleBusAutoRefresh(enabled) {
+    if (busLayerManager) {
+        if (enabled) {
+            busLayerManager.startAutoRefresh();
+        } else {
+            busLayerManager.stopAutoRefresh();
+        }
+    }
+}
+
+/**
+ * Get nearby buses for incident popup
+ */
+async function getNearbyBuses(lat, lng, radius = 500) {
+    try {
+        const response = await fetch(`/api/buses/nearby/${lat}/${lng}/${radius}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch nearby buses');
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('[Map] Error fetching nearby buses:', error);
+        return [];
+    }
+}
+
+// Expose bus functions globally
+window.toggleBusStops = toggleBusStops;
+window.toggleBusVehicles = toggleBusVehicles;
+window.toggleBusLayers = toggleBusLayers;
+window.filterBusByLine = filterBusByLine;
+window.toggleBusAutoRefresh = toggleBusAutoRefresh;
+window.getNearbyBuses = getNearbyBuses;

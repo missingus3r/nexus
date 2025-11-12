@@ -108,6 +108,47 @@
                         Heatmap
                     </label>
                 </div>
+
+                <hr style="margin: 1rem 0; border-color: var(--border-color);">
+
+                <!-- Controles de Transporte Público -->
+                <div class="bus-controls">
+                    <h4 style="margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span>🚌</span> Transporte Público
+                    </h4>
+
+                    <label class="bus-master-toggle">
+                        <input type="checkbox" id="showBuses" checked>
+                        <strong>Activar Transporte Público</strong>
+                    </label>
+
+                    <div id="busSubControls" class="bus-sub-controls">
+                        <div class="layer-controls">
+                            <label>
+                                <input type="checkbox" id="showBusStops" checked>
+                                🚏 Paradas
+                                <span id="busStopCount" class="count-badge">0</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" id="showBusVehicles" checked>
+                                🚌 Buses
+                                <span id="busVehicleCount" class="count-badge">0</span>
+                            </label>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 0.75rem;">
+                            <label for="busLineFilter">Filtrar por Línea:</label>
+                            <select id="busLineFilter">
+                                <option value="all">Todas las líneas</option>
+                            </select>
+                        </div>
+
+                        <label style="margin-top: 0.75rem;">
+                            <input type="checkbox" id="autoBusRefresh" checked>
+                            Auto-actualizar (3s)
+                        </label>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -153,6 +194,47 @@
                             <input type="checkbox" id="showHeatmapMobile" checked>
                             Mostrar Heatmap
                         </label>
+                    </div>
+
+                    <hr style="margin: 1rem 0; border-color: var(--border-color);">
+
+                    <!-- Controles de Transporte Público Mobile -->
+                    <div class="bus-controls-mobile">
+                        <h4 style="margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <span>🚌</span> Transporte Público
+                        </h4>
+
+                        <label class="bus-master-toggle">
+                            <input type="checkbox" id="showBusesMobile" checked>
+                            <strong>Activar Transporte Público</strong>
+                        </label>
+
+                        <div id="busSubControlsMobile" class="bus-sub-controls">
+                            <div class="layer-controls">
+                                <label>
+                                    <input type="checkbox" id="showBusStopsMobile" checked>
+                                    🚏 Paradas
+                                    <span id="busStopCountMobile" class="count-badge">0</span>
+                                </label>
+                                <label>
+                                    <input type="checkbox" id="showBusVehiclesMobile" checked>
+                                    🚌 Buses
+                                    <span id="busVehicleCountMobile" class="count-badge">0</span>
+                                </label>
+                            </div>
+
+                            <div class="form-group" style="margin-top: 0.75rem;">
+                                <label for="busLineFilterMobile">Filtrar por Línea:</label>
+                                <select id="busLineFilterMobile">
+                                    <option value="all">Todas las líneas</option>
+                                </select>
+                            </div>
+
+                            <label style="margin-top: 0.75rem;">
+                                <input type="checkbox" id="autoBusRefreshMobile" checked>
+                                Auto-actualizar (3s)
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -408,6 +490,7 @@
             isAuthenticated: <%= isAuthenticated ? 'true' : 'false' %>
         };
     </script>
+    <script src="/js/bus-layer.js"></script>
     <script src="/js/map.js"></script>
     <script src="/js/centinel.js"></script>
 </body>
