@@ -33,7 +33,7 @@ function getAuth0Config() {
     routes: {
       callback: '/callback',
       login: '/login',
-      logout: '/logout',
+      logout: '/auth0/logout',
       postLogoutRedirect: '/'
     },
     authorizationParams: {

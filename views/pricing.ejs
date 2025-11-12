@@ -31,7 +31,7 @@
                     <a href="/nexus">Nexus</a>
                     <a href="/pricing" aria-current="page" class="active">Pricing</a>
                     <% if (isAuthenticated) { %>
-                        <a href="/logout">Cerrar sesión</a>
+                        <a href="/auth/logout">Cerrar sesión</a>
                     <% } else { %>
                         <a href="/login">Iniciar sesión</a>
                     <% } %>
@@ -317,13 +317,13 @@
     }
 
     // Logout handler - simplificado
-    const logoutLinks = document.querySelectorAll('a[href="/logout"]');
+    const logoutLinks = document.querySelectorAll('a[href="/auth/logout"]');
     logoutLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             localStorage.clear();
             sessionStorage.clear();
-            window.location.href = '/logout';
+            window.location.href = '/auth/logout';
         });
     });
     </script>

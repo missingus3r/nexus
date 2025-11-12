@@ -33,7 +33,7 @@
                     <a href="/pricing">Pricing</a>
                     <a href="/donadores" aria-current="page" class="active">Donadores</a>
                     <% if (typeof isAuthenticated !== 'undefined' && isAuthenticated) { %>
-                        <a href="/logout">Cerrar sesión</a>
+                        <a href="/auth/logout">Cerrar sesión</a>
                     <% } else { %>
                         <a href="/login">Iniciar sesión</a>
                     <% } %>
@@ -220,13 +220,13 @@
     <script>
         // Logout handler - simplificado
         document.addEventListener('DOMContentLoaded', function() {
-            const logoutLinks = document.querySelectorAll('a[href="/logout"]');
+            const logoutLinks = document.querySelectorAll('a[href="/auth/logout"]');
             logoutLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     localStorage.clear();
                     sessionStorage.clear();
-                    window.location.href = '/logout';
+                    window.location.href = '/auth/logout';
                 });
             });
         });

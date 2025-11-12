@@ -43,7 +43,7 @@
                 </div>
                 <div class="nav-group">
                     <a href="/perfil" class="platform-btn <%= page === 'perfil' ? 'active' : '' %>">Perfil</a>
-                    <a href="/logout" class="btn btn-secondary">Salir</a>
+                    <a href="/auth/logout" class="btn btn-secondary">Salir</a>
                 </div>
 
                 <!-- Theme Toggle -->
@@ -63,7 +63,7 @@
 
                 <% if (isAuthenticated) { %>
                     <a href="/perfil" class="nav-link <%= page === 'perfil' ? 'active' : '' %>">Perfil</a>
-                    <a href="/logout" class="btn btn-secondary">Salir</a>
+                    <a href="/auth/logout" class="btn btn-secondary">Salir</a>
                 <% } else { %>
                     <a href="/login" class="btn btn-primary">Iniciar Sesión</a>
                 <% } %>

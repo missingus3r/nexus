@@ -237,6 +237,24 @@ router.delete('/delete-account', (req, res) => {
   }
 });
 
-// Ruta /auth/clear-session eliminada - Auth0 maneja el logout automáticamente en /logout
+/**
+ * GET /auth/logout
+ * Logout personalizado que destruye la sesión de Express antes de redirigir a Auth0
+ */
+router.get('/logout', (req, res) => {
+  try {
+    // Destruir la sesión de Express
+    req.session.destroy((err) => {
+      if (err) {
+        logger.error('Error destroying session during logout:', err);
+      }
+      // Redirigir a la ruta de logout de Auth0 para cerrar sesión OIDC
+      res.redirect('/auth0/logout');
+    });
+  } catch (error) {
+    logger.error('Error during logout:', error);
+    res.redirect('/auth0/logout');
+  }
+});
 
 export default router;

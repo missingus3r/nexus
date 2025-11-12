@@ -204,7 +204,7 @@
 
                     <!-- Account Actions -->
                     <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <a href="/logout" class="btn btn-secondary">Cerrar Sesión</a>
+                        <a href="/auth/logout" class="btn btn-secondary">Cerrar Sesión</a>
                         <% if (user && user.role === 'admin') { %>
                             <a href="/admin" class="btn btn-primary">Panel de Admin</a>
                         <% } %>
