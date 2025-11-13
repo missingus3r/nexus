@@ -554,3 +554,28 @@ document.getElementById('welcomeModal')?.addEventListener('click', (e) => {
 
 // Show welcome modal on page load if not shown before
 document.addEventListener('DOMContentLoaded', checkAndShowWelcomeModal);
+
+// ============================================
+// MOBILITY APPS MODAL
+// ============================================
+
+function openMobilityAppsModal() {
+    const modal = document.getElementById('mobilityAppsModal');
+    modal.classList.add('active');
+}
+
+function closeMobilityAppsModal() {
+    const modal = document.getElementById('mobilityAppsModal');
+    modal.classList.remove('active');
+}
+
+// Event listeners for mobility apps modal
+document.getElementById('mobilityAppsBtn')?.addEventListener('click', openMobilityAppsModal);
+document.getElementById('mobilityAppsModalClose')?.addEventListener('click', closeMobilityAppsModal);
+
+// Close modal when clicking outside
+document.getElementById('mobilityAppsModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'mobilityAppsModal') {
+        closeMobilityAppsModal();
+    }
+});

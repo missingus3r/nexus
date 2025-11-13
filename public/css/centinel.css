@@ -591,3 +591,213 @@ html[data-theme="dark"] #busLineFilterMobile option {
         height: 48px;
     }
 }
+
+/* ============================================
+   MOBILITY APPS BUTTON
+   ============================================ */
+
+.mobility-apps-btn {
+    position: fixed;
+    z-index: 10;
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.mobility-apps-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.mobility-apps-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5), 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.mobility-apps-btn:hover::before {
+    opacity: 1;
+}
+
+.mobility-apps-btn:active {
+    transform: translateY(-1px) scale(1);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Desktop: al lado del botón de refresh */
+@media (min-width: 769px) {
+    .mobility-apps-btn {
+        bottom: 20px;
+        right: 88px;
+    }
+}
+
+/* Mobile: debajo del botón de refresh */
+@media (max-width: 768px) {
+    .mobility-apps-btn {
+        bottom: 16px;
+        left: 16px;
+        width: 48px;
+        height: 48px;
+    }
+}
+
+/* ============================================
+   MOBILITY APPS MODAL
+   ============================================ */
+
+.mobility-section {
+    margin-bottom: 2rem;
+}
+
+.mobility-section:last-child {
+    margin-bottom: 0;
+}
+
+.mobility-section-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.mobility-icon {
+    font-size: 1.5rem;
+}
+
+.mobility-app-card {
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s ease;
+}
+
+.mobility-app-card:hover {
+    box-shadow: 0 4px 12px var(--shadow-elevation);
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
+}
+
+.mobility-app-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.mobility-app-info h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.mobility-app-info p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.mobility-app-links {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.store-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.75rem;
+    background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.store-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
+}
+
+.store-badge img {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+/* Scrollbar for modal content */
+#mobilityAppsContent::-webkit-scrollbar {
+    width: 8px;
+}
+
+#mobilityAppsContent::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 4px;
+}
+
+#mobilityAppsContent::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+}
+
+#mobilityAppsContent::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .mobility-app-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .mobility-app-links {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .store-badge {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .mobility-section-title {
+        font-size: 1.1rem;
+    }
+
+    .mobility-app-info h4 {
+        font-size: 1rem;
+    }
+
+    #mobilityAppsModal .modal-content {
+        max-width: 95%;
+        margin: 1rem;
+    }
+}
