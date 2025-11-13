@@ -18,7 +18,8 @@ import {
 import mongoose from 'mongoose';
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
-const PENDING_INCIDENT_MAX_AGE_DAYS = 30;
+const PENDING_INCIDENT_TTL_HOURS = 48; // TTL for unvalidated incidents (48 hours)
+const PENDING_INCIDENT_MAX_AGE_DAYS = 30; // Legacy cleanup for very old incidents
 const VALIDATION_ARCHIVE_DAYS = 180;
 
 const __filename = fileURLToPath(import.meta.url);
@@ -27,6 +28,95 @@ const uploadsDir = path.join(__dirname, '../../uploads');
 
 // Lightweight archive collection for validations. We only care about storing the originals.
 const validationArchiveCollection = () => mongoose.connection.collection('validationarchives');
+
+/**
+ * Remove unvalidated incidents after 48 hours TTL and notify users
+ */
+async function cleanupExpiredIncidents() {
+  const cutoff = new Date(Date.now() - PENDING_INCIDENT_TTL_HOURS * 60 * 60 * 1000);
+  const incidents = await Incident.find({
+    status: 'pending',
+    createdAt: { $lt: cutoff }
+  }).select('_id media reporterUid type description createdAt');
+
+  if (incidents.length === 0) {
+    return {
+      removed: 0,
+      mediaDeleted: 0,
+      notified: 0
+    };
+  }
+
+  const incidentIds = incidents.map(incident => incident._id);
+  let mediaDeleted = 0;
+  let notified = 0;
+
+  // Notify users and delete media files
+  for (const incident of incidents) {
+    try {
+      // Notify the reporter
+      if (incident.reporterUid) {
+        await Notification.createNotification(
+          incident.reporterUid,
+          'incident_expired',
+          '⏱️ Reporte expirado',
+          `Tu reporte de ${incident.type} no fue validado por ningún usuario en 48 horas y ha sido eliminado automáticamente.`,
+          {
+            incidentId: incident._id,
+            type: incident.type,
+            createdAt: incident.createdAt
+          }
+        );
+        notified++;
+      }
+
+      // Delete associated media files
+      if (Array.isArray(incident.media)) {
+        for (const mediaItem of incident.media) {
+          if (!mediaItem?.url) continue;
+          const filename = path.basename(mediaItem.url.split('?')[0]);
+          if (filename && filename !== '.' && filename !== '..') {
+            try {
+              const filePath = path.join(uploadsDir, filename);
+              await fs.unlink(filePath);
+              mediaDeleted++;
+            } catch (error) {
+              if (error.code !== 'ENOENT') {
+                logger.warn('Failed to delete media file during TTL cleanup', {
+                  filename,
+                  error: error.message
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      logger.error('Error processing expired incident', {
+        incidentId: incident._id,
+        error: error.message
+      });
+    }
+  }
+
+  // Delete validations for these incidents
+  await Validation.deleteMany({ incidentId: { $in: incidentIds } });
+
+  // Delete the incidents
+  const deleteResult = await Incident.deleteMany({ _id: { $in: incidentIds } });
+
+  logger.info('Cleanup removed expired incidents (48h TTL)', {
+    removed: deleteResult.deletedCount || 0,
+    mediaDeleted,
+    notified
+  });
+
+  return {
+    removed: deleteResult.deletedCount || 0,
+    mediaDeleted,
+    notified
+  };
+}
 
 /**
  * Remove incidents that stayed pending for too long along with related artifacts.
@@ -281,6 +371,9 @@ async function removeOrphanedMediaFiles() {
  */
 export async function runScheduledCleanup() {
   const summary = {
+    expiredIncidents: 0,
+    expiredIncidentMedia: 0,
+    expiredIncidentNotifications: 0,
     removedPendingIncidents: 0,
     incidentMediaDeleted: 0,
     notificationsDeleted: 0,
@@ -289,6 +382,17 @@ export async function runScheduledCleanup() {
     orphanedFilesDeleted: 0
   };
 
+  // First cleanup expired incidents (48h TTL)
+  try {
+    const expiredResult = await cleanupExpiredIncidents();
+    summary.expiredIncidents = expiredResult.removed;
+    summary.expiredIncidentMedia = expiredResult.mediaDeleted;
+    summary.expiredIncidentNotifications = expiredResult.notified;
+  } catch (error) {
+    logger.error('Expired incident cleanup (48h TTL) failed', { error: error.message });
+  }
+
+  // Then cleanup very old pending incidents (30 days)
   try {
     const incidentResult = await cleanupStalePendingIncidents();
     summary.removedPendingIncidents = incidentResult.removed;

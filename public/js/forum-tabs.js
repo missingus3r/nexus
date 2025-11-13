@@ -57,16 +57,16 @@ async function loadMyPosts() {
   container.innerHTML = '<div style="text-align: center; padding: 3rem; color: var(--text-secondary);">Cargando...</div>';
 
   try {
-    const token = await window.authUtils.getAuthToken();
-    if (!token) {
+    // Ensure auth is initialized
+    await window.authUtils.getAuthToken();
+
+    if (!window.authUtils.isAuthenticated()) {
       container.innerHTML = '<div style="text-align: center; padding: 3rem; color: var(--text-secondary);">Inicia sesión para ver tus posts</div>';
       return;
     }
 
     const response = await fetch(`/forum/my-threads?page=${myPostsPage}&sort=${myPostsSort}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      credentials: 'include'
     });
 
     if (response.ok) {
@@ -174,8 +174,10 @@ async function loadMyReports() {
   container.innerHTML = '<div style="text-align: center; padding: 3rem; color: var(--text-secondary);">Cargando...</div>';
 
   try {
-    const token = await window.authUtils.getAuthToken();
-    if (!token) {
+    // Ensure auth is initialized
+    await window.authUtils.getAuthToken();
+
+    if (!window.authUtils.isAuthenticated()) {
       container.innerHTML = '<div style="text-align: center; padding: 3rem; color: var(--text-secondary);">Inicia sesión para ver tus reportes</div>';
       return;
     }
@@ -190,9 +192,7 @@ async function loadMyReports() {
     }
 
     const response = await fetch(`/reports/my-reports?${params}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      credentials: 'include'
     });
 
     if (response.ok) {
@@ -294,16 +294,16 @@ async function loadNotifications() {
   container.innerHTML = '<div style="text-align: center; padding: 3rem; color: var(--text-secondary);">Cargando...</div>';
 
   try {
-    const token = await window.authUtils.getAuthToken();
-    if (!token) {
+    // Ensure auth is initialized
+    await window.authUtils.getAuthToken();
+
+    if (!window.authUtils.isAuthenticated()) {
       container.innerHTML = '<div style="text-align: center; padding: 3rem; color: var(--text-secondary);">Inicia sesión para ver tus notificaciones</div>';
       return;
     }
 
     const response = await fetch('/notifications', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      credentials: 'include'
     });
 
     if (response.ok) {
@@ -348,12 +348,9 @@ function displayNotifications(notifications) {
 async function handleNotificationClick(notifId, threadId, commentId) {
   // Mark as read
   try {
-    const token = await window.authUtils.getAuthToken();
     await fetch(`/notifications/${notifId}/read`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      credentials: 'include'
     });
   } catch (error) {
     console.error('Error marking notification as read:', error);
@@ -368,12 +365,9 @@ async function handleNotificationClick(notifId, threadId, commentId) {
 // Mark all notifications as read
 async function markAllNotificationsAsRead() {
   try {
-    const token = await window.authUtils.getAuthToken();
     const response = await fetch('/notifications/read-all', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      credentials: 'include'
     });
 
     if (response.ok) {
@@ -399,13 +393,13 @@ function updateNotificationBadge(count) {
 
 // Check for new notifications periodically
 async function checkNotifications() {
-  const token = await window.authUtils.getAuthToken();
-  if (!token) return;
+  // Ensure auth is initialized
+  await window.authUtils.getAuthToken();
+
+  if (!window.authUtils.isAuthenticated()) return;
 
   fetch('/notifications?unread=true&limit=1', {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
+    credentials: 'include'
   })
     .then(res => res.json())
     .then(data => {

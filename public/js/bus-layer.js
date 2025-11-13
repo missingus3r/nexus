@@ -158,13 +158,16 @@ class BusLayerManager {
           'text-field': ['get', 'line'],
           'text-size': 14,
           'text-allow-overlap': true,
-          'text-ignore-placement': false
+          'text-ignore-placement': false,
+          'text-padding': 2,
+          'text-letter-spacing': 0.05
         },
         paint: {
           'text-color': '#ffffff',
           'text-halo-color': '#22c55e',
-          'text-halo-width': 3,
-          'text-halo-blur': 1
+          'text-halo-width': 7,
+          'text-halo-blur': 0,
+          'text-opacity': 1
         }
       });
     }
@@ -180,13 +183,16 @@ class BusLayerManager {
           'text-field': ['get', 'line'],
           'text-size': 14,
           'text-allow-overlap': true,
-          'text-ignore-placement': false
+          'text-ignore-placement': false,
+          'text-padding': 2,
+          'text-letter-spacing': 0.05
         },
         paint: {
           'text-color': '#ffffff',
           'text-halo-color': '#ef4444',
-          'text-halo-width': 3,
-          'text-halo-blur': 1
+          'text-halo-width': 7,
+          'text-halo-blur': 0,
+          'text-opacity': 1
         }
       });
     }

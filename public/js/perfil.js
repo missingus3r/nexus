@@ -2,7 +2,7 @@
 
         async function loadProfile() {
             try {
-                const response = await fetch('/api/auth/profile', {
+                const response = await fetch('/auth/profile', {
                     credentials: 'include'
                 });
                 const data = await response.json();
@@ -563,7 +563,7 @@
             };
 
             try {
-                const response = await fetch('/api/auth/settings', {
+                const response = await fetch('/auth/settings', {
                     method: 'PUT',
                     credentials: 'include',
                     headers: {
@@ -618,7 +618,7 @@
         // Handle account deletion
         confirmDeleteBtn?.addEventListener('click', async () => {
             try {
-                const response = await fetch('/api/auth/delete-account', {
+                const response = await fetch('/auth/delete-account', {
                     method: 'DELETE',
                     credentials: 'include',
                     headers: {
@@ -734,7 +734,7 @@
                 confirmUploadBtn.disabled = true;
                 confirmUploadBtn.textContent = 'Subiendo...';
 
-                const response = await fetch('/api/auth/upload-photo', {
+                const response = await fetch('/auth/upload-photo', {
                     method: 'POST',
                     credentials: 'include',
                     body: formData
@@ -773,7 +773,7 @@
             }
 
             try {
-                const response = await fetch('/api/auth/remove-photo', {
+                const response = await fetch('/auth/remove-photo', {
                     method: 'DELETE',
                     credentials: 'include',
                     headers: {
@@ -850,13 +850,15 @@
                 return;
             }
 
-            const uploadedPhoto = profileData.user.photoUrl || null;
-            const auth0Photo = profileData.user.picture || null;
+            const userPicture = profileData.user.picture || null;
+
+            // Check if picture is an uploaded photo (starts with /uploads/)
+            const isUploadedPhoto = userPicture && userPicture.startsWith('/uploads/');
 
             if (removePhotoBtn) {
-                removePhotoBtn.style.display = uploadedPhoto ? 'inline-block' : 'none';
+                // Show remove button only for uploaded photos, not Auth0 pictures
+                removePhotoBtn.style.display = isUploadedPhoto ? 'inline-block' : 'none';
             }
 
-            const photoToDisplay = uploadedPhoto || auth0Photo || null;
-            updateAvatar(photoToDisplay, defaultEmoji);
+            updateAvatar(userPicture, defaultEmoji);
         }

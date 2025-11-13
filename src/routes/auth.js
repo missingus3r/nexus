@@ -2,6 +2,13 @@ import express from 'express';
 import { User, Incident, Validation, ForumThread, ForumComment } from '../models/index.js';
 import logger from '../utils/logger.js';
 import { getAuthenticatedUser } from '../config/auth0.js';
+import upload from '../middleware/upload.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
@@ -254,6 +261,116 @@ router.get('/logout', (req, res) => {
   } catch (error) {
     logger.error('Error during logout:', error);
     res.redirect('/auth0/logout');
+  }
+});
+
+/**
+ * POST /auth/upload-photo
+ * Upload user profile photo
+ */
+router.post('/upload-photo', upload.single('photo'), async (req, res) => {
+  try {
+    const sessionUser = await getAuthenticatedUser(req);
+
+    if (!sessionUser) {
+      return res.status(401).json({ error: 'No autenticado' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se proporcionó ninguna foto' });
+    }
+
+    // Get user from database
+    const user = await User.findOne({ uid: sessionUser.uid });
+    if (!user) {
+      // Clean up uploaded file
+      fs.unlinkSync(req.file.path);
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Delete old photo if exists and it's not an Auth0 picture
+    if (user.picture && user.picture.startsWith('/uploads/')) {
+      const oldPhotoPath = path.join(__dirname, '../../', user.picture);
+      if (fs.existsSync(oldPhotoPath)) {
+        try {
+          fs.unlinkSync(oldPhotoPath);
+        } catch (err) {
+          logger.warn('Error deleting old photo:', err);
+        }
+      }
+    }
+
+    // Update user with new photo URL
+    const photoUrl = `/uploads/${req.file.filename}`;
+    user.picture = photoUrl;
+    await user.save();
+
+    logger.info('Profile photo uploaded for user:', { userId: user._id, photoUrl });
+
+    res.json({
+      success: true,
+      message: 'Foto de perfil actualizada exitosamente',
+      photoUrl
+    });
+  } catch (error) {
+    logger.error('Error uploading profile photo:', error);
+
+    // Clean up uploaded file on error
+    if (req.file && fs.existsSync(req.file.path)) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (err) {
+        logger.warn('Error cleaning up file after error:', err);
+      }
+    }
+
+    res.status(500).json({ error: 'Error al subir la foto' });
+  }
+});
+
+/**
+ * DELETE /auth/remove-photo
+ * Remove user profile photo
+ */
+router.delete('/remove-photo', async (req, res) => {
+  try {
+    const sessionUser = await getAuthenticatedUser(req);
+
+    if (!sessionUser) {
+      return res.status(401).json({ error: 'No autenticado' });
+    }
+
+    // Get user from database
+    const user = await User.findOne({ uid: sessionUser.uid });
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Delete photo file if it's a local upload (not Auth0 picture)
+    if (user.picture && user.picture.startsWith('/uploads/')) {
+      const photoPath = path.join(__dirname, '../../', user.picture);
+      if (fs.existsSync(photoPath)) {
+        try {
+          fs.unlinkSync(photoPath);
+        } catch (err) {
+          logger.warn('Error deleting photo file:', err);
+        }
+      }
+    }
+
+    // Reset picture to Auth0 default or null
+    user.picture = sessionUser.picture || null;
+    await user.save();
+
+    logger.info('Profile photo removed for user:', { userId: user._id });
+
+    res.json({
+      success: true,
+      message: 'Foto de perfil eliminada exitosamente'
+    });
+  } catch (error) {
+    logger.error('Error removing profile photo:', error);
+    res.status(500).json({ error: 'Error al eliminar la foto' });
   }
 });
 

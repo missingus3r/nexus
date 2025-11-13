@@ -22,7 +22,6 @@ async function getUserLocation() {
     try {
         if (!navigator.geolocation) {
             console.log('Geolocation not supported');
-            document.getElementById('locationInfo').textContent = '(Ubicación no disponible)';
             return;
         }
 
@@ -36,21 +35,13 @@ async function getUserLocation() {
         const { latitude, longitude } = position.coords;
         userLocation = { lat: latitude, lon: longitude };
 
-        // Reverse geocode to get country and city
+        // Reverse geocode to get country
         const countryData = await reverseGeocode(latitude, longitude);
         if (countryData && countryData.countryCode) {
             userCountry = countryData.countryCode;
-            // Extract city from display name
-            const parts = countryData.displayName.split(',');
-            const city = parts[0] || 'Tu ubicación';
-            document.getElementById('locationInfo').textContent =
-                `📍 ${city}`;
-        } else {
-            document.getElementById('locationInfo').textContent = '📍 Ubicación detectada';
         }
     } catch (error) {
         console.log('Location error:', error.message);
-        document.getElementById('locationInfo').textContent = '(Ubicación no disponible)';
     }
 }
 

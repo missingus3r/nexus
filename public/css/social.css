@@ -42,7 +42,7 @@ body {
     background: var(--surface);
     border: 1px solid var(--border-soft);
     backdrop-filter: blur(18px);
-    overflow: hidden;
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
     gap: 96px;

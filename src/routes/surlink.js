@@ -1123,6 +1123,46 @@ router.post('/sites/:siteId/comments/:commentId/replies', requireLogin, async (r
   }
 });
 
+// Delete a site comment (admin or comment owner only)
+router.delete('/sites/:siteId/comments/:commentId', requireLogin, async (req, res) => {
+  try {
+    const { siteId, commentId } = req.params;
+    const user = req.session.user;
+
+    const comment = await SiteComment.findOne({
+      _id: commentId,
+      siteId
+    });
+
+    if (!comment) {
+      return res.status(404).json({ error: 'Comentario no encontrado' });
+    }
+
+    // Check if user is admin or comment owner
+    const isAdmin = user.role === 'admin';
+    const isOwner = comment.userId === user.uid;
+
+    if (!isAdmin && !isOwner) {
+      return res.status(403).json({ error: 'No tienes permiso para eliminar este comentario' });
+    }
+
+    await SiteComment.deleteOne({ _id: commentId });
+
+    logger.info('Site comment deleted', {
+      commentId,
+      siteId,
+      deletedBy: user.uid,
+      isAdmin,
+      originalAuthor: comment.userId
+    });
+
+    res.json({ success: true, message: 'Comentario eliminado exitosamente' });
+  } catch (error) {
+    logger.error('Error deleting site comment', { error });
+    res.status(500).json({ error: 'Error al eliminar comentario' });
+  }
+});
+
 /**
  * ====================================
  * JOB LISTINGS ROUTES (Surlink Trabajos)

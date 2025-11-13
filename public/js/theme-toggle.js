@@ -2,34 +2,34 @@
     const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
 
     const safeStorage = {
-        get() {
+        async get() {
             try {
-                // Use PreferencesService only (database-backed)
+                // Use PreferencesService (works for authenticated and anonymous users)
                 if (window.PreferencesService) {
-                    return window.PreferencesService.getTheme();
+                    return await window.PreferencesService.getTheme();
                 }
                 return null;
             } catch (error) {
+                console.error('[ThemeToggle] Error getting theme:', error);
                 return null;
             }
         },
-        set(value) {
+        async set(value) {
             try {
-                // Save to PreferencesService only (database-backed)
+                // Save to PreferencesService (works for authenticated and anonymous users)
                 if (window.PreferencesService) {
-                    window.PreferencesService.setTheme(value);
+                    await window.PreferencesService.setTheme(value);
                 }
-                // Note: Theme changes require authentication
             } catch (error) {
-                // Ignore write errors
+                console.error('[ThemeToggle] Error setting theme:', error);
             }
         }
     };
 
     const normalizeTheme = (theme) => (theme === 'dark' ? 'dark' : 'light');
 
-    const getInitialTheme = () => {
-        const stored = safeStorage.get();
+    const getInitialTheme = async () => {
+        const stored = await safeStorage.get();
         if (stored && stored !== 'auto') {
             return normalizeTheme(stored);
         }
@@ -61,24 +61,31 @@
         });
     };
 
-    let currentTheme = applyTheme(getInitialTheme());
+    let currentTheme = 'light';
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // Re-apply once body exists to update body classes and buttons inside templates
+    // Initialize theme asynchronously
+    (async () => {
+        currentTheme = await getInitialTheme();
+        currentTheme = applyTheme(currentTheme);
+    })();
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Wait for initial theme and re-apply once body exists
+        currentTheme = await getInitialTheme();
         currentTheme = applyTheme(currentTheme);
 
         document.querySelectorAll('[data-theme-toggle]').forEach((button) => {
-            button.addEventListener('click', () => {
+            button.addEventListener('click', async () => {
                 currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
                 currentTheme = applyTheme(currentTheme);
-                safeStorage.set(currentTheme);
+                await safeStorage.set(currentTheme);
             });
         });
     });
 
-    const handleSystemThemeChange = (event) => {
-        const stored = safeStorage.get();
-        if (stored) {
+    const handleSystemThemeChange = async (event) => {
+        const stored = await safeStorage.get();
+        if (stored && stored !== 'auto') {
             // User has an explicit preference, respect it
             return;
         }

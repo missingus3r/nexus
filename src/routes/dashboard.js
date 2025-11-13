@@ -51,31 +51,31 @@ router.get('/dashboard/data', requireAuth, async (req, res, next) => {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    // Get latest incidents (Centinel alerts) - last 10
+    // Get latest incidents (Centinel alerts) - last 5
     const incidents = await Incident.find({
       status: { $in: ['verified', 'pending'] },
       hidden: false
     })
       .sort({ createdAt: -1 })
-      .limit(10)
+      .limit(5)
       .select('type severity location description createdAt neighborhoodName')
       .lean();
 
-    // Get latest Surlink posts - last 10
+    // Get latest Surlink posts - last 5
     const surlinkPosts = await SurlinkListing.find({
       status: 'active'
     })
       .sort({ createdAt: -1 })
-      .limit(10)
+      .limit(5)
       .select('title category price.amount price.currency location.city media createdAt')
       .lean();
 
-    // Get latest forum threads - last 10
+    // Get latest forum threads - last 5
     const forumThreads = await ForumThread.find({
       status: 'active'
     })
       .sort({ createdAt: -1 })
-      .limit(10)
+      .limit(5)
       .populate('author', 'name picture')
       .select('title hashtags likesCount commentsCount createdAt author')
       .lean();

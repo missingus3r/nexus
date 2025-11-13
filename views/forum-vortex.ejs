@@ -98,7 +98,7 @@
 
                 <script>
                     // Load hashtag filters dynamically
-                    fetch('/api/forum/hashtags')
+                    fetch('/forum/hashtags')
                         .then(res => res.json())
                         .then(data => {
                             const container = document.getElementById('hashtagFilters');

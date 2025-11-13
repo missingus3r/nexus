@@ -395,7 +395,7 @@ async function loadIncidentsList() {
     content.innerHTML = '<p class="text-center">Cargando incidentes...</p>';
 
     try {
-        const response = await fetch('/api/map/incidents?limit=20', {
+        const response = await fetch('/map/incidents?limit=20', {
             credentials: 'include'
         });
 

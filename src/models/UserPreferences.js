@@ -37,7 +37,7 @@ const userPreferencesSchema = new mongoose.Schema({
   navigation: {
     surlinkActiveCategory: {
       type: String,
-      default: 'casas'
+      default: 'construccion'
     },
     surlinkActiveConstruccionTab: {
       type: String,
@@ -50,6 +50,10 @@ const userPreferencesSchema = new mongoose.Schema({
     surlinkActiveFinancialTab: {
       type: String,
       default: 'bancos'
+    },
+    surlinkActiveTrabajosTab: {
+      type: String,
+      default: 'ofertas'
     }
   },
 

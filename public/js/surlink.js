@@ -392,6 +392,13 @@
       btn.dataset.liked = liked ? 'true' : 'false';
       const counter = btn.querySelector('[data-like-count]');
       if (counter) counter.textContent = likes;
+
+      // Update SVG heart icon
+      const svg = btn.querySelector('.surlink-like-icon');
+      if (svg) {
+        svg.setAttribute('fill', liked ? '#ef4444' : 'none');
+        svg.setAttribute('stroke', liked ? '#ef4444' : 'currentColor');
+      }
     });
   };
 
@@ -400,6 +407,7 @@
     const summary = listing.summary || listing.description || '';
     const truncated = summary.length > 140 ? `${summary.slice(0, 140)}…` : summary;
     const likeLabel = listing.isLiked ? 'Quitar de favoritos' : 'Guardar';
+    const isLiked = listing.isLiked ? 'true' : 'false';
 
     return `
       <article class="surlink-card" data-listing="${listing.id}" data-category="${listing.category}">
@@ -409,8 +417,10 @@
             <div class="surlink-card-price">${escapeHtml(formatPrice(listing))}</div>
           </div>
           <div class="surlink-card-actions">
-            <button type="button" class="surlink-like-btn" data-action="like" data-id="${listing.id}" data-category="${listing.category}" data-liked="${listing.isLiked ? 'true' : 'false'}" title="${escapeHtml(likeLabel)}">
-              <span class="surlink-like-icon">♥</span>
+            <button type="button" class="surlink-like-btn" data-action="like" data-id="${listing.id}" data-category="${listing.category}" data-liked="${isLiked}" title="${escapeHtml(likeLabel)}">
+              <svg class="surlink-like-icon" width="16" height="16" viewBox="0 0 24 24" fill="${listing.isLiked ? '#ef4444' : 'none'}" stroke="${listing.isLiked ? '#ef4444' : 'currentColor'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
               <span data-like-count>${listing.likeCount || 0}</span>
             </button>
           </div>
@@ -840,7 +850,9 @@
             <img src="${escapeHtml(site.logo)}" alt="${escapeHtml(site.name)}" loading="lazy" onerror="handleFaviconError(this)">
           </div>
           <button type="button" class="surlink-like-btn construccion-like-btn" data-action="like-construccion" data-site-id="${site.id}" data-liked="${isLiked ? 'true' : 'false'}" title="${escapeHtml(likeLabel)}">
-            <span class="surlink-like-icon">♥</span>
+            <svg class="surlink-like-icon" width="16" height="16" viewBox="0 0 24 24" fill="${isLiked ? '#ef4444' : 'none'}" stroke="${isLiked ? '#ef4444' : 'currentColor'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
             <span class="surlink-like-count">${likesCount}</span>
           </button>
         </div>
@@ -947,6 +959,13 @@
         if (counter) {
           counter.textContent = data.likesCount;
         }
+
+        // Update SVG heart icon
+        const svg = btn.querySelector('.surlink-like-icon');
+        if (svg) {
+          svg.setAttribute('fill', data.liked ? '#ef4444' : 'none');
+          svg.setAttribute('stroke', data.liked ? '#ef4444' : 'currentColor');
+        }
       });
     } catch (error) {
       toastError('Error al procesar el like');
@@ -993,7 +1012,9 @@
           </div>
           <div style="display: flex; align-items: center; gap: 0.5rem;">
             <button type="button" class="surlink-like-btn construccion-like-btn" data-action="like-academy" data-site-id="${site.id}" data-liked="${isLiked ? 'true' : 'false'}" title="${escapeHtml(likeLabel)}">
-              <span class="surlink-like-icon">♥</span>
+              <svg class="surlink-like-icon" width="16" height="16" viewBox="0 0 24 24" fill="${isLiked ? '#ef4444' : 'none'}" stroke="${isLiked ? '#ef4444' : 'currentColor'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
               <span class="surlink-like-count">${likesCount}</span>
             </button>
             <div class="surlink-comment-badge" title="${commentsCount} ${commentsCount === 1 ? 'comentario' : 'comentarios'}">
@@ -1108,6 +1129,13 @@
         if (counter) {
           counter.textContent = data.likesCount;
         }
+
+        // Update SVG heart icon
+        const svg = btn.querySelector('.surlink-like-icon');
+        if (svg) {
+          svg.setAttribute('fill', data.liked ? '#ef4444' : 'none');
+          svg.setAttribute('stroke', data.liked ? '#ef4444' : 'currentColor');
+        }
       });
     } catch (error) {
       toastError('Error al procesar el like');
@@ -1154,7 +1182,9 @@
           </div>
           <div style="display: flex; align-items: center; gap: 0.5rem;">
             <button type="button" class="surlink-like-btn construccion-like-btn" data-action="like-financial" data-site-id="${site.id}" data-liked="${isLiked ? 'true' : 'false'}" title="${escapeHtml(likeLabel)}">
-              <span class="surlink-like-icon">♥</span>
+              <svg class="surlink-like-icon" width="16" height="16" viewBox="0 0 24 24" fill="${isLiked ? '#ef4444' : 'none'}" stroke="${isLiked ? '#ef4444' : 'currentColor'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
               <span class="surlink-like-count">${likesCount}</span>
             </button>
             <div class="surlink-comment-badge" title="${commentsCount} ${commentsCount === 1 ? 'comentario' : 'comentarios'}">
@@ -1269,6 +1299,13 @@
         if (counter) {
           counter.textContent = data.likesCount;
         }
+
+        // Update SVG heart icon
+        const svg = btn.querySelector('.surlink-like-icon');
+        if (svg) {
+          svg.setAttribute('fill', data.liked ? '#ef4444' : 'none');
+          svg.setAttribute('stroke', data.liked ? '#ef4444' : 'currentColor');
+        }
       });
     } catch (error) {
       toastError('Error al procesar el like');
@@ -1366,7 +1403,13 @@
       return;
     }
 
-    container.innerHTML = comments.map(comment => `
+    const isAdmin = config.role === 'admin';
+    const currentUserId = config.uid;
+
+    container.innerHTML = comments.map(comment => {
+      const canDelete = isAdmin || (currentUserId && comment.userId === currentUserId);
+
+      return `
       <div class="surlink-comment" data-comment-id="${comment.id}" style="margin-bottom: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
           <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.9rem;">
@@ -1376,6 +1419,11 @@
             <div style="font-weight: 600; color: #333; font-size: 0.95rem;">${escapeHtml(comment.username)}</div>
             <div style="font-size: 0.75rem; color: #999;">${formatCommentDate(comment.createdAt)}</div>
           </div>
+          ${canDelete ? `
+            <button type="button" class="surlink-delete-comment-btn" data-comment-id="${comment.id}" style="background: none; border: none; color: #dc3545; font-size: 0.85rem; cursor: pointer; padding: 0.25rem 0.5rem; font-weight: 500; transition: color 0.2s;" title="Eliminar comentario">
+              🗑️ Eliminar
+            </button>
+          ` : ''}
         </div>
         <p style="margin: 0 0 0.75rem 0; color: #555; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(comment.content)}</p>
         ${config.isAuthenticated ? `
@@ -1411,7 +1459,8 @@
           </div>
         </div>
       </div>
-    `).join('');
+      `;
+    }).join('');
 
     // Attach reply button handlers
     container.querySelectorAll('.surlink-reply-btn').forEach(btn => {
@@ -1427,6 +1476,11 @@
     // Attach submit reply handlers
     container.querySelectorAll('.surlink-submit-reply-btn').forEach(btn => {
       btn.addEventListener('click', () => handleSubmitReply(btn.dataset.commentId));
+    });
+
+    // Attach delete comment handlers
+    container.querySelectorAll('.surlink-delete-comment-btn').forEach(btn => {
+      btn.addEventListener('click', () => handleDeleteSiteComment(btn.dataset.commentId));
     });
   };
 
@@ -1502,6 +1556,26 @@
       loadSiteComments(state.currentSite.id);
     } catch (error) {
       toastError(`Error al publicar respuesta: ${error.message}`);
+    }
+  };
+
+  // Handle delete site comment
+  const handleDeleteSiteComment = async (commentId) => {
+    if (!state.currentSite) return;
+
+    if (!confirm('¿Estás seguro de que deseas eliminar este comentario?')) {
+      return;
+    }
+
+    try {
+      await request(`${API_BASE}/sites/${state.currentSite.id}/comments/${commentId}`, {
+        method: 'DELETE'
+      });
+
+      toastSuccess('Comentario eliminado exitosamente');
+      loadSiteComments(state.currentSite.id);
+    } catch (error) {
+      toastError(`Error al eliminar comentario: ${error.message}`);
     }
   };
 
@@ -1605,8 +1679,8 @@
       </div>
 
       <!-- Comments Section -->
-      <div class="surlink-comments-section" style="margin-top: 3rem; border-top: 1px solid #e0e0e0; padding-top: 2rem;">
-        <h4 style="margin-bottom: 1.5rem; font-size: 1.2rem; color: #333;">Comentarios</h4>
+      <div class="surlink-comments-section" style="margin-top: 3rem; border-top: 1px solid var(--border-color); padding-top: 2rem;">
+        <h4 class="surlink-comments-title">Comentarios</h4>
 
         ${config.isAuthenticated ? `
           <div class="surlink-comment-form" style="margin-bottom: 2rem;">
@@ -1911,6 +1985,11 @@
   const setActiveTrabajosTab = (tab) => {
     state.activeTrabajosTab = tab;
 
+    // Save to preferences
+    if (window.PreferencesService) {
+      window.PreferencesService.setNavigation('surlinkActiveTrabajosTab', tab);
+    }
+
     trabajosTabs.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.trabajosTab === tab);
     });
@@ -1929,13 +2008,6 @@
       loadMisTrabajosGuardados();
     } else if (tab === 'mi-cv') {
       loadCV();
-    }
-
-    // Save to localStorage
-    try {
-      localStorage.setItem('surlinkActiveTrabajosTab', tab);
-    } catch (e) {
-      console.error('Error saving to localStorage:', e);
     }
   };
 
@@ -1981,11 +2053,14 @@
     if (!jobs || jobs.length === 0) {
       container.innerHTML = `
         <div class="surlink-empty-state">
-          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-          </svg>
-          <p>No se encontraron ofertas laborales</p>
+          <div class="empty-state-icon">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+          </div>
+          <h3>No se encontraron ofertas laborales</h3>
+          <p>Intenta ajustar los filtros de búsqueda o revisa más tarde para nuevas oportunidades.</p>
         </div>
       `;
       return;
@@ -2191,10 +2266,13 @@
       if (!data.favorites || data.favorites.length === 0) {
         container.innerHTML = `
           <div class="surlink-empty-state">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-            </svg>
-            <p>No tenés trabajos guardados aún</p>
+            <div class="empty-state-icon">
+              <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+            </div>
+            <h3>No tenés trabajos guardados aún</h3>
+            <p>Explora las ofertas laborales y guarda las que te interesen haciendo clic en el ícono de corazón.</p>
           </div>
         `;
         return;
@@ -2443,10 +2521,15 @@
     }
   };
 
-  const boot = () => {
+  const boot = async () => {
     if (!elements.modal) return;
 
-    // Restore saved state from localStorage
+    // Wait for PreferencesService to initialize
+    if (window.PreferencesService) {
+      await window.PreferencesService.waitForInit();
+    }
+
+    // Restore saved state from PreferencesService (syncs with DB for authenticated, localStorage for guests)
     let savedCategory = 'construccion';
     let savedConstruccionTab = 'proyectos';
     let savedAcademyTab = 'universidades';
@@ -2454,19 +2537,19 @@
     let savedTrabajosTab = 'ofertas';
 
     try {
-      const storedCategory = localStorage.getItem('surlinkActiveCategory');
-      const storedConstruccionTab = localStorage.getItem('surlinkActiveConstruccionTab');
-      const storedAcademyTab = localStorage.getItem('surlinkActiveAcademyTab');
-      const storedFinancialTab = localStorage.getItem('surlinkActiveFinancialTab');
-      const storedTrabajosTab = localStorage.getItem('surlinkActiveTrabajosTab');
-
-      if (storedCategory) savedCategory = storedCategory;
-      if (storedConstruccionTab) savedConstruccionTab = storedConstruccionTab;
-      if (storedAcademyTab) savedAcademyTab = storedAcademyTab;
-      if (storedFinancialTab) savedFinancialTab = storedFinancialTab;
-      if (storedTrabajosTab) savedTrabajosTab = storedTrabajosTab;
+      if (window.PreferencesService) {
+        const navigation = await window.PreferencesService.getNavigation();
+        if (navigation) {
+          savedCategory = navigation.surlinkActiveCategory || savedCategory;
+          savedConstruccionTab = navigation.surlinkActiveConstruccionTab || savedConstruccionTab;
+          savedAcademyTab = navigation.surlinkActiveAcademyTab || savedAcademyTab;
+          savedFinancialTab = navigation.surlinkActiveFinancialTab || savedFinancialTab;
+          savedTrabajosTab = navigation.surlinkActiveTrabajosTab || savedTrabajosTab;
+          console.log('[Surlink] Restored navigation preferences:', { savedCategory, savedConstruccionTab, savedAcademyTab, savedFinancialTab, savedTrabajosTab });
+        }
+      }
     } catch (e) {
-      console.error('Error reading from localStorage:', e);
+      console.error('Error reading preferences:', e);
     }
 
     // Set active quick link

@@ -19,6 +19,32 @@
   };
 
   /**
+   * Load guest preferences from localStorage
+   */
+  const loadGuestPreferences = () => {
+    try {
+      const stored = localStorage.getItem('vortex_guest_preferences');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error('Error loading guest preferences from localStorage:', error);
+    }
+    return null;
+  };
+
+  /**
+   * Save guest preferences to localStorage
+   */
+  const saveGuestPreferences = (preferences) => {
+    try {
+      localStorage.setItem('vortex_guest_preferences', JSON.stringify(preferences));
+    } catch (error) {
+      console.error('Error saving guest preferences to localStorage:', error);
+    }
+  };
+
+  /**
    * Initialize preferences service
    */
   const init = async () => {
@@ -39,21 +65,26 @@
         } catch (error) {
           // If API call fails, user is not authenticated (guest mode)
           state.isAuthenticated = false;
-          console.log('[PreferencesService] Guest mode - using defaults only');
+          console.log('[PreferencesService] Guest mode - using localStorage');
+
+          // Load from localStorage or use defaults
+          const guestPrefs = loadGuestPreferences();
+
           state.preferences = {
             favorites: { construccion: [], academy: [], financial: [], listings: [] },
             navigation: {
-              surlinkActiveCategory: 'construccion',
-              surlinkActiveConstruccionTab: 'proyectos',
-              surlinkActiveAcademyTab: 'universidades',
-              surlinkActiveFinancialTab: 'bancos'
+              surlinkActiveCategory: guestPrefs?.navigation?.surlinkActiveCategory || 'construccion',
+              surlinkActiveConstruccionTab: guestPrefs?.navigation?.surlinkActiveConstruccionTab || 'proyectos',
+              surlinkActiveAcademyTab: guestPrefs?.navigation?.surlinkActiveAcademyTab || 'universidades',
+              surlinkActiveFinancialTab: guestPrefs?.navigation?.surlinkActiveFinancialTab || 'bancos',
+              surlinkActiveTrabajosTab: guestPrefs?.navigation?.surlinkActiveTrabajosTab || 'ofertas'
             },
             welcomeModals: {
-              surlinkWelcomeShown: false,
-              centinelWelcomeShown: false,
-              forumWelcomeShown: false
+              surlinkWelcomeShown: guestPrefs?.welcomeModals?.surlinkWelcomeShown || false,
+              centinelWelcomeShown: guestPrefs?.welcomeModals?.centinelWelcomeShown || false,
+              forumWelcomeShown: guestPrefs?.welcomeModals?.forumWelcomeShown || false
             },
-            ui: { theme: 'auto' }
+            ui: { theme: guestPrefs?.ui?.theme || 'auto' }
           };
         }
 
@@ -211,8 +242,11 @@
     if (state.isAuthenticated) {
       console.log(`[PreferencesService] Saving navigation ${key} = ${value} to API`);
       updateAPI(`${API_BASE}/navigation`, { [key]: value }, `nav-${key}`);
+    } else {
+      // Save to localStorage for guests
+      console.log(`[PreferencesService] Saving navigation ${key} = ${value} to localStorage`);
+      saveGuestPreferences(state.preferences);
     }
-    // Note: Guests cannot save navigation (requires authentication)
   };
 
   /**
@@ -248,8 +282,11 @@
     if (state.isAuthenticated) {
       console.log(`[PreferencesService] Saving ${modalName} = ${seen} to API`);
       updateAPI(`${API_BASE}/welcome-modals`, { [modalName]: seen }, `modal-${modalName}`);
+    } else {
+      // Save to localStorage for guests
+      console.log(`[PreferencesService] Saving ${modalName} = ${seen} to localStorage`);
+      saveGuestPreferences(state.preferences);
     }
-    // Note: Guests cannot save welcome modal state (requires authentication)
   };
 
   /**
@@ -270,23 +307,38 @@
   /**
    * Set theme
    */
-  const setTheme = (theme) => {
+  const setTheme = async (theme) => {
+    // Ensure service is initialized
+    if (!state.initialized) {
+      await init();
+    }
+
     if (!state.preferences) return;
 
     state.preferences.ui.theme = theme;
 
     if (state.isAuthenticated) {
       updateAPI(`${API_BASE}/theme`, { theme }, 'theme');
+    } else {
+      // Save to localStorage for guests
+      console.log(`[PreferencesService] Saving theme ${theme} to localStorage`);
+      saveGuestPreferences(state.preferences);
     }
-    // Note: Guests cannot save theme (requires authentication)
   };
 
   /**
    * Get theme
    */
-  const getTheme = () => {
+  const getTheme = async () => {
+    // Ensure service is initialized
+    if (!state.initialized) {
+      await init();
+    }
+
     if (!state.preferences) return 'auto';
-    return state.preferences.ui.theme || 'auto';
+    const theme = state.preferences.ui.theme || 'auto';
+    console.log(`[PreferencesService] Get theme = ${theme}`);
+    return theme;
   };
 
   /**

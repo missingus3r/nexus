@@ -216,12 +216,27 @@ async function loadThreads() {
       credentials: 'include'
     });
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const data = await response.json();
-    displayThreads(data.threads);
-    displayPagination(data.pagination);
+
+    // Validate response structure
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid response format');
+    }
+
+    displayThreads(data.threads || []);
+    displayPagination(data.pagination || { page: 1, pages: 1, total: 0, limit: 20 });
   } catch (error) {
     console.error('Error loading threads:', error);
     document.getElementById('threadsList').innerHTML = '<p style="text-align: center; color: var(--danger-color);">Error al cargar threads</p>';
+    // Clear pagination on error
+    const paginationContainer = document.getElementById('pagination');
+    if (paginationContainer) {
+      paginationContainer.innerHTML = '';
+    }
   }
 }
 
@@ -312,21 +327,37 @@ async function displayThreads(threads) {
 function displayPagination(pagination) {
   const container = document.getElementById('pagination');
 
-  if (pagination.pages <= 1) {
-    container.innerHTML = '';
+  // Validate pagination object and its properties
+  if (!pagination || typeof pagination !== 'object') {
+    if (container) {
+      container.innerHTML = '';
+    }
+    return;
+  }
+
+  // Ensure pages property exists and is a valid number
+  const totalPages = parseInt(pagination.pages) || 0;
+  const currentPageNum = parseInt(pagination.page) || 1;
+
+  if (totalPages <= 1) {
+    if (container) {
+      container.innerHTML = '';
+    }
     return;
   }
 
   let pages = [];
-  for (let i = 1; i <= pagination.pages; i++) {
+  for (let i = 1; i <= totalPages; i++) {
     pages.push(`
-      <button class="pagination-btn ${i === pagination.page ? 'active' : ''}" onclick="goToPage(${i})">
+      <button class="pagination-btn ${i === currentPageNum ? 'active' : ''}" onclick="goToPage(${i})">
         ${i}
       </button>
     `);
   }
 
-  container.innerHTML = pages.join('');
+  if (container) {
+    container.innerHTML = pages.join('');
+  }
 }
 
 function goToPage(page) {

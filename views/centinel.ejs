@@ -22,6 +22,16 @@
 
             <!-- Controles flotantes para mobile -->
             <div class="floating-controls mobile-only">
+
+                <% if (isAuthenticated) { %>
+                    <button id="reportBtnMobile" class="floating-btn primary">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                    </button>
+                <% } %>
+
                 <button id="filtersBtn" class="floating-btn" title="Filtros">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <line x1="4" y1="6" x2="20" y2="6"></line>
@@ -32,15 +42,6 @@
                         <circle cx="12" cy="18" r="2"></circle>
                     </svg>
                 </button>
-
-                <% if (isAuthenticated) { %>
-                    <button id="reportBtnMobile" class="floating-btn primary">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                    </button>
-                <% } %>
 
                 <button id="layersBtn" class="floating-btn" title="Capas">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -61,6 +62,15 @@
                     </svg>
                 </button>
             </div>
+
+            <!-- Botón de refresh flotante (mobile y desktop) -->
+            <button id="refreshBtn" class="refresh-floating-btn" title="Actualizar Mapa">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+            </button>
 
             <!-- Desktop floating button for incidents list -->
             <button id="incidentsListBtnDesktop" class="incidents-list-btn desktop-only" title="Últimos Incidentes">

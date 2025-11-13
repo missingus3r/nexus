@@ -11,6 +11,14 @@ let selectedLocation = null;
 let locationMarker = null;
 let approximateCircle = null;
 
+/**
+ * Check if user is on a mobile device
+ */
+function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+}
+
 // Initialize map on page load
 document.addEventListener('DOMContentLoaded', () => {
     initializeMap();
@@ -65,13 +73,15 @@ function initializeMap() {
         // Load map data immediately
         loadMapData();
 
-        // Try to center on user's location
-        centerOnUserLocation();
+        // Try to center on user's location (only on mobile devices)
+        if (isMobileDevice()) {
+            centerOnUserLocation();
 
-        // Reload data after user location is set (in case the bbox changed)
-        setTimeout(() => {
-            loadMapData();
-        }, 3000);
+            // Reload data after user location is set (in case the bbox changed)
+            setTimeout(() => {
+                loadMapData();
+            }, 3000);
+        }
     });
 
     // Add navigation controls
@@ -88,9 +98,11 @@ function initializeMap() {
 
     map.addControl(geolocateControl, 'top-right');
 
-    // Automatically trigger geolocation on load
+    // Automatically trigger geolocation on load (only on mobile devices)
     map.on('load', () => {
-        geolocateControl.trigger();
+        if (isMobileDevice()) {
+            geolocateControl.trigger();
+        }
     });
 }
 
@@ -495,6 +507,43 @@ async function loadMapData() {
     }
 }
 
+/**
+ * Handle manual refresh button click
+ */
+async function handleManualRefresh() {
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (!refreshBtn) return;
+
+    // Add refreshing animation
+    refreshBtn.classList.add('refreshing');
+    refreshBtn.disabled = true;
+
+    try {
+        console.log('[Manual Refresh] Starting refresh...');
+
+        // Refresh incidents and map data
+        await loadMapData();
+
+        // Refresh buses if bus layer is active
+        if (busLayerManager && busLayerManager.isInitialized) {
+            console.log('[Manual Refresh] Refreshing buses...');
+            await busLayerManager.loadBuses();
+        }
+
+        console.log('[Manual Refresh] Complete!');
+
+        // Show success feedback (optional)
+        setTimeout(() => {
+            refreshBtn.classList.remove('refreshing');
+            refreshBtn.disabled = false;
+        }, 600);
+    } catch (error) {
+        console.error('[Manual Refresh] Error:', error);
+        refreshBtn.classList.remove('refreshing');
+        refreshBtn.disabled = false;
+    }
+}
+
 
 function setupEventListeners() {
     // Type filter change
@@ -569,6 +618,12 @@ function setupEventListeners() {
     map.on('moveend', () => {
         loadMapData();
     });
+
+    // Refresh button
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', handleManualRefresh);
+    }
 }
 
 function toggleIncidentsLayer(show) {

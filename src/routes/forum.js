@@ -6,6 +6,7 @@ import { verifyApiAuth, requireAuth } from '../middleware/apiAuth.js';
 import { uploadForumImages, handleUploadErrors } from '../middleware/upload.js';
 import { processMentions, createMentionNotifications } from '../utils/forumHelpers.js';
 import crypto from 'crypto';
+import logger from '../utils/logger.js';
 
 const router = express.Router();
 
@@ -28,7 +29,7 @@ const sanitizeConfig = {
 };
 
 // Optional authentication (doesn't fail if not authenticated)
-const optionalAuth = [verifyApiAuth, requireAuth];
+const optionalAuth = [verifyApiAuth];
 
 // Combined authentication middleware (requires authenticated user)
 const authenticate = [verifyApiAuth, requireAuth, (req, res, next) => {
@@ -386,11 +387,21 @@ router.get('/threads/:id', optionalAuth, async (req, res) => {
       }
     });
 
-    // Add liked status if user is authenticated
+    // Add liked status and permissions if user is authenticated
     if (req.user) {
+      const isAuthor = thread.author._id.toString() === req.user._id.toString();
+      const isAdmin = req.user.role === 'admin';
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      const isWithinEditWindow = thread.createdAt >= fiveMinutesAgo;
+
       thread.isLiked = thread.likes.some(like =>
         like.userId.toString() === req.user._id.toString()
       );
+      thread.isAuthenticated = true;
+      thread.isAuthor = isAuthor;
+      thread.isAdmin = isAdmin;
+      thread.canEdit = isAdmin || (isAuthor && isWithinEditWindow);
+      thread.canDelete = isAdmin || (isAuthor && isWithinEditWindow);
 
       // Add user's votes for polls
       if (thread.type === 'poll' && thread.poll) {
@@ -413,9 +424,16 @@ router.get('/threads/:id', optionalAuth, async (req, res) => {
       }
 
       const markLiked = (comment) => {
+        const commentIsAuthor = comment.author._id.toString() === req.user._id.toString();
+        const commentIsWithinEditWindow = comment.createdAt >= fiveMinutesAgo;
+
         comment.isLiked = comment.likes.some(like =>
           like.userId.toString() === req.user._id.toString()
         );
+        comment.isAuthor = commentIsAuthor;
+        comment.isAdmin = isAdmin;
+        comment.canEdit = isAdmin || (commentIsAuthor && commentIsWithinEditWindow);
+        comment.canDelete = isAdmin || (commentIsAuthor && commentIsWithinEditWindow);
         comment.replies.forEach(markLiked);
       };
       rootComments.forEach(markLiked);

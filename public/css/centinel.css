@@ -429,6 +429,13 @@
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* Bus line filter options - force black text in dark mode */
+html[data-theme="dark"] #busLineFilter option,
+html[data-theme="dark"] #busLineFilterMobile option {
+    background-color: #ffffff;
+    color: #000000;
+}
+
 /* Bus info in incident popup */
 .nearby-buses {
     margin-top: 1rem;
@@ -507,5 +514,80 @@
     .count-badge {
         font-size: 0.7rem;
         padding: 0.1rem 0.4rem;
+    }
+}
+
+/* ============================================
+   REFRESH BUTTON
+   ============================================ */
+
+.refresh-floating-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10;
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(76, 175, 80, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.refresh-floating-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.refresh-floating-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5), 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.refresh-floating-btn:hover::before {
+    opacity: 1;
+}
+
+.refresh-floating-btn:active {
+    transform: translateY(-1px) scale(1);
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.refresh-floating-btn svg {
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.refresh-floating-btn:hover svg {
+    transform: rotate(180deg);
+}
+
+.refresh-floating-btn.refreshing svg {
+    animation: spin-refresh 1s linear infinite;
+}
+
+@keyframes spin-refresh {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .refresh-floating-btn {
+        bottom: 80px;
+        left: 16px;
+        right: auto;
+        width: 48px;
+        height: 48px;
     }
 }

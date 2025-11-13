@@ -77,7 +77,7 @@ const userSchema = new mongoose.Schema({
   picture: {
     type: String,
     required: false,
-    description: 'User profile picture URL from Auth0'
+    description: 'User profile picture URL (from Auth0 or uploaded)'
   },
   lastLogin: {
     type: Date,
