@@ -935,6 +935,25 @@ async function handleReportSubmit(e) {
         }
     }
 
+    // Get buttons and validation message element
+    const submitBtn = document.getElementById('reportSubmitBtn');
+    const cancelBtn = document.getElementById('reportCancelBtn');
+    const validationMessage = document.getElementById('validationMessage');
+
+    // Hide validation message before submit
+    if (validationMessage) {
+        validationMessage.style.display = 'none';
+        validationMessage.textContent = '';
+    }
+
+    // Save original button text
+    const originalSubmitText = submitBtn.textContent;
+
+    // Disable submit button, hide cancel button, and show loading state
+    submitBtn.disabled = true;
+    cancelBtn.style.display = 'none'; // Hide cancel button during validation
+    submitBtn.innerHTML = '<span style="display: inline-flex; align-items: center; gap: 8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite;"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>Evaluando con IA...</span>';
+
     try {
         const response = await fetch('/map/incidents', {
             method: 'POST',
@@ -949,13 +968,44 @@ async function handleReportSubmit(e) {
             form.reset();
             cancelLocationSelection();
             loadMapData();
+
+            // Reset buttons
+            submitBtn.textContent = originalSubmitText;
+            submitBtn.disabled = false;
+            cancelBtn.style.display = 'inline-block'; // Show cancel button again
+
+            // Clear validation message
+            if (validationMessage) {
+                validationMessage.style.display = 'none';
+                validationMessage.textContent = '';
+            }
         } else {
             const error = await response.json();
-            toastError('Error: ' + (error.error || 'No se pudo reportar el incidente'));
+
+            // Reset buttons
+            submitBtn.textContent = originalSubmitText;
+            submitBtn.disabled = false;
+            cancelBtn.style.display = 'inline-block'; // Show cancel button again
+
+            // Handle Gemini validation rejection specifically
+            if (error.validationFailed) {
+                // Show validation error message in the span
+                if (validationMessage) {
+                    validationMessage.textContent = error.reason || 'El contenido no es relevante para Centinel. Por favor verifica que reportas un incidente de seguridad real.';
+                    validationMessage.style.display = 'block';
+                }
+            } else {
+                toastError('Error: ' + (error.error || 'No se pudo reportar el incidente'));
+            }
         }
     } catch (error) {
         console.error('Error reporting incident:', error);
         toastError('Error al reportar el incidente');
+
+        // Reset buttons on error
+        submitBtn.textContent = originalSubmitText;
+        submitBtn.disabled = false;
+        cancelBtn.style.display = 'inline-block'; // Show cancel button again
     }
 }
 

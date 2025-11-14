@@ -6,6 +6,7 @@ import { validateIncident } from '../services/validationService.js';
 import { updateHeatmapForIncident } from '../services/heatmapService.js';
 import { assignNeighborhoodToIncident, updateNeighborhoodHeatmap } from '../services/neighborhoodService.js';
 import { uploadIncidentPhotos, handleUploadErrors } from '../middleware/upload.js';
+import { validateIncidentRelevance } from '../services/geminiService.js';
 import logger from '../utils/logger.js';
 import crypto from 'crypto';
 import fs from 'fs';
@@ -155,6 +156,44 @@ router.post('/', verifyApiAuth, requireAuth, writeRateLimiter, uploadIncidentPho
         });
       }
     }
+
+    // Validate incident relevance with Gemini AI
+    const validationResult = await validateIncidentRelevance({
+      type,
+      description,
+      severity: severity ? parseInt(severity) : 3
+    });
+
+    if (!validationResult.isValid) {
+      // Clean up uploaded files if validation fails
+      if (req.files) {
+        req.files.forEach(file => {
+          try {
+            fs.unlinkSync(file.path);
+          } catch (err) {
+            logger.error('Failed to delete file after validation failure:', err);
+          }
+        });
+      }
+
+      logger.info('Incident rejected by Gemini validation', {
+        type,
+        description: description?.substring(0, 50),
+        reason: validationResult.reason,
+        reporter: req.user.uid
+      });
+
+      return res.status(400).json({
+        error: 'El contenido reportado no es relevante para Centinel',
+        reason: validationResult.reason,
+        validationFailed: true
+      });
+    }
+
+    logger.info('Incident passed Gemini validation', {
+      type,
+      reporter: req.user.uid
+    });
 
     // Create incident
     const incidentData = {

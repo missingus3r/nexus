@@ -84,8 +84,7 @@
             <button id="emergencyBtn" class="emergency-btn" title="Emergencias y Números Útiles">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    <text x="12" y="17" text-anchor="middle" font-size="14" font-family="Inter, sans-serif" font-weight="bold" fill="currentColor">!</text>
                 </svg>
             </button>
 
@@ -479,6 +478,7 @@
                         <label for="description">Descripción:</label>
                         <textarea id="description" name="description" maxlength="1000" placeholder="Describe el incidente..."></textarea>
                         <small><span id="charCount">0</span>/1000</small>
+                        <span id="validationMessage" class="validation-message" style="display: none;"></span>
                     </div>
 
                     <div class="form-group">
@@ -491,8 +491,8 @@
                     </div>
 
                     <div class="form-group">
-                        <button type="submit" class="btn btn-primary">Reportar</button>
-                        <button type="button" class="btn btn-secondary" onclick="closeReportModal();">Cancelar</button>
+                        <button type="submit" id="reportSubmitBtn" class="btn btn-primary">Reportar</button>
+                        <button type="button" id="reportCancelBtn" class="btn btn-secondary" onclick="closeReportModal();">Cancelar</button>
                     </div>
                 </form>
             </div>
@@ -987,7 +987,7 @@
                             <div class="emergency-card-desc">MIDES / Montevideo</div>
                             <div class="emergency-card-buttons">
                                 <a href="tel:08008798" class="emergency-card-btn">0800 8798</a>
-                                <a href="tel:092910000" class="emergency-card-btn">WhatsApp: 092 910 000</a>
+                                <a href="https://wa.me/092910000/?text=Hola, necesito ayuda con una persona en situación de calle" class="emergency-card-btn">WhatsApp: 092 910 000</a>
                             </div>
                         </div>
                     </div>

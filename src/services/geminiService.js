@@ -192,3 +192,121 @@ Responde SOLO con el JSON, sin texto adicional.`;
     return null;
   }
 }
+
+/**
+ * Validate if a user-reported incident is relevant for publication
+ * Uses Gemini to determine if the incident is related to public safety
+ * @param {Object} incidentData - The incident data to validate
+ * @param {String} incidentData.type - Incident type (homicidio, rapiña, etc.)
+ * @param {String} incidentData.description - User's description
+ * @param {Number} incidentData.severity - Severity (1-5)
+ * @returns {Object} { isValid: boolean, reason: string }
+ */
+export async function validateIncidentRelevance(incidentData) {
+  try {
+    // Check if Gemini API key is configured
+    const apiKey = process.env.GEMINI_API_KEY?.trim();
+    if (!apiKey) {
+      logger.warn('GEMINI_API_KEY not configured, allowing incident by default');
+      return {
+        isValid: true,
+        reason: 'Validación automática desactivada'
+      };
+    }
+
+    const { type, description, severity } = incidentData;
+
+    // Prepare prompt for Gemini
+    const prompt = `Eres un moderador de una plataforma de seguridad ciudadana en Uruguay llamada "Centinel". Tu trabajo es determinar si un reporte de incidente es RELEVANTE para publicarse en la plataforma.
+
+DATOS DEL INCIDENTE REPORTADO:
+- Tipo: ${type}
+- Descripción: ${description || '(sin descripción)'}
+- Severidad: ${severity}/5
+
+CRITERIOS DE VALIDACIÓN:
+
+✅ VÁLIDO (debe publicarse) si:
+- Es un incidente real de seguridad pública (robos, asaltos, delitos, actividad sospechosa)
+- Es una situación que afecta o podría afectar la seguridad de la comunidad
+- Aunque sea breve, describe un evento criminal o de riesgo
+
+❌ INVÁLIDO (NO debe publicarse) si:
+- Es una queja personal no relacionada con seguridad ("me quedé sin leche", "mi vecino es ruidoso")
+- Es spam, contenido sin sentido o irrelevante
+- Es un problema cotidiano sin implicaciones de seguridad
+- Está vacío o sin información útil
+- Es claramente falso o broma
+
+INSTRUCCIONES:
+1. Analiza si el incidente reportado es relevante para seguridad ciudadana
+2. Ten criterio flexible: si hay duda razonable de que podría ser relevante, ACEPTA el reporte
+3. Solo rechaza reportes claramente irrelevantes o spam
+
+Responde ÚNICAMENTE con un objeto JSON válido (sin markdown, sin bloques de código, solo el JSON):
+{
+  "isValid": true/false,
+  "reason": "Explicación breve (máximo 100 caracteres) de por qué es válido o inválido"
+}
+
+Responde SOLO con el JSON, sin texto adicional.`;
+
+    logger.info('Validating incident with Gemini', {
+      type,
+      descriptionLength: description?.length || 0,
+      severity
+    });
+
+    const model = getGeminiModel();
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    // Parse JSON response
+    let validationResult;
+    try {
+      // Remove markdown code blocks if present
+      const cleanText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      validationResult = JSON.parse(cleanText);
+    } catch (parseError) {
+      logger.error('Failed to parse Gemini validation response', {
+        text,
+        error: parseError.message
+      });
+      // On parse error, allow the incident (fail open)
+      return {
+        isValid: true,
+        reason: 'Error en validación automática'
+      };
+    }
+
+    // Validate response structure
+    if (typeof validationResult.isValid !== 'boolean' || !validationResult.reason) {
+      logger.error('Invalid Gemini validation response structure', { validationResult });
+      // On invalid structure, allow the incident (fail open)
+      return {
+        isValid: true,
+        reason: 'Error en validación automática'
+      };
+    }
+
+    logger.info('Gemini validation result', {
+      type,
+      isValid: validationResult.isValid,
+      reason: validationResult.reason
+    });
+
+    return validationResult;
+
+  } catch (error) {
+    logger.error('Gemini validation error:', {
+      error: error.message,
+      stack: error.stack
+    });
+    // On error, allow the incident (fail open to avoid blocking legitimate reports)
+    return {
+      isValid: true,
+      reason: 'Error en validación automática'
+    };
+  }
+}
