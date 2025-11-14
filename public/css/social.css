@@ -42,7 +42,6 @@ body {
     background: var(--surface);
     border: 1px solid var(--border-soft);
     backdrop-filter: blur(18px);
-    overflow-x: hidden;
     display: flex;
     flex-direction: column;
     gap: 96px;
@@ -194,6 +193,7 @@ main {
     align-items: center;
     gap: 24px;
     max-width: 760px;
+    width: 100%;
 }
 
 .hero-eyebrow {
@@ -205,9 +205,10 @@ main {
 }
 
 .hero-title {
-    font-size: clamp(3rem, 5vw, 4.6rem);
+    font-size: clamp(2rem, 5vw, 4.6rem);
     font-weight: 600;
     line-height: 1.1;
+    width: 100%;
 }
 
 .hero-text {

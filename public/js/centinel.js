@@ -428,13 +428,18 @@ function displayIncidentsList(incidents) {
     const statusColors = {
         'pending': '#ffa726',
         'verified': '#66bb6a',
-        'rejected': '#ef5350'
+        'rejected': '#ef5350',
+        'auto_verified': '#2196f3'
     };
     const statusLabels = {
         'pending': 'Pendiente',
         'verified': 'Verificado',
-        'rejected': 'Rechazado'
+        'rejected': 'Rechazado',
+        'auto_verified': 'Auto-verificado'
     };
+
+    // Check if user is admin
+    const isAdmin = window.authConfig?.user?.role === 'admin';
 
     content.innerHTML = incidents.map(incident => {
         const props = incident.properties;
@@ -448,6 +453,20 @@ function displayIncidentsList(incidents) {
             hour: '2-digit',
             minute: '2-digit'
         });
+
+        // Edit button for admins
+        const editButton = isAdmin ? `
+            <button
+                onclick="openEditIncidentModal('${incident.properties.id}')"
+                class="incident-card-btn"
+                style="background: var(--warning-color); margin-top: 0.5rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Editar Incidente
+            </button>
+        ` : '';
 
         return `
             <div class="incident-card">
@@ -474,6 +493,7 @@ function displayIncidentsList(incidents) {
                     </svg>
                     Ver en el Mapa
                 </button>
+                ${editButton}
             </div>
         `;
     }).join('');
@@ -577,5 +597,278 @@ document.getElementById('mobilityAppsModalClose')?.addEventListener('click', clo
 document.getElementById('mobilityAppsModal')?.addEventListener('click', (e) => {
     if (e.target.id === 'mobilityAppsModal') {
         closeMobilityAppsModal();
+    }
+});
+
+// ============================================
+// EDIT INCIDENT MODAL (ADMIN ONLY)
+// ============================================
+
+// Global variable to store current sources
+let currentIncidentSources = [];
+
+window.openEditIncidentModal = async function(incidentId) {
+    const modal = document.getElementById('editIncidentModal');
+    modal.classList.add('active');
+
+    // Reset sources
+    currentIncidentSources = [];
+
+    // Load incident data
+    try {
+        const response = await fetch(`/map/incidents/${incidentId}`, {
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al cargar el incidente');
+        }
+
+        const incident = await response.json();
+        const props = incident.properties || incident;
+
+        // Populate form
+        document.getElementById('editIncidentId').value = props.id;
+        document.getElementById('editType').value = props.type;
+        document.getElementById('editSeverity').value = props.severity;
+        document.getElementById('editDescription').value = props.description || '';
+        document.getElementById('editStatus').value = props.status;
+        document.getElementById('editHidden').checked = props.hidden || false;
+        document.getElementById('editHiddenReason').value = props.hiddenReason || '';
+
+        // Load source news
+        if (props.sourceNews && props.sourceNews.length > 0) {
+            currentIncidentSources = props.sourceNews.map(news => ({
+                newsId: news.newsId || news._id,
+                title: news.title,
+                url: news.url,
+                source: news.source,
+                addedAt: news.addedAt
+            }));
+        }
+
+        // Display current sources
+        displayCurrentSources();
+
+        // Toggle hidden reason field
+        document.getElementById('editHiddenReasonGroup').style.display =
+            props.hidden ? 'block' : 'none';
+    } catch (error) {
+        console.error('Error loading incident:', error);
+        toastError('Error al cargar los datos del incidente');
+    }
+}
+
+window.closeEditIncidentModal = function() {
+    const modal = document.getElementById('editIncidentModal');
+    modal.classList.remove('active');
+    document.getElementById('editIncidentForm').reset();
+    document.getElementById('newsSearch').value = '';
+    document.getElementById('newsSearchResults').style.display = 'none';
+    currentIncidentSources = [];
+}
+
+// Display current sources
+function displayCurrentSources() {
+    const container = document.getElementById('currentSourcesContainer');
+
+    if (!currentIncidentSources || currentIncidentSources.length === 0) {
+        container.innerHTML = `
+            <div style="color: var(--text-secondary); font-size: 0.9rem; padding: 0.5rem;">
+                No hay fuentes asociadas
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = currentIncidentSources.map(news => `
+        <div style="display: flex; justify-content: space-between; align-items: start; padding: 0.75rem; background: var(--background); border: 1px solid var(--border-color); border-radius: 6px;">
+            <div style="flex: 1;">
+                <div style="font-weight: 500; margin-bottom: 0.25rem;">${news.title}</div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                    ${news.source} • <a href="${news.url}" target="_blank" style="color: var(--primary-color);">Ver noticia</a>
+                </div>
+            </div>
+            <button
+                type="button"
+                class="remove-source-btn"
+                data-news-id="${news.newsId}"
+                style="background: var(--danger-color); color: white; border: none; padding: 0.25rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; margin-left: 1rem;">
+                Quitar
+            </button>
+        </div>
+    `).join('');
+}
+
+// Handle remove source button clicks using event delegation
+document.addEventListener('click', function(e) {
+    const removeBtn = e.target.closest('.remove-source-btn');
+    if (removeBtn) {
+        const newsId = removeBtn.getAttribute('data-news-id');
+        if (newsId) {
+            currentIncidentSources = currentIncidentSources.filter(news => news.newsId !== newsId);
+            displayCurrentSources();
+            toastSuccess('Fuente eliminada. Guarda los cambios para confirmar.');
+        }
+    }
+});
+
+// Search news with debounce
+let searchTimeout;
+document.getElementById('newsSearch')?.addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    const query = e.target.value.trim();
+
+    if (query.length < 2) {
+        document.getElementById('newsSearchResults').style.display = 'none';
+        return;
+    }
+
+    searchTimeout = setTimeout(async () => {
+        await searchNews(query);
+    }, 300);
+});
+
+// Search news function
+async function searchNews(query) {
+    const resultsContainer = document.getElementById('newsSearchResults');
+
+    try {
+        resultsContainer.style.display = 'block';
+        resultsContainer.innerHTML = `
+            <div style="padding: 1rem; text-align: center; color: var(--text-secondary);">
+                Buscando...
+            </div>
+        `;
+
+        const response = await fetch(`/admin/news/search?q=${encodeURIComponent(query)}`, {
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Error al buscar noticias');
+        }
+
+        if (!data.news || data.news.length === 0) {
+            resultsContainer.innerHTML = `
+                <div style="padding: 1rem; text-align: center; color: var(--text-secondary);">
+                    No se encontraron noticias
+                </div>
+            `;
+            return;
+        }
+
+        resultsContainer.innerHTML = data.news.map(news => {
+            const alreadyAdded = currentIncidentSources.some(s => s.newsId === news._id);
+            const date = new Date(news.publishedAt).toLocaleDateString('es-UY');
+
+            return `
+                <div style="padding: 0.75rem; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background 0.2s;"
+                     onmouseover="this.style.background='var(--background)'"
+                     onmouseout="this.style.background='transparent'"
+                     onclick="${alreadyAdded ? '' : `addSource('${news._id}', '${news.title.replace(/'/g, "\\'")}', '${news.url}', '${news.source}')`}">
+                    <div style="font-weight: 500; margin-bottom: 0.25rem;">${news.title}</div>
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center;">
+                        <span>${news.source} • ${date}</span>
+                        ${alreadyAdded ? '<span style="color: var(--success-color);">✓ Agregada</span>' : '<span style="color: var(--primary-color);">+ Agregar</span>'}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error searching news:', error);
+        resultsContainer.innerHTML = `
+            <div style="padding: 1rem; text-align: center; color: var(--danger-color);">
+                Error al buscar noticias
+            </div>
+        `;
+    }
+}
+
+// Add source to list
+window.addSource = function(newsId, title, url, source) {
+    // Check if already added
+    if (currentIncidentSources.some(s => s.newsId === newsId)) {
+        return;
+    }
+
+    currentIncidentSources.push({
+        newsId: newsId,
+        title: title,
+        url: url,
+        source: source,
+        addedAt: new Date().toISOString()
+    });
+
+    displayCurrentSources();
+
+    // Refresh search results to show "Agregada" badge
+    const query = document.getElementById('newsSearch').value.trim();
+    if (query.length >= 2) {
+        searchNews(query);
+    }
+}
+
+// Toggle hidden reason field based on checkbox
+document.getElementById('editHidden')?.addEventListener('change', (e) => {
+    const reasonGroup = document.getElementById('editHiddenReasonGroup');
+    reasonGroup.style.display = e.target.checked ? 'block' : 'none';
+});
+
+// Handle edit form submission
+document.getElementById('editIncidentForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const incidentId = document.getElementById('editIncidentId').value;
+    const formData = {
+        type: document.getElementById('editType').value,
+        severity: parseInt(document.getElementById('editSeverity').value),
+        description: document.getElementById('editDescription').value,
+        status: document.getElementById('editStatus').value,
+        hidden: document.getElementById('editHidden').checked,
+        hiddenReason: document.getElementById('editHiddenReason').value,
+        sourceNews: currentIncidentSources
+    };
+
+    try {
+        const response = await fetch(`/admin/incidents/${incidentId}`, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            toastSuccess('Incidente actualizado exitosamente');
+            closeEditIncidentModal();
+
+            // Reload incidents list
+            loadIncidentsList();
+
+            // Reload map data
+            if (window.map) {
+                window.loadMapData?.();
+            }
+        } else {
+            toastError(data.error || 'Error al actualizar el incidente');
+        }
+    } catch (error) {
+        console.error('Error updating incident:', error);
+        toastError('Error al actualizar el incidente');
+    }
+});
+
+// Close edit modal events
+document.getElementById('editIncidentModalClose')?.addEventListener('click', closeEditIncidentModal);
+
+document.getElementById('editIncidentModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'editIncidentModal') {
+        closeEditIncidentModal();
     }
 });
