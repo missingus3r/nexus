@@ -2,7 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import Incident from '../models/Incident.js';
 import NewsEvent from '../models/NewsEvent.js';
-import { AdminPost, Notification, User, SurlinkListing, ForumThread, ForumComment, ForumSettings, PricingSettings, PageVisit, SystemSettings, ApiToken } from '../models/index.js';
+import { AdminPost, Notification, User, SurlinkListing, ForumThread, ForumComment, ForumSettings, PricingSettings, PageVisit, SystemSettings, ApiToken, Donor } from '../models/index.js';
 import { runNewsIngestion } from '../jobs/newsIngestion.js';
 import { runScheduledCleanup, reloadCronJobs } from '../jobs/index.js';
 import logger from '../utils/logger.js';
@@ -1754,6 +1754,196 @@ router.put('/api-tokens/:id', requireAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Error al actualizar token API',
+      details: error.message
+    });
+  }
+});
+
+// ============================================================================
+// DONORS MANAGEMENT
+// ============================================================================
+
+/**
+ * GET /admin/donors
+ * Get all donors
+ */
+router.get('/donors', requireAdmin, async (req, res) => {
+  try {
+    const donors = await Donor.getAllDonors();
+
+    res.json({
+      success: true,
+      donors
+    });
+  } catch (error) {
+    logger.error('Error fetching donors:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener donadores',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * GET /admin/donors/:id
+ * Get a specific donor
+ */
+router.get('/donors/:id', requireAdmin, async (req, res) => {
+  try {
+    const donor = await Donor.findById(req.params.id);
+
+    if (!donor) {
+      return res.status(404).json({
+        success: false,
+        error: 'Donador no encontrado'
+      });
+    }
+
+    res.json({
+      success: true,
+      donor
+    });
+  } catch (error) {
+    logger.error('Error fetching donor:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener donador',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * POST /admin/donors
+ * Create a new donor
+ */
+router.post('/donors', requireAdmin, async (req, res) => {
+  try {
+    const { name, amount, currency, date, message, isAnonymous } = req.body;
+
+    // Validation
+    if (!name || !amount || !date) {
+      return res.status(400).json({
+        success: false,
+        error: 'Nombre, monto y fecha son requeridos'
+      });
+    }
+
+    if (amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'El monto debe ser mayor a 0'
+      });
+    }
+
+    // Create donor
+    const donor = new Donor({
+      name: name.trim(),
+      amount: parseFloat(amount),
+      currency: currency || 'USD',
+      date: date.trim(),
+      message: message?.trim() || '',
+      isAnonymous: !!isAnonymous
+    });
+
+    await donor.save();
+
+    logger.info(`Donor created: ${name} - $${amount} by ${req.user.email}`);
+
+    res.status(201).json({
+      success: true,
+      message: 'Donador creado exitosamente',
+      donor
+    });
+  } catch (error) {
+    logger.error('Error creating donor:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al crear donador',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * PUT /admin/donors/:id
+ * Update a donor
+ */
+router.put('/donors/:id', requireAdmin, async (req, res) => {
+  try {
+    const { name, amount, currency, date, message, isAnonymous } = req.body;
+
+    const donor = await Donor.findById(req.params.id);
+
+    if (!donor) {
+      return res.status(404).json({
+        success: false,
+        error: 'Donador no encontrado'
+      });
+    }
+
+    // Update fields
+    if (name !== undefined) donor.name = name.trim();
+    if (amount !== undefined) {
+      if (amount <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'El monto debe ser mayor a 0'
+        });
+      }
+      donor.amount = parseFloat(amount);
+    }
+    if (currency !== undefined) donor.currency = currency;
+    if (date !== undefined) donor.date = date.trim();
+    if (message !== undefined) donor.message = message.trim();
+    if (isAnonymous !== undefined) donor.isAnonymous = !!isAnonymous;
+
+    await donor.save();
+
+    logger.info(`Donor updated: ${donor.name} by ${req.user.email}`);
+
+    res.json({
+      success: true,
+      message: 'Donador actualizado exitosamente',
+      donor
+    });
+  } catch (error) {
+    logger.error('Error updating donor:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al actualizar donador',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * DELETE /admin/donors/:id
+ * Delete a donor
+ */
+router.delete('/donors/:id', requireAdmin, async (req, res) => {
+  try {
+    const donor = await Donor.findByIdAndDelete(req.params.id);
+
+    if (!donor) {
+      return res.status(404).json({
+        success: false,
+        error: 'Donador no encontrado'
+      });
+    }
+
+    logger.info(`Donor deleted: ${donor.name} by ${req.user.email}`);
+
+    res.json({
+      success: true,
+      message: 'Donador eliminado exitosamente'
+    });
+  } catch (error) {
+    logger.error('Error deleting donor:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al eliminar donador',
       details: error.message
     });
   }

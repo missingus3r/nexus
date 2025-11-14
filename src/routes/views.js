@@ -1,6 +1,7 @@
 import express from 'express';
 import { checkMaintenance } from '../middleware/maintenanceCheck.js';
 import { getAuthenticatedUser } from '../config/auth0.js';
+import { Donor } from '../models/index.js';
 
 const router = express.Router();
 
@@ -222,5 +223,24 @@ router.get('/admin', async (req, res) => {
  * Logout - Manejado automáticamente por Auth0 middleware en /logout
  * No se define ruta aquí para permitir que Auth0 maneje el cierre de sesión completo
  */
+
+/**
+ * API: Get all donors (public)
+ */
+router.get('/api/donors', async (req, res) => {
+  try {
+    const donors = await Donor.getAllDonors();
+    res.json({
+      success: true,
+      donors
+    });
+  } catch (error) {
+    console.error('Error fetching donors:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener donadores'
+    });
+  }
+});
 
 export default router;

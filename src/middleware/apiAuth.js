@@ -94,7 +94,7 @@ export const requireAuth = async (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({
       success: false,
-      error: 'Authentication required'
+      error: 'Necesitas estar logeado para realizar esta acción'
     });
   }
   next();
@@ -169,7 +169,7 @@ export const requirePermission = (permission) => {
     // Guest users: no permissions
     return res.status(401).json({
       success: false,
-      error: 'Authentication required'
+      error: 'Necesitas estar logeado para realizar esta acción'
     });
   };
 };

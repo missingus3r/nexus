@@ -78,86 +78,9 @@
                 <h2 class="section-title">Nuestros Donadores</h2>
                 <p class="section-subtitle">Agradecemos enormemente a cada persona que ha contribuido al proyecto</p>
 
-                <div class="donors-grid">
-                    <!-- Platinum Donor ($100+) -->
-                    <div class="donor-card platinum">
-                        <div class="donor-badge">
-                            <span class="badge-icon">💎</span>
-                            <span class="badge-label">Platino</span>
-                        </div>
-                        <div class="donor-info">
-                            <h3 class="donor-name">Bruno Silveira</h3>
-                            <p class="donor-amount">$150 USD</p>
-                            <p class="donor-date">Enero 2025</p>
-                            <p class="donor-message">"Creando herramientas que impacten positivamente en la comunidad."</p>
-                        </div>
-                    </div>
-
-                    <!-- Gold Donor ($51-99) -->
-                    <div class="donor-card gold">
-                        <div class="donor-badge">
-                            <span class="badge-icon">⭐⭐⭐</span>
-                            <span class="badge-label">Oro</span>
-                        </div>
-                        <div class="donor-info">
-                            <h3 class="donor-name">Donador Anónimo</h3>
-                            <p class="donor-amount">$75 USD</p>
-                            <p class="donor-date">Enero 2025</p>
-                            <p class="donor-message">"Apoyando proyectos que hacen la diferencia."</p>
-                        </div>
-                    </div>
-
-                    <!-- Silver Donor ($11-50) -->
-                    <div class="donor-card silver">
-                        <div class="donor-badge">
-                            <span class="badge-icon">⭐⭐</span>
-                            <span class="badge-label">Plata</span>
-                        </div>
-                        <div class="donor-info">
-                            <h3 class="donor-name">María González</h3>
-                            <p class="donor-amount">$25 USD</p>
-                            <p class="donor-date">Diciembre 2024</p>
-                            <p class="donor-message">"Excelente iniciativa para la comunidad."</p>
-                        </div>
-                    </div>
-
-                    <!-- Silver Donor -->
-                    <div class="donor-card silver">
-                        <div class="donor-badge">
-                            <span class="badge-icon">⭐⭐</span>
-                            <span class="badge-label">Plata</span>
-                        </div>
-                        <div class="donor-info">
-                            <h3 class="donor-name">Carlos Rodríguez</h3>
-                            <p class="donor-amount">$30 USD</p>
-                            <p class="donor-date">Diciembre 2024</p>
-                        </div>
-                    </div>
-
-                    <!-- Bronze Donor ($1-10) -->
-                    <div class="donor-card bronze">
-                        <div class="donor-badge">
-                            <span class="badge-icon">⭐</span>
-                            <span class="badge-label">Bronce</span>
-                        </div>
-                        <div class="donor-info">
-                            <h3 class="donor-name">Ana Martínez</h3>
-                            <p class="donor-amount">$10 USD</p>
-                            <p class="donor-date">Noviembre 2024</p>
-                        </div>
-                    </div>
-
-                    <!-- Bronze Donor -->
-                    <div class="donor-card bronze">
-                        <div class="donor-badge">
-                            <span class="badge-icon">⭐</span>
-                            <span class="badge-label">Bronce</span>
-                        </div>
-                        <div class="donor-info">
-                            <h3 class="donor-name">Donador Anónimo</h3>
-                            <p class="donor-amount">$5 USD</p>
-                            <p class="donor-date">Noviembre 2024</p>
-                        </div>
+                <div class="donors-grid" id="donorsGrid">
+                    <div style="text-align: center; padding: 3rem; color: var(--text-secondary); grid-column: 1 / -1;">
+                        Cargando donadores...
                     </div>
                 </div>
             </section>
@@ -218,6 +141,80 @@
 
     <script src="/js/social.js"></script>
     <script>
+        // Load donors from API
+        async function loadDonors() {
+            const grid = document.getElementById('donorsGrid');
+
+            if (!grid) return;
+
+            try {
+                const response = await fetch('/api/donors');
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Error al cargar donadores');
+                }
+
+                displayDonors(data.donors || []);
+            } catch (error) {
+                console.error('Error loading donors:', error);
+                grid.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: var(--danger-color); grid-column: 1 / -1;">
+                        Error al cargar donadores. Por favor, intenta nuevamente más tarde.
+                    </div>
+                `;
+            }
+        }
+
+        function displayDonors(donors) {
+            const grid = document.getElementById('donorsGrid');
+
+            if (!grid) return;
+
+            if (!donors || donors.length === 0) {
+                grid.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: var(--text-secondary); grid-column: 1 / -1;">
+                        Aún no hay donadores registrados. ¡Sé el primero en contribuir!
+                    </div>
+                `;
+                return;
+            }
+
+            const tierBadges = {
+                platinum: { label: 'Platino', icon: '💎' },
+                gold: { label: 'Oro', icon: '⭐⭐⭐' },
+                silver: { label: 'Plata', icon: '⭐⭐' },
+                bronze: { label: 'Bronce', icon: '⭐' }
+            };
+
+            const donorCards = donors.map(donor => {
+                const badge = tierBadges[donor.tier] || tierBadges.bronze;
+                const messageHTML = donor.message
+                    ? `<p class="donor-message">"${donor.message}"</p>`
+                    : '';
+
+                // Use "Donador Anónimo" if isAnonymous is true
+                const displayName = donor.isAnonymous ? 'Donador Anónimo' : donor.name;
+
+                return `
+                    <div class="donor-card ${donor.tier}">
+                        <div class="donor-badge">
+                            <span class="badge-icon">${badge.icon}</span>
+                            <span class="badge-label">${badge.label}</span>
+                        </div>
+                        <div class="donor-info">
+                            <h3 class="donor-name">${displayName}</h3>
+                            <p class="donor-amount">$${donor.amount} ${donor.currency || 'USD'}</p>
+                            <p class="donor-date">${donor.date}</p>
+                            ${messageHTML}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            grid.innerHTML = donorCards;
+        }
+
         // Logout handler - simplificado
         document.addEventListener('DOMContentLoaded', function() {
             const logoutLinks = document.querySelectorAll('a[href="/auth/logout"]');
@@ -229,6 +226,9 @@
                     window.location.href = '/auth/logout';
                 });
             });
+
+            // Load donors on page load
+            loadDonors();
         });
     </script>
 </body>

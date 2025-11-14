@@ -91,7 +91,7 @@ router.post('/', verifyApiAuth, requireAuth, writeRateLimiter, uploadIncidentPho
       if (req.files) {
         req.files.forEach(file => fs.unlinkSync(file.path));
       }
-      return res.status(401).json({ error: 'Authentication required' });
+      return res.status(401).json({ error: 'Necesitas estar logeado para realizar esta acción' });
     }
 
     const { type, severity, description, locationType, approximateRadius } = req.body;
@@ -220,7 +220,7 @@ router.post('/:id/validate', verifyApiAuth, requireAuth, writeRateLimiter, async
   try {
     // Check if user is authenticated
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return res.status(401).json({ error: 'Necesitas estar logeado para realizar esta acción' });
     }
 
     const { id } = req.params;
@@ -352,7 +352,7 @@ router.post('/:id/photos', verifyApiAuth, requireAuth, writeRateLimiter, uploadI
       if (req.files) {
         req.files.forEach(file => fs.unlinkSync(file.path));
       }
-      return res.status(401).json({ error: 'Authentication required' });
+      return res.status(401).json({ error: 'Necesitas estar logeado para realizar esta acción' });
     }
 
     const incident = await Incident.findById(req.params.id);

@@ -13,7 +13,7 @@ const router = express.Router();
 router.get('/', verifyApiAuth, requireAuth, async (req, res, next) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return res.status(401).json({ error: 'Necesitas estar logeado para realizar esta acción' });
     }
 
     const { unread, limit = 50, offset = 0 } = req.query;
@@ -52,7 +52,7 @@ router.get('/', verifyApiAuth, requireAuth, async (req, res, next) => {
 router.post('/:id/read', verifyApiAuth, requireAuth, async (req, res, next) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return res.status(401).json({ error: 'Necesitas estar logeado para realizar esta acción' });
     }
 
     const notification = await Notification.findOne({
@@ -82,7 +82,7 @@ router.post('/:id/read', verifyApiAuth, requireAuth, async (req, res, next) => {
 router.post('/read-all', verifyApiAuth, requireAuth, async (req, res, next) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return res.status(401).json({ error: 'Necesitas estar logeado para realizar esta acción' });
     }
 
     await Notification.markAllAsRead(req.user.uid);
@@ -102,7 +102,7 @@ router.post('/read-all', verifyApiAuth, requireAuth, async (req, res, next) => {
 router.get('/admin-posts', verifyApiAuth, requireAuth, async (req, res, next) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return res.status(401).json({ error: 'Necesitas estar logeado para realizar esta acción' });
     }
 
     const { limit = 20, offset = 0 } = req.query;
@@ -138,7 +138,7 @@ router.get('/admin-posts', verifyApiAuth, requireAuth, async (req, res, next) =>
 router.post('/admin-posts/:id/like', verifyApiAuth, requireAuth, async (req, res, next) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return res.status(401).json({ error: 'Necesitas estar logeado para realizar esta acción' });
     }
 
     const post = await AdminPost.findById(req.params.id);
@@ -174,7 +174,7 @@ router.post('/admin-posts/:id/like', verifyApiAuth, requireAuth, async (req, res
 router.post('/admin-posts/:id/view', verifyApiAuth, requireAuth, async (req, res, next) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      return res.status(401).json({ error: 'Necesitas estar logeado para realizar esta acción' });
     }
 
     const post = await AdminPost.findById(req.params.id);

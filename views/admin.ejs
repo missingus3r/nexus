@@ -462,6 +462,14 @@
                     <p>Cargando estadísticas de visitas...</p>
                 </div>
 
+                <!-- Visits Chart -->
+                <div id="visitsChartContainer" style="margin-top: 2rem; display: none;">
+                    <h3 style="margin-bottom: 1rem;">📈 Visitas por Día (Últimos 30 días)</h3>
+                    <div style="background: var(--surface); padding: 1.5rem; border-radius: 8px;">
+                        <canvas id="visitsChart" style="max-height: 400px;"></canvas>
+                    </div>
+                </div>
+
                 <!-- Top Pages -->
                 <div id="topPagesContainer" style="margin-top: 2rem; display: none;">
                     <h3 style="margin-bottom: 1rem;">📄 Páginas Más Visitadas</h3>
@@ -504,6 +512,48 @@
                         </button>
                     </div>
                 </div>
+            </div>
+
+            <!-- Donors Management -->
+            <div class="surlink-controls">
+                <h2>❤️ Gestión del Muro de Donadores</h2>
+                <p>
+                    Administra los donadores que aparecen en el muro público de donaciones.
+                </p>
+
+                <div style="margin-top: 2rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="openDonorModal()">
+                        ➕ Agregar Donador
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadDonors()">
+                        🔄 Actualizar Lista
+                    </button>
+                </div>
+
+                <!-- Donors Table -->
+                <div style="margin-top: 2rem; overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 8px; min-width: 800px;">
+                        <thead>
+                            <tr style="background: var(--background); border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 1rem; text-align: left;">Nombre</th>
+                                <th style="padding: 1rem; text-align: center;">Monto</th>
+                                <th style="padding: 1rem; text-align: center;">Tier</th>
+                                <th style="padding: 1rem; text-align: left;">Fecha</th>
+                                <th style="padding: 1rem; text-align: left;">Mensaje</th>
+                                <th style="padding: 1rem; text-align: center;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="donorsTableBody">
+                            <tr>
+                                <td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+                                    Cargando donadores...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="donorsStatus" class="status-message" style="margin-top: 1rem; display: none;"></div>
             </div>
 
             <!-- Cron Jobs Management -->
@@ -679,6 +729,114 @@
                 </div>
                 <div id="allVisitsStatus" class="status-message" style="margin-top: 1rem;"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Donor Modal -->
+    <div id="donorModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 1000; overflow-y: auto;">
+        <div style="max-width: 600px; margin: 2rem auto; background: var(--surface); border-radius: 8px; padding: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0;" id="donorModalTitle">Agregar Donador</h2>
+                <button onclick="closeDonorModal()" style="background: transparent; border: none; font-size: 2rem; cursor: pointer; color: var(--text-primary);">&times;</button>
+            </div>
+
+            <form id="donorForm" onsubmit="handleDonorSubmit(event)">
+                <input type="hidden" id="donorId">
+
+                <div style="margin-bottom: 1rem;">
+                    <label for="donorName" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
+                        Nombre del Donador <span style="color: var(--danger-color);">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="donorName"
+                        required
+                        style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--background); color: var(--text-primary);"
+                        placeholder="Ej: Juan Pérez o Donador Anónimo"
+                    >
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <label for="donorAmount" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
+                            Monto <span style="color: var(--danger-color);">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            id="donorAmount"
+                            required
+                            min="0.01"
+                            step="0.01"
+                            style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--background); color: var(--text-primary);"
+                            placeholder="Ej: 150"
+                        >
+                    </div>
+
+                    <div>
+                        <label for="donorCurrency" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
+                            Moneda
+                        </label>
+                        <select
+                            id="donorCurrency"
+                            style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--background); color: var(--text-primary);"
+                        >
+                            <option value="USD">USD</option>
+                            <option value="UYU">UYU</option>
+                            <option value="EUR">EUR</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label for="donorDate" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
+                        Fecha de Donación <span style="color: var(--danger-color);">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="donorDate"
+                        required
+                        style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--background); color: var(--text-primary);"
+                        placeholder="Ej: Enero 2025, Diciembre 2024"
+                    >
+                    <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                        Formato libre, ejemplo: "Enero 2025"
+                    </small>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label for="donorMessage" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
+                        Mensaje (Opcional)
+                    </label>
+                    <textarea
+                        id="donorMessage"
+                        maxlength="200"
+                        rows="3"
+                        style="width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid var(--border-color); background: var(--background); color: var(--text-primary); resize: vertical;"
+                        placeholder="Mensaje opcional del donador (máximo 200 caracteres)"
+                    ></textarea>
+                    <small style="color: var(--text-secondary); display: block; margin-top: 0.25rem;">
+                        <span id="messageCounter">0</span>/200 caracteres
+                    </small>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" id="donorIsAnonymous">
+                        <span>Marcar como anónimo</span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                    <button type="button" onclick="closeDonorModal()" class="btn btn-secondary">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="donorSubmitBtn">
+                        Guardar Donador
+                    </button>
+                </div>
+            </form>
+
+            <div id="donorModalStatus" class="status-message" style="margin-top: 1rem; display: none;"></div>
         </div>
     </div>
 

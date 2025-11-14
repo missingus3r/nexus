@@ -34,7 +34,7 @@ const optionalAuth = [verifyApiAuth];
 // Combined authentication middleware (requires authenticated user)
 const authenticate = [verifyApiAuth, requireAuth, (req, res, next) => {
   if (!req.user) {
-    return res.status(401).json({ error: 'Authentication required' });
+    return res.status(401).json({ error: 'Necesitas estar logeado para realizar esta acción' });
   }
   next();
 }];

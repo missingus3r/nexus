@@ -267,7 +267,12 @@ async function submitPollVote(threadId) {
         window.location.reload();
       }, 600);
     } else {
-      toastError('Error: ' + (data.error || 'No se pudo registrar el voto'));
+      // Si es un error de autenticación, mostrar advertencia en lugar de error
+      if (response.status === 401) {
+        toastWarning(data.error || 'Necesitas estar logeado para votar');
+      } else {
+        toastError('Error: ' + (data.error || 'No se pudo registrar el voto'));
+      }
     }
   } catch (error) {
     console.error('Error voting in poll:', error);

@@ -19,3 +19,4 @@ export { default as Report } from './Report.js';
 export { default as ApiToken } from './ApiToken.js';
 export { default as JobListing } from './JobListing.js';
 export { default as CVDocument } from './CVDocument.js';
+export { default as Donor } from './Donor.js';

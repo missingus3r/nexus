@@ -9,6 +9,8 @@
             loadMaintenanceSettings();
             setupUserManagementHandlers();
             loadCronSettings();
+            loadDonors();
+            setupDonorMessageCounter();
         });
 
         async function loadStats() {
@@ -761,6 +763,8 @@
         }
 
         // Page Visits Functions
+        let visitsChartInstance = null; // Store chart instance globally
+
         async function loadVisitStats() {
             try {
                 const response = await fetch('/admin/visits/stats', {
@@ -773,6 +777,7 @@
                 }
 
                 displayVisitStats(data);
+                displayVisitsChart(data.timeline || []);
             } catch (error) {
                 console.error('Error loading visit stats:', error);
                 document.getElementById('visitStatsContainer').innerHTML = `
@@ -810,6 +815,157 @@
                     </div>
                 </div>
             `;
+        }
+
+        function displayVisitsChart(timeline) {
+            const container = document.getElementById('visitsChartContainer');
+            const canvas = document.getElementById('visitsChart');
+
+            if (!canvas || !timeline || timeline.length === 0) {
+                if (container) container.style.display = 'none';
+                return;
+            }
+
+            // Show container
+            container.style.display = 'block';
+
+            // Prepare data for chart
+            const labels = timeline.map(item => {
+                const date = new Date(item.date);
+                return date.toLocaleDateString('es-UY', { month: 'short', day: 'numeric' });
+            });
+            const totalData = timeline.map(item => item.total || 0);
+            const authenticatedData = timeline.map(item => item.authenticated || 0);
+            const anonymousData = timeline.map(item => item.anonymous || 0);
+
+            // Get CSS variables for chart colors
+            const rootStyles = getComputedStyle(document.documentElement);
+            const primaryColor = rootStyles.getPropertyValue('--primary-color').trim() || '#6366f1';
+            const successColor = rootStyles.getPropertyValue('--success-color').trim() || '#10b981';
+            const warningColor = rootStyles.getPropertyValue('--warning-color').trim() || '#f59e0b';
+            const textPrimary = rootStyles.getPropertyValue('--text-primary').trim() || '#1f2937';
+            const textSecondary = rootStyles.getPropertyValue('--text-secondary').trim() || '#6b7280';
+            const borderColor = rootStyles.getPropertyValue('--border-color').trim() || '#e5e7eb';
+
+            // Destroy previous chart instance if exists
+            if (visitsChartInstance) {
+                visitsChartInstance.destroy();
+            }
+
+            // Create new chart
+            const ctx = canvas.getContext('2d');
+            visitsChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Total Visitas',
+                            data: totalData,
+                            borderColor: primaryColor,
+                            backgroundColor: primaryColor + '20',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        },
+                        {
+                            label: 'Autenticados',
+                            data: authenticatedData,
+                            borderColor: successColor,
+                            backgroundColor: successColor + '20',
+                            fill: false,
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointRadius: 3,
+                            pointHoverRadius: 5
+                        },
+                        {
+                            label: 'Anónimos',
+                            data: anonymousData,
+                            borderColor: warningColor,
+                            backgroundColor: warningColor + '20',
+                            fill: false,
+                            tension: 0.4,
+                            borderWidth: 2,
+                            pointRadius: 3,
+                            pointHoverRadius: 5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: textPrimary,
+                                padding: 15,
+                                font: {
+                                    size: 12,
+                                    weight: '500'
+                                },
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            borderColor: borderColor,
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.parsed.y + ' visitas';
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: borderColor,
+                                borderColor: borderColor
+                            },
+                            ticks: {
+                                color: textSecondary,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: borderColor,
+                                borderColor: borderColor
+                            },
+                            ticks: {
+                                color: textSecondary,
+                                font: {
+                                    size: 11
+                                },
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         async function loadTopPages() {
@@ -1357,4 +1513,313 @@
                 statusDiv.textContent = `❌ Error al ejecutar ${label}: ${error.message}`;
             }
         }
+
+        // ============================================================================
+        // DONORS MANAGEMENT FUNCTIONS
+        // ============================================================================
+
+        function setupDonorMessageCounter() {
+            const messageInput = document.getElementById('donorMessage');
+            const counter = document.getElementById('messageCounter');
+
+            if (messageInput && counter) {
+                messageInput.addEventListener('input', () => {
+                    counter.textContent = messageInput.value.length;
+                });
+            }
+        }
+
+        async function loadDonors() {
+            const tbody = document.getElementById('donorsTableBody');
+            const statusDiv = document.getElementById('donorsStatus');
+
+            if (!tbody) return;
+
+            tbody.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-secondary);">Cargando donadores...</td></tr>';
+
+            try {
+                const response = await fetch('/admin/donors', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al cargar donadores');
+                }
+
+                displayDonors(data.donors || []);
+
+                if (statusDiv) {
+                    statusDiv.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading donors:', error);
+                tbody.innerHTML = `<tr><td colspan="6" style="padding: 2rem; text-align: center; color: var(--danger-color);">Error al cargar donadores: ${error.message}</td></tr>`;
+
+                if (statusDiv) {
+                    statusDiv.className = 'status-message error';
+                    statusDiv.textContent = `Error: ${error.message}`;
+                    statusDiv.style.display = 'block';
+                }
+            }
+        }
+
+        function displayDonors(donors) {
+            const tbody = document.getElementById('donorsTableBody');
+
+            if (!tbody) return;
+
+            if (!donors || donors.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-secondary);">No hay donadores registrados</td></tr>';
+                return;
+            }
+
+            const tierBadges = {
+                platinum: { label: 'Platino', color: '#c7d2fe', icon: '💎' },
+                gold: { label: 'Oro', color: '#fef08a', icon: '⭐⭐⭐' },
+                silver: { label: 'Plata', color: '#e5e7eb', icon: '⭐⭐' },
+                bronze: { label: 'Bronce', color: '#fed7aa', icon: '⭐' }
+            };
+
+            const rows = donors.map(donor => {
+                const badge = tierBadges[donor.tier] || tierBadges.bronze;
+                const message = donor.message ? `<div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">"${donor.message}"</div>` : '';
+
+                return `
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 1rem;">
+                            <div style="font-weight: 500;">${donor.name}</div>
+                            ${donor.isAnonymous ? '<div style="font-size: 0.75rem; color: var(--text-secondary);">Anónimo</div>' : ''}
+                        </td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <strong>$${donor.amount} ${donor.currency || 'USD'}</strong>
+                        </td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <span style="background: ${badge.color}20; color: ${badge.color}; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 500; border: 1px solid ${badge.color}40;">
+                                ${badge.icon} ${badge.label}
+                            </span>
+                        </td>
+                        <td style="padding: 1rem;">${donor.date}</td>
+                        <td style="padding: 1rem; max-width: 300px;">
+                            ${donor.message || '<span style="color: var(--text-secondary);">Sin mensaje</span>'}
+                        </td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                                <button
+                                    class="btn btn-secondary"
+                                    onclick="editDonor('${donor._id}')"
+                                    style="padding: 0.25rem 0.75rem; font-size: 0.85rem;"
+                                >
+                                    ✏️ Editar
+                                </button>
+                                <button
+                                    class="btn btn-danger"
+                                    onclick="deleteDonor('${donor._id}', '${donor.name}')"
+                                    style="padding: 0.25rem 0.75rem; font-size: 0.85rem;"
+                                >
+                                    🗑️ Eliminar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows;
+        }
+
+        function openDonorModal(donorId = null) {
+            const modal = document.getElementById('donorModal');
+            const title = document.getElementById('donorModalTitle');
+            const form = document.getElementById('donorForm');
+            const submitBtn = document.getElementById('donorSubmitBtn');
+
+            if (!modal) return;
+
+            // Reset form
+            form.reset();
+            document.getElementById('donorId').value = '';
+            document.getElementById('messageCounter').textContent = '0';
+
+            if (donorId) {
+                // Edit mode
+                title.textContent = 'Editar Donador';
+                submitBtn.textContent = 'Actualizar Donador';
+                loadDonorData(donorId);
+            } else {
+                // Create mode
+                title.textContent = 'Agregar Donador';
+                submitBtn.textContent = 'Guardar Donador';
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeDonorModal() {
+            const modal = document.getElementById('donorModal');
+            const statusDiv = document.getElementById('donorModalStatus');
+
+            if (modal) modal.style.display = 'none';
+            if (statusDiv) statusDiv.style.display = 'none';
+        }
+
+        async function loadDonorData(donorId) {
+            const statusDiv = document.getElementById('donorModalStatus');
+
+            try {
+                const response = await fetch(`/admin/donors/${donorId}`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al cargar datos del donador');
+                }
+
+                const donor = data.donor;
+
+                // Fill form
+                document.getElementById('donorId').value = donor._id;
+                document.getElementById('donorName').value = donor.name;
+                document.getElementById('donorAmount').value = donor.amount;
+                document.getElementById('donorCurrency').value = donor.currency || 'USD';
+                document.getElementById('donorDate').value = donor.date;
+                document.getElementById('donorMessage').value = donor.message || '';
+                document.getElementById('donorIsAnonymous').checked = donor.isAnonymous || false;
+                document.getElementById('messageCounter').textContent = (donor.message || '').length;
+            } catch (error) {
+                console.error('Error loading donor data:', error);
+                if (statusDiv) {
+                    statusDiv.className = 'status-message error';
+                    statusDiv.textContent = `Error: ${error.message}`;
+                    statusDiv.style.display = 'block';
+                }
+            }
+        }
+
+        async function handleDonorSubmit(event) {
+            event.preventDefault();
+
+            const statusDiv = document.getElementById('donorModalStatus');
+            const submitBtn = document.getElementById('donorSubmitBtn');
+
+            const donorId = document.getElementById('donorId').value;
+            const isEdit = !!donorId;
+
+            const donorData = {
+                name: document.getElementById('donorName').value.trim(),
+                amount: parseFloat(document.getElementById('donorAmount').value),
+                currency: document.getElementById('donorCurrency').value,
+                date: document.getElementById('donorDate').value.trim(),
+                message: document.getElementById('donorMessage').value.trim(),
+                isAnonymous: document.getElementById('donorIsAnonymous').checked
+            };
+
+            try {
+                submitBtn.disabled = true;
+                if (statusDiv) {
+                    statusDiv.className = 'status-message';
+                    statusDiv.textContent = isEdit ? 'Actualizando donador...' : 'Creando donador...';
+                    statusDiv.style.display = 'block';
+                }
+
+                const url = isEdit ? `/admin/donors/${donorId}` : '/admin/donors';
+                const method = isEdit ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(donorData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al guardar donador');
+                }
+
+                if (statusDiv) {
+                    statusDiv.className = 'status-message success';
+                    statusDiv.textContent = `✓ ${data.message || 'Donador guardado exitosamente'}`;
+                }
+
+                // Reload donors list
+                await loadDonors();
+
+                // Close modal after a short delay
+                setTimeout(() => {
+                    closeDonorModal();
+                }, 1500);
+            } catch (error) {
+                console.error('Error saving donor:', error);
+                if (statusDiv) {
+                    statusDiv.className = 'status-message error';
+                    statusDiv.textContent = `❌ Error: ${error.message}`;
+                    statusDiv.style.display = 'block';
+                }
+            } finally {
+                submitBtn.disabled = false;
+            }
+        }
+
+        async function editDonor(donorId) {
+            openDonorModal(donorId);
+        }
+
+        async function deleteDonor(donorId, donorName) {
+            const statusDiv = document.getElementById('donorsStatus');
+
+            if (!confirm(`¿Estás seguro de eliminar al donador "${donorName}"?\n\nEsta acción no se puede deshacer.`)) {
+                return;
+            }
+
+            try {
+                if (statusDiv) {
+                    statusDiv.className = 'status-message';
+                    statusDiv.textContent = 'Eliminando donador...';
+                    statusDiv.style.display = 'block';
+                }
+
+                const response = await fetch(`/admin/donors/${donorId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al eliminar donador');
+                }
+
+                if (statusDiv) {
+                    statusDiv.className = 'status-message success';
+                    statusDiv.textContent = `✓ ${data.message || 'Donador eliminado exitosamente'}`;
+                }
+
+                // Reload donors list
+                await loadDonors();
+
+                setTimeout(() => {
+                    if (statusDiv) statusDiv.style.display = 'none';
+                }, 3000);
+            } catch (error) {
+                console.error('Error deleting donor:', error);
+                if (statusDiv) {
+                    statusDiv.className = 'status-message error';
+                    statusDiv.textContent = `❌ Error: ${error.message}`;
+                    statusDiv.style.display = 'block';
+                }
+            }
+        }
+
+        // Make functions global
+        window.loadDonors = loadDonors;
+        window.openDonorModal = openDonorModal;
+        window.closeDonorModal = closeDonorModal;
+        window.handleDonorSubmit = handleDonorSubmit;
+        window.editDonor = editDonor;
+        window.deleteDonor = deleteDonor;
 
