@@ -601,6 +601,31 @@ document.getElementById('mobilityAppsModal')?.addEventListener('click', (e) => {
 });
 
 // ============================================
+// EMERGENCY MODAL
+// ============================================
+
+function openEmergencyModal() {
+    const modal = document.getElementById('emergencyModal');
+    modal.classList.add('active');
+}
+
+function closeEmergencyModal() {
+    const modal = document.getElementById('emergencyModal');
+    modal.classList.remove('active');
+}
+
+// Event listeners for emergency modal
+document.getElementById('emergencyBtn')?.addEventListener('click', openEmergencyModal);
+document.getElementById('emergencyModalClose')?.addEventListener('click', closeEmergencyModal);
+
+// Close modal when clicking outside
+document.getElementById('emergencyModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'emergencyModal') {
+        closeEmergencyModal();
+    }
+});
+
+// ============================================
 // EDIT INCIDENT MODAL (ADMIN ONLY)
 // ============================================
 

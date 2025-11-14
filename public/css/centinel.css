@@ -694,6 +694,7 @@ html[data-theme="dark"] #busLineFilterMobile option {
     align-items: center;
     gap: 1rem;
     transition: all 0.2s ease;
+    overflow: hidden;
 }
 
 .mobility-app-card:hover {
@@ -705,6 +706,7 @@ html[data-theme="dark"] #busLineFilterMobile option {
 .mobility-app-info {
     flex: 1;
     min-width: 0;
+    overflow: hidden;
 }
 
 .mobility-app-info h4 {
@@ -712,22 +714,27 @@ html[data-theme="dark"] #busLineFilterMobile option {
     font-size: 1.1rem;
     font-weight: 600;
     color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .mobility-app-info p {
     margin: 0;
     font-size: 0.9rem;
     color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .mobility-app-links {
     display: flex;
     gap: 0.5rem;
     flex-shrink: 0;
+    flex-wrap: wrap;
 }
 
 .store-badge {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 0.4rem;
     padding: 0.5rem 0.75rem;
@@ -739,6 +746,7 @@ html[data-theme="dark"] #busLineFilterMobile option {
     font-weight: 600;
     transition: all 0.2s ease;
     white-space: nowrap;
+    box-sizing: border-box;
 }
 
 .store-badge:hover {
@@ -799,5 +807,389 @@ html[data-theme="dark"] #busLineFilterMobile option {
     #mobilityAppsModal .modal-content {
         max-width: 95%;
         margin: 1rem;
+    }
+}
+
+/* ============================================
+   EMERGENCY BUTTON
+   ============================================ */
+
+.emergency-btn {
+    position: fixed;
+    z-index: 10;
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(244, 67, 54, 0.5), 0 3px 10px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    animation: pulse-emergency 2s ease-in-out infinite;
+}
+
+.emergency-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.emergency-btn:hover {
+    transform: translateY(-4px) scale(1.08);
+    box-shadow: 0 8px 24px rgba(244, 67, 54, 0.6), 0 5px 15px rgba(0, 0, 0, 0.35);
+    animation: none;
+}
+
+.emergency-btn:hover::before {
+    opacity: 1;
+}
+
+.emergency-btn:active {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4), 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+@keyframes pulse-emergency {
+    0%, 100% {
+        box-shadow: 0 6px 20px rgba(244, 67, 54, 0.5), 0 3px 10px rgba(0, 0, 0, 0.3);
+    }
+    50% {
+        box-shadow: 0 8px 28px rgba(244, 67, 54, 0.7), 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+}
+
+/* Desktop: alineado con mobility apps y refresh button */
+@media (min-width: 769px) {
+    .emergency-btn {
+        bottom: 20px;
+        right: 156px;
+    }
+}
+
+/* Mobile: encima del botón de refresh */
+@media (max-width: 768px) {
+    .emergency-btn {
+        bottom: 144px;
+        left: 16px;
+        width: 52px;
+        height: 52px;
+    }
+}
+
+/* ============================================
+   EMERGENCY MODAL
+   ============================================ */
+
+/* Botón gigante 911 */
+.emergency-911-btn {
+    display: block;
+    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+    color: white;
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    text-decoration: none;
+    box-shadow: 0 8px 24px rgba(244, 67, 54, 0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.emergency-911-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.emergency-911-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(244, 67, 54, 0.5);
+}
+
+.emergency-911-btn:hover::before {
+    left: 100%;
+}
+
+.emergency-911-btn:active {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(244, 67, 54, 0.4);
+}
+
+.emergency-911-icon {
+    margin-bottom: 1rem;
+}
+
+.emergency-911-number {
+    font-size: 5rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.emergency-911-label {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.emergency-911-desc {
+    font-size: 1rem;
+    opacity: 0.95;
+    font-weight: 500;
+}
+
+/* Grid de emergencias */
+.emergency-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.emergency-card {
+    background: var(--surface);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.emergency-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: #f44336;
+    transform: scaleY(0);
+    transition: transform 0.2s ease;
+}
+
+.emergency-card:hover {
+    box-shadow: 0 6px 16px var(--shadow-elevation);
+    transform: translateY(-3px);
+    border-color: #f44336;
+}
+
+.emergency-card:hover::before {
+    transform: scaleY(1);
+}
+
+.emergency-card-icon {
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
+}
+
+.emergency-card-number {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: #f44336;
+    margin-bottom: 0.5rem;
+    line-height: 1;
+}
+
+.emergency-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.emergency-card-desc {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* Cards con múltiples botones */
+.emergency-card-dual {
+    cursor: default;
+}
+
+.emergency-card-dual:hover {
+    transform: translateY(-2px);
+}
+
+.emergency-card-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.emergency-card-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-align: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+}
+
+.emergency-card-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+}
+
+.emergency-card-btn:active {
+    transform: translateY(0);
+}
+
+/* Emergency sections */
+.emergency-section {
+    margin-bottom: 2rem;
+}
+
+.emergency-section-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f44336;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.emergency-icon {
+    font-size: 1.6rem;
+}
+
+/* Grid pequeño para emergencias móviles privadas */
+.emergency-grid-small {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.75rem;
+}
+
+.emergency-card-small {
+    background: var(--surface);
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    padding: 1.25rem 1rem;
+    text-decoration: none;
+    color: var(--text-primary);
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.emergency-card-small:hover {
+    box-shadow: 0 4px 12px var(--shadow-elevation);
+    transform: translateY(-2px);
+    border-color: #f44336;
+}
+
+.emergency-card-small-number {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #f44336;
+    margin-bottom: 0.25rem;
+}
+
+.emergency-card-small-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Scrollbar para emergency modal */
+#emergencyContent::-webkit-scrollbar {
+    width: 8px;
+}
+
+#emergencyContent::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 4px;
+}
+
+#emergencyContent::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+}
+
+#emergencyContent::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+}
+
+/* Mobile responsive para emergency modal */
+@media (max-width: 768px) {
+    .emergency-911-number {
+        font-size: 4rem;
+    }
+
+    .emergency-911-label {
+        font-size: 1.2rem;
+    }
+
+    .emergency-911-desc {
+        font-size: 0.9rem;
+    }
+
+    .emergency-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .emergency-card {
+        padding: 1.25rem;
+    }
+
+    .emergency-card-number {
+        font-size: 2rem;
+    }
+
+    .emergency-card-title {
+        font-size: 1rem;
+    }
+
+    .emergency-grid-small {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .emergency-section-title {
+        font-size: 1.2rem;
+    }
+
+    #emergencyModal .modal-content {
+        max-width: 95%;
+        margin: 1rem;
+    }
+
+    .emergency-card-buttons {
+        flex-direction: column;
+    }
+
+    .emergency-card-btn {
+        width: 100%;
     }
 }

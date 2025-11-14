@@ -80,6 +80,15 @@
                 </svg>
             </button>
 
+            <!-- Botón de emergencia -->
+            <button id="emergencyBtn" class="emergency-btn" title="Emergencias y Números Útiles">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </button>
+
             <!-- Desktop floating button for incidents list -->
             <button id="incidentsListBtnDesktop" class="incidents-list-btn desktop-only" title="Últimos Incidentes">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -886,6 +895,134 @@
                                     <span>App Store</span>
                                 </a>
                             </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Modal -->
+        <div id="emergencyModal" class="modal">
+            <div class="modal-content" style="max-width: 900px;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); color: white; padding: 1.5rem; border-radius: 8px 8px 0 0;">
+                    <h2 style="margin: 0; display: flex; align-items: center; gap: 12px; font-size: 1.5rem;">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        Emergencias y Números Útiles
+                    </h2>
+                    <button id="emergencyModalClose" class="modal-close" style="color: white; opacity: 0.9;">&times;</button>
+                </div>
+                <div id="emergencyContent" style="max-height: 70vh; overflow-y: auto; padding: 1.5rem;">
+
+                    <!-- Botón gigante 911 -->
+                    <div style="margin-bottom: 2rem; text-align: center;">
+                        <a href="tel:911" class="emergency-911-btn">
+                            <div class="emergency-911-icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                </svg>
+                            </div>
+                            <div class="emergency-911-number">911</div>
+                            <div class="emergency-911-label">Emergencia Nacional</div>
+                            <div class="emergency-911-desc">Policía, Bomberos y Asistencia Médica</div>
+                        </a>
+                    </div>
+
+                    <!-- Grid de números especializados -->
+                    <div class="emergency-grid">
+                        <!-- SAME 105 -->
+                        <a href="tel:105" class="emergency-card">
+                            <div class="emergency-card-icon">🚑</div>
+                            <div class="emergency-card-number">105</div>
+                            <div class="emergency-card-title">SAME - Ambulancia Pública</div>
+                            <div class="emergency-card-desc">Sistema de Atención Médica de Emergencias</div>
+                        </a>
+
+                        <!-- Prefectura 106 -->
+                        <a href="tel:106" class="emergency-card">
+                            <div class="emergency-card-icon">⚓</div>
+                            <div class="emergency-card-number">106</div>
+                            <div class="emergency-card-title">Prefectura Nacional Naval</div>
+                            <div class="emergency-card-desc">Emergencias marítimas y costa</div>
+                        </a>
+
+                        <!-- Policía Caminera 108 -->
+                        <a href="tel:108" class="emergency-card">
+                            <div class="emergency-card-icon">🚔</div>
+                            <div class="emergency-card-number">108</div>
+                            <div class="emergency-card-title">Policía Caminera</div>
+                            <div class="emergency-card-desc">Emergencias en rutas y carreteras</div>
+                        </a>
+
+                        <!-- Violencia de Género -->
+                        <div class="emergency-card emergency-card-dual">
+                            <div class="emergency-card-icon">💜</div>
+                            <div class="emergency-card-title">Violencia de Género</div>
+                            <div class="emergency-card-desc">IM / Inmujeres - Línea gratuita y confidencial</div>
+                            <div class="emergency-card-buttons">
+                                <a href="tel:08004141" class="emergency-card-btn">0800 4141</a>
+                                <a href="tel:*4141" class="emergency-card-btn">*4141</a>
+                            </div>
+                        </div>
+
+                        <!-- Prevención del Suicidio -->
+                        <div class="emergency-card emergency-card-dual">
+                            <div class="emergency-card-icon">💚</div>
+                            <div class="emergency-card-title">Prevención del Suicidio - VIVE</div>
+                            <div class="emergency-card-desc">Apoyo emocional y prevención</div>
+                            <div class="emergency-card-buttons">
+                                <a href="tel:24008483" class="emergency-card-btn">2400 8483</a>
+                                <a href="tel:08008483" class="emergency-card-btn">0800 8483</a>
+                            </div>
+                        </div>
+
+                        <!-- Personas en situación de calle -->
+                        <div class="emergency-card emergency-card-dual">
+                            <div class="emergency-card-icon">🏠</div>
+                            <div class="emergency-card-title">Personas en Situación de Calle</div>
+                            <div class="emergency-card-desc">MIDES / Montevideo</div>
+                            <div class="emergency-card-buttons">
+                                <a href="tel:08008798" class="emergency-card-btn">0800 8798</a>
+                                <a href="tel:092910000" class="emergency-card-btn">WhatsApp: 092 910 000</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Emergencias móviles privadas -->
+                    <div class="emergency-section">
+                        <h3 class="emergency-section-title">
+                            <span class="emergency-icon">🏥</span>
+                            Emergencias Móviles Privadas
+                        </h3>
+                        <div class="emergency-grid-small">
+                            <a href="tel:133" class="emergency-card-small">
+                                <div class="emergency-card-small-number">133</div>
+                                <div class="emergency-card-small-title">SUAT</div>
+                            </a>
+                            <a href="tel:159" class="emergency-card-small">
+                                <div class="emergency-card-small-number">159</div>
+                                <div class="emergency-card-small-title">SEMM</div>
+                            </a>
+                            <a href="tel:147" class="emergency-card-small">
+                                <div class="emergency-card-small-number">147</div>
+                                <div class="emergency-card-small-title">UCM</div>
+                            </a>
+                            <a href="tel:1830" class="emergency-card-small">
+                                <div class="emergency-card-small-number">1830</div>
+                                <div class="emergency-card-small-title">Emergencia UNO</div>
+                            </a>
+                            <a href="tel:1727" class="emergency-card-small">
+                                <div class="emergency-card-small-number">1727</div>
+                                <div class="emergency-card-small-title">Emergencia 1727</div>
+                            </a>
+                            <a href="tel:1955" class="emergency-card-small">
+                                <div class="emergency-card-small-number">1955</div>
+                                <div class="emergency-card-small-title">EMUCAR</div>
+                            </a>
                         </div>
                     </div>
 
