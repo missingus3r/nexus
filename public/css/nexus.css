@@ -431,6 +431,9 @@ main {
     border-radius: 20px;
     padding: 28px 24px;
     transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
 }
 
 .enlace-card:hover {

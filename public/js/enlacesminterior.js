@@ -1,4 +1,30 @@
-document.addEventListener('DOMContentLoaded', loadLinks);
+document.addEventListener('DOMContentLoaded', () => {
+    loadLinks();
+
+    // Handle smooth scroll to hash on page load
+    setTimeout(() => {
+        if (window.location.hash) {
+            const targetId = window.location.hash.substring(1);
+            const targetElement = document.getElementById(targetId);
+
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                // Add highlight effect
+                targetElement.style.transition = 'all 0.3s ease';
+                targetElement.style.backgroundColor = 'rgba(102, 126, 234, 0.1)';
+                targetElement.style.borderRadius = '8px';
+                targetElement.style.padding = '1.5rem';
+
+                // Remove highlight after 2 seconds
+                setTimeout(() => {
+                    targetElement.style.backgroundColor = '';
+                    targetElement.style.padding = '';
+                }, 2000);
+            }
+        }
+    }, 500); // Wait for links to load
+});
 
 async function loadLinks() {
     try {
@@ -16,8 +42,14 @@ async function loadLinks() {
                 domain = 'gub.uy';
             }
 
+            // Generate unique ID from link name
+            const linkId = link.name.toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove accents
+                .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with dashes
+                .replace(/^-+|-+$/g, ''); // Remove leading/trailing dashes
+
             return `
-            <div class="link-item">
+            <div class="link-item" id="${linkId}">
                 <div style="display: flex; align-items: start; gap: 1rem; margin-bottom: 1rem;">
                     <div class="link-favicon" style="flex-shrink: 0;">
                         <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64"

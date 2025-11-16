@@ -23,53 +23,106 @@ if (hamburger && nav) {
   });
 }
 
-const modal = document.getElementById('adoption-modal');
-const openModalButton = document.getElementById('open-adoption-modal');
-const closeModalButton = document.getElementById('close-adoption-modal');
+// Adoption modal functionality
+const adoptionModal = document.getElementById('adoption-modal');
+const openAdoptionModalButton = document.getElementById('open-adoption-modal');
+const closeAdoptionModalButton = document.getElementById('close-adoption-modal');
 
-const toggleModal = (show) => {
-  if (!modal) return;
+const toggleAdoptionModal = (show) => {
+  if (!adoptionModal) return;
 
-  const isActive = modal.classList.contains('active');
+  const isActive = adoptionModal.classList.contains('active');
   const shouldShow = typeof show === 'boolean' ? show : !isActive;
 
   if (shouldShow) {
-    modal.classList.add('active');
-    modal.setAttribute('aria-hidden', 'false');
+    adoptionModal.classList.add('active');
+    adoptionModal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
 
-    if (closeModalButton) {
-      closeModalButton.focus();
+    if (closeAdoptionModalButton) {
+      closeAdoptionModalButton.focus();
     }
   } else {
-    modal.classList.remove('active');
-    modal.setAttribute('aria-hidden', 'true');
+    adoptionModal.classList.remove('active');
+    adoptionModal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
 
-    if (openModalButton) {
-      openModalButton.focus();
+    if (openAdoptionModalButton) {
+      openAdoptionModalButton.focus();
     }
   }
 };
 
-if (openModalButton) {
-  openModalButton.addEventListener('click', () => toggleModal(true));
+if (openAdoptionModalButton) {
+  openAdoptionModalButton.addEventListener('click', () => toggleAdoptionModal(true));
 }
 
-if (closeModalButton) {
-  closeModalButton.addEventListener('click', () => toggleModal(false));
+if (closeAdoptionModalButton) {
+  closeAdoptionModalButton.addEventListener('click', () => toggleAdoptionModal(false));
 }
 
-if (modal) {
-  modal.addEventListener('click', (event) => {
-    if (event.target === modal) {
-      toggleModal(false);
+if (adoptionModal) {
+  adoptionModal.addEventListener('click', (event) => {
+    if (event.target === adoptionModal) {
+      toggleAdoptionModal(false);
     }
   });
 }
 
+// Lost & Found modal functionality
+const lostFoundModal = document.getElementById('lost-found-modal');
+const openLostFoundModalButton = document.getElementById('open-lost-found-modal');
+const closeLostFoundModalButton = document.getElementById('close-lost-found-modal');
+
+const toggleLostFoundModal = (show) => {
+  if (!lostFoundModal) return;
+
+  const isActive = lostFoundModal.classList.contains('active');
+  const shouldShow = typeof show === 'boolean' ? show : !isActive;
+
+  if (shouldShow) {
+    lostFoundModal.classList.add('active');
+    lostFoundModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+
+    if (closeLostFoundModalButton) {
+      closeLostFoundModalButton.focus();
+    }
+  } else {
+    lostFoundModal.classList.remove('active');
+    lostFoundModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+
+    if (openLostFoundModalButton) {
+      openLostFoundModalButton.focus();
+    }
+  }
+};
+
+if (openLostFoundModalButton) {
+  openLostFoundModalButton.addEventListener('click', () => toggleLostFoundModal(true));
+}
+
+if (closeLostFoundModalButton) {
+  closeLostFoundModalButton.addEventListener('click', () => toggleLostFoundModal(false));
+}
+
+if (lostFoundModal) {
+  lostFoundModal.addEventListener('click', (event) => {
+    if (event.target === lostFoundModal) {
+      toggleLostFoundModal(false);
+    }
+  });
+}
+
+// Global escape key listener for all modals
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && modal?.classList.contains('active')) {
-    toggleModal(false);
+  if (event.key === 'Escape') {
+    if (adoptionModal?.classList.contains('active')) {
+      toggleAdoptionModal(false);
+    }
+    if (lostFoundModal?.classList.contains('active')) {
+      toggleLostFoundModal(false);
+    }
   }
 });
