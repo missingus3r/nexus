@@ -101,9 +101,22 @@
                 <span>Últimos Incidentes</span>
             </button>
 
+            <!-- Desktop floating button for filters -->
+            <button id="filtersBtnDesktop" class="filters-btn desktop-only" title="Filtros y Capas">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                <span>Filtros</span>
+            </button>
+
             <!-- Desktop controls -->
-            <div class="map-controls desktop-only">
-                <h3>Filtros</h3>
+            <div class="map-controls desktop-only" id="desktopFiltersPanel">
+                <div class="map-controls-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="margin: 0;">Filtros</h3>
+                    <button id="closeFiltersPanelBtn" class="close-filters-btn" style="background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary); line-height: 1; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: background 0.2s;">
+                        &times;
+                    </button>
+                </div>
                 <div class="form-group">
                     <label for="typeFilter">Tipo de Incidente:</label>
                     <select id="typeFilter">
@@ -350,6 +363,27 @@
                     <div class="form-group">
                         <label for="editDescription">Descripción:</label>
                         <textarea id="editDescription" name="description" rows="4" maxlength="1000" placeholder="Descripción del incidente..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>📍 Ubicación:</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <label for="editLatitude" style="font-size: 0.9rem; color: var(--text-secondary);">Latitud:</label>
+                                <input type="number" id="editLatitude" name="latitude" step="0.000001" min="-90" max="90" required
+                                       style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--background); color: var(--text-primary);"
+                                       placeholder="-34.9011">
+                            </div>
+                            <div>
+                                <label for="editLongitude" style="font-size: 0.9rem; color: var(--text-secondary);">Longitud:</label>
+                                <input type="number" id="editLongitude" name="longitude" step="0.000001" min="-180" max="180" required
+                                       style="width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border-color); background: var(--background); color: var(--text-primary);"
+                                       placeholder="-56.1645">
+                            </div>
+                        </div>
+                        <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+                            Haz clic en el mapa para actualizar las coordenadas, o edítalas manualmente.
+                        </small>
                     </div>
 
                     <div class="form-group">

@@ -1957,7 +1957,7 @@ router.delete('/donors/:id', requireAdmin, async (req, res) => {
 router.put('/incidents/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { type, severity, description, status, hidden, hiddenReason, sourceNews } = req.body;
+    const { type, severity, description, status, hidden, hiddenReason, sourceNews, latitude, longitude } = req.body;
 
     // Validate incident ID
     if (!id) {
@@ -1983,6 +1983,20 @@ router.put('/incidents/:id', requireAdmin, async (req, res) => {
     if (status !== undefined) incident.status = status;
     if (hidden !== undefined) incident.hidden = hidden;
     if (hiddenReason !== undefined) incident.hiddenReason = hiddenReason;
+
+    // Update location if provided
+    if (latitude !== undefined && longitude !== undefined) {
+      const lat = parseFloat(latitude);
+      const lon = parseFloat(longitude);
+
+      // Validate coordinates
+      if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+        incident.location = {
+          type: 'Point',
+          coordinates: [lon, lat]
+        };
+      }
+    }
 
     // Update sourceNews if provided
     if (sourceNews !== undefined && Array.isArray(sourceNews)) {
