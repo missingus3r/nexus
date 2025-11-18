@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const creditProfileRequestSchema = new mongoose.Schema({
   // Usuario que solicita
@@ -226,4 +226,4 @@ creditProfileRequestSchema.statics.getUserRequests = function(uid) {
 
 const CreditProfileRequest = mongoose.model('CreditProfileRequest', creditProfileRequestSchema);
 
-module.exports = CreditProfileRequest;
+export default CreditProfileRequest;
