@@ -533,6 +533,26 @@ document.getElementById('incidentsListModal')?.addEventListener('click', (e) => 
     }
 });
 
+// Desktop Filters Panel Toggle
+const filtersBtnDesktop = document.getElementById('filtersBtnDesktop');
+const desktopFiltersPanel = document.getElementById('desktopFiltersPanel');
+const closeFiltersPanelBtn = document.getElementById('closeFiltersPanelBtn');
+
+function toggleFiltersPanel() {
+    if (desktopFiltersPanel) {
+        desktopFiltersPanel.classList.toggle('active');
+    }
+}
+
+function closeFiltersPanel() {
+    if (desktopFiltersPanel) {
+        desktopFiltersPanel.classList.remove('active');
+    }
+}
+
+filtersBtnDesktop?.addEventListener('click', toggleFiltersPanel);
+closeFiltersPanelBtn?.addEventListener('click', closeFiltersPanel);
+
 // Welcome Modal Logic
 function closeWelcomeModal() {
     const modal = document.getElementById('welcomeModal');
@@ -660,6 +680,11 @@ window.openEditIncidentModal = async function(incidentId) {
         document.getElementById('editStatus').value = props.status;
         document.getElementById('editHidden').checked = props.hidden || false;
         document.getElementById('editHiddenReason').value = props.hiddenReason || '';
+
+        // Populate location coordinates
+        const coordinates = incident.geometry?.coordinates || [0, 0];
+        document.getElementById('editLatitude').value = coordinates[1];
+        document.getElementById('editLongitude').value = coordinates[0];
 
         // Load source news
         if (props.sourceNews && props.sourceNews.length > 0) {
@@ -854,7 +879,9 @@ document.getElementById('editIncidentForm')?.addEventListener('submit', async (e
         status: document.getElementById('editStatus').value,
         hidden: document.getElementById('editHidden').checked,
         hiddenReason: document.getElementById('editHiddenReason').value,
-        sourceNews: currentIncidentSources
+        sourceNews: currentIncidentSources,
+        latitude: parseFloat(document.getElementById('editLatitude').value),
+        longitude: parseFloat(document.getElementById('editLongitude').value)
     };
 
     try {
