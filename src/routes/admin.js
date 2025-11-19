@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import Incident from '../models/Incident.js';
 import NewsEvent from '../models/NewsEvent.js';
 import { AdminPost, Notification, User, SurlinkListing, ForumThread, ForumComment, ForumSettings, PricingSettings, PageVisit, SystemSettings, ApiToken, Donor } from '../models/index.js';
+import CreditProfileRequest from '../models/CreditProfileRequest.js';
 import { runNewsIngestion } from '../jobs/newsIngestion.js';
 import { runScheduledCleanup, reloadCronJobs } from '../jobs/index.js';
 import logger from '../utils/logger.js';
@@ -1956,7 +1957,7 @@ router.delete('/donors/:id', requireAdmin, async (req, res) => {
 router.put('/incidents/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { type, severity, description, status, hidden, hiddenReason, sourceNews } = req.body;
+    const { type, severity, description, status, hidden, hiddenReason, sourceNews, latitude, longitude } = req.body;
 
     // Validate incident ID
     if (!id) {
@@ -1982,6 +1983,20 @@ router.put('/incidents/:id', requireAdmin, async (req, res) => {
     if (status !== undefined) incident.status = status;
     if (hidden !== undefined) incident.hidden = hidden;
     if (hiddenReason !== undefined) incident.hiddenReason = hiddenReason;
+
+    // Update location if provided
+    if (latitude !== undefined && longitude !== undefined) {
+      const lat = parseFloat(latitude);
+      const lon = parseFloat(longitude);
+
+      // Validate coordinates
+      if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+        incident.location = {
+          type: 'Point',
+          coordinates: [lon, lat]
+        };
+      }
+    }
 
     // Update sourceNews if provided
     if (sourceNews !== undefined && Array.isArray(sourceNews)) {
@@ -2068,6 +2083,302 @@ router.get('/news/search', requireAdmin, async (req, res) => {
       success: false,
       error: 'Error al buscar noticias',
       details: error.message
+    });
+  }
+});
+
+// ============================
+// CREDIT PROFILE ADMIN ENDPOINTS
+// ============================
+
+/**
+ * GET /admin/credit-profile/requests
+ * Get all credit profile requests
+ */
+router.get('/credit-profile/requests', requireAdmin, async (req, res) => {
+  try {
+    const { status, page = 1, limit = 50 } = req.query;
+
+    const query = {};
+    if (status && status !== 'all') {
+      query.status = status;
+    }
+
+    const requests = await CreditProfileRequest.find(query)
+      .sort({ requestedAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .lean();
+
+    const total = await CreditProfileRequest.countDocuments(query);
+
+    // Get user details for each request
+    const requestsWithUsers = await Promise.all(
+      requests.map(async (req) => {
+        const user = await User.findOne({ uid: req.uid }).select('email name').lean();
+        return {
+          ...req,
+          userEmail: user?.email || 'Desconocido',
+          userName: user?.name || 'Desconocido'
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      requests: requestsWithUsers,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching credit profile requests', { error });
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener solicitudes'
+    });
+  }
+});
+
+/**
+ * GET /admin/credit-profile/requests/:id
+ * Get specific credit profile request details
+ */
+router.get('/credit-profile/requests/:id', requireAdmin, async (req, res) => {
+  try {
+    const request = await CreditProfileRequest.findById(req.params.id).lean();
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        error: 'Solicitud no encontrada'
+      });
+    }
+
+    // Get user details
+    const user = await User.findOne({ uid: request.uid }).select('email name').lean();
+
+    res.json({
+      success: true,
+      request: {
+        ...request,
+        userEmail: user?.email || 'Desconocido',
+        userName: user?.name || 'Desconocido'
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching credit profile request', { error });
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener solicitud'
+    });
+  }
+});
+
+/**
+ * PUT /admin/credit-profile/requests/:id/status
+ * Update request status
+ */
+router.put('/credit-profile/requests/:id/status', requireAdmin, async (req, res) => {
+  try {
+    const { status, adminNotes } = req.body;
+
+    if (!['pendiente', 'procesando', 'generada', 'error'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Estado inválido'
+      });
+    }
+
+    const request = await CreditProfileRequest.findById(req.params.id);
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        error: 'Solicitud no encontrada'
+      });
+    }
+
+    request.status = status;
+    if (adminNotes) {
+      request.adminNotes = adminNotes;
+    }
+
+    if (status === 'procesando' && !request.processedAt) {
+      request.processedAt = new Date();
+    }
+
+    await request.save();
+
+    logger.info('Credit profile request status updated', {
+      requestId: request._id,
+      status,
+      adminEmail: req.user.email
+    });
+
+    res.json({
+      success: true,
+      message: 'Estado actualizado exitosamente',
+      request
+    });
+  } catch (error) {
+    logger.error('Error updating request status', { error });
+    res.status(500).json({
+      success: false,
+      error: 'Error al actualizar estado'
+    });
+  }
+});
+
+/**
+ * PUT /admin/credit-profile/requests/:id/data
+ * Upload credit profile data (JSON from BCU)
+ */
+router.put('/credit-profile/requests/:id/data', requireAdmin, async (req, res) => {
+  try {
+    const { profileData } = req.body;
+
+    if (!profileData) {
+      return res.status(400).json({
+        success: false,
+        error: 'Datos del perfil son requeridos'
+      });
+    }
+
+    // Validar estructura mínima del JSON
+    if (!profileData.nombre || !profileData.documento) {
+      return res.status(400).json({
+        success: false,
+        error: 'JSON inválido: falta nombre o documento'
+      });
+    }
+
+    const request = await CreditProfileRequest.findById(req.params.id);
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        error: 'Solicitud no encontrada'
+      });
+    }
+
+    // Actualizar datos
+    request.profileData = profileData;
+    request.status = 'generada';
+    request.generatedAt = new Date();
+    request.processedAt = new Date();
+
+    // Calcular puntaje crediticio
+    request.calculateCreditScore();
+
+    await request.save();
+
+    logger.info('Credit profile data uploaded', {
+      requestId: request._id,
+      adminEmail: req.user.email,
+      creditScore: request.creditScore,
+      bcuRating: request.bcuRating
+    });
+
+    res.json({
+      success: true,
+      message: 'Datos cargados exitosamente',
+      request: {
+        id: request._id,
+        status: request.status,
+        creditScore: request.creditScore,
+        bcuRating: request.bcuRating,
+        totalDebt: request.totalDebt
+      }
+    });
+  } catch (error) {
+    logger.error('Error uploading credit profile data', { error });
+    res.status(500).json({
+      success: false,
+      error: 'Error al cargar datos',
+      details: error.message
+    });
+  }
+});
+
+/**
+ * DELETE /admin/credit-profile/requests/:id
+ * Delete credit profile request
+ */
+router.delete('/credit-profile/requests/:id', requireAdmin, async (req, res) => {
+  try {
+    const request = await CreditProfileRequest.findById(req.params.id);
+
+    if (!request) {
+      return res.status(404).json({
+        success: false,
+        error: 'Solicitud no encontrada'
+      });
+    }
+
+    await request.deleteOne();
+
+    logger.info('Credit profile request deleted by admin', {
+      requestId: req.params.id,
+      adminEmail: req.user.email
+    });
+
+    res.json({
+      success: true,
+      message: 'Solicitud eliminada exitosamente'
+    });
+  } catch (error) {
+    logger.error('Error deleting credit profile request', { error });
+    res.status(500).json({
+      success: false,
+      error: 'Error al eliminar solicitud'
+    });
+  }
+});
+
+/**
+ * GET /admin/credit-profile/stats
+ * Get statistics about credit profile requests
+ */
+router.get('/credit-profile/stats', requireAdmin, async (req, res) => {
+  try {
+    const [
+      totalRequests,
+      pendingRequests,
+      processingRequests,
+      generatedRequests,
+      errorRequests,
+      requestsToday
+    ] = await Promise.all([
+      CreditProfileRequest.countDocuments(),
+      CreditProfileRequest.countDocuments({ status: 'pendiente' }),
+      CreditProfileRequest.countDocuments({ status: 'procesando' }),
+      CreditProfileRequest.countDocuments({ status: 'generada' }),
+      CreditProfileRequest.countDocuments({ status: 'error' }),
+      CreditProfileRequest.countDocuments({
+        requestedAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+      })
+    ]);
+
+    res.json({
+      success: true,
+      stats: {
+        total: totalRequests,
+        pending: pendingRequests,
+        processing: processingRequests,
+        generated: generatedRequests,
+        error: errorRequests,
+        today: requestsToday
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching credit profile stats', { error });
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener estadísticas'
     });
   }
 });

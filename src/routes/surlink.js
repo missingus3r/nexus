@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { SurlinkListing, SiteLike, JobListing, CVDocument } from '../models/index.js';
 import SiteComment from '../models/SiteComment.js';
+import CreditProfileRequest from '../models/CreditProfileRequest.js';
 import logger from '../utils/logger.js';
 import construccionSites, { getSitesByCategory as getConstruccionSitesByCategory, getAllSites as getAllConstruccionSites, getSiteById as getConstruccionSiteById } from '../data/construccion-sites.js';
 import academySites, { getSitesByCategory as getAcademySitesByCategory, getAllSites as getAllAcademySites, getSiteById as getAcademySiteById } from '../data/academy-sites.js';
@@ -1580,6 +1581,192 @@ router.get('/cv/export/pdf', requireLogin, async (req, res) => {
     if (!res.headersSent) {
       res.status(500).json({ error: 'Error al exportar CV' });
     }
+  }
+});
+
+// ============================
+// CREDIT PROFILE ENDPOINTS
+// ============================
+
+/**
+ * POST /surlink/credit-profile/request
+ * Create a new credit profile request
+ */
+router.post('/credit-profile/request', requireLogin, async (req, res) => {
+  try {
+    const userId = req.session.user.uid;
+    const username = req.session.user.name || req.session.user.email;
+    const { cedula } = req.body;
+
+    // Validar cédula
+    if (!cedula || cedula.trim().length === 0) {
+      return res.status(400).json({ error: 'La cédula es requerida' });
+    }
+
+    // Validar formato de cédula uruguaya (7-8 dígitos)
+    const cedulaClean = cedula.replace(/\D/g, '');
+    if (cedulaClean.length < 7 || cedulaClean.length > 8) {
+      return res.status(400).json({ error: 'Formato de cédula inválido' });
+    }
+
+    // Verificar si ya existe una solicitud pendiente o procesando
+    const existingRequest = await CreditProfileRequest.findOne({
+      uid: userId,
+      status: { $in: ['pendiente', 'procesando'] }
+    });
+
+    if (existingRequest) {
+      return res.status(400).json({
+        error: 'Ya tienes una solicitud en proceso. Por favor espera a que se complete.',
+        request: existingRequest
+      });
+    }
+
+    // Crear nueva solicitud
+    const request = new CreditProfileRequest({
+      uid: userId,
+      username,
+      cedula: cedulaClean,
+      status: 'pendiente'
+    });
+
+    await request.save();
+
+    logger.info('Credit profile request created', {
+      userId,
+      requestId: request._id,
+      cedula: cedulaClean
+    });
+
+    res.json({
+      success: true,
+      message: 'Solicitud creada exitosamente. El proceso puede demorar hasta 24 horas.',
+      request: {
+        id: request._id,
+        status: request.status,
+        requestedAt: request.requestedAt
+      }
+    });
+  } catch (error) {
+    logger.error('Error creating credit profile request', { error });
+    res.status(500).json({ error: 'Error al crear la solicitud' });
+  }
+});
+
+/**
+ * GET /surlink/credit-profile
+ * Get all credit profile requests for current user
+ */
+router.get('/credit-profile', requireLogin, async (req, res) => {
+  try {
+    const userId = req.session.user.uid;
+
+    const requests = await CreditProfileRequest.find({ uid: userId })
+      .sort({ requestedAt: -1 })
+      .lean();
+
+    // Formatear respuesta
+    const formattedRequests = requests.map(req => ({
+      id: req._id,
+      cedula: req.cedula,
+      status: req.status,
+      requestedAt: req.requestedAt,
+      generatedAt: req.generatedAt,
+      creditScore: req.creditScore,
+      bcuRating: req.bcuRating,
+      totalDebt: req.totalDebt,
+      hasData: !!req.profileData
+    }));
+
+    res.json({
+      requests: formattedRequests
+    });
+  } catch (error) {
+    logger.error('Error fetching credit profile requests', { error });
+    res.status(500).json({ error: 'Error al obtener las solicitudes' });
+  }
+});
+
+/**
+ * GET /surlink/credit-profile/:id
+ * Get detailed credit profile request
+ */
+router.get('/credit-profile/:id', requireLogin, async (req, res) => {
+  try {
+    const userId = req.session.user.uid;
+    const requestId = req.params.id;
+
+    const request = await CreditProfileRequest.findById(requestId).lean();
+
+    if (!request) {
+      return res.status(404).json({ error: 'Solicitud no encontrada' });
+    }
+
+    // Verificar que la solicitud pertenezca al usuario
+    if (request.uid !== userId) {
+      return res.status(403).json({ error: 'No tienes permiso para ver esta solicitud' });
+    }
+
+    res.json({
+      request: {
+        id: request._id,
+        cedula: request.cedula,
+        status: request.status,
+        requestedAt: request.requestedAt,
+        generatedAt: request.generatedAt,
+        processedAt: request.processedAt,
+        creditScore: request.creditScore,
+        bcuRating: request.bcuRating,
+        totalDebt: request.totalDebt,
+        profileData: request.profileData,
+        adminNotes: request.adminNotes
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching credit profile request', { error });
+    res.status(500).json({ error: 'Error al obtener la solicitud' });
+  }
+});
+
+/**
+ * DELETE /surlink/credit-profile/:id
+ * Delete a credit profile request (only if pending)
+ */
+router.delete('/credit-profile/:id', requireLogin, async (req, res) => {
+  try {
+    const userId = req.session.user.uid;
+    const requestId = req.params.id;
+
+    const request = await CreditProfileRequest.findById(requestId);
+
+    if (!request) {
+      return res.status(404).json({ error: 'Solicitud no encontrada' });
+    }
+
+    // Verificar que la solicitud pertenezca al usuario
+    if (request.uid !== userId) {
+      return res.status(403).json({ error: 'No tienes permiso para eliminar esta solicitud' });
+    }
+
+    // Solo permitir eliminar si está pendiente
+    if (request.status !== 'pendiente') {
+      return res.status(400).json({ error: 'Solo puedes eliminar solicitudes pendientes' });
+    }
+
+    await request.deleteOne();
+
+    logger.info('Credit profile request deleted', {
+      userId,
+      requestId
+    });
+
+    res.json({
+      success: true,
+      message: 'Solicitud eliminada exitosamente'
+    });
+  } catch (error) {
+    logger.error('Error deleting credit profile request', { error });
+    res.status(500).json({ error: 'Error al eliminar la solicitud' });
   }
 });
 

@@ -8,6 +8,7 @@
     <%- include('partials/theme-init') %>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/surlink.css">
+    <link rel="stylesheet" href="/css/credit-profile.css">
     <!-- Leaflet CSS for maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
@@ -342,10 +343,156 @@
                             <button type="button" class="construccion-tab" data-financial-tab="procesadores">
                                 Procesadores
                             </button>
+                            <button type="button" class="construccion-tab credit-profile-tab" data-financial-tab="perfil-crediticio">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 0.5rem; vertical-align: -2px;">
+                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                    <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
+                                </svg>
+                                Perfil Crediticio BCU
+                            </button>
                         </div>
 
                         <div class="surlink-feedback" data-feedback="financial" hidden></div>
                         <div class="surlink-results construccion-grid" id="surlinkFinancialResults"></div>
+
+                        <!-- Perfil Crediticio Container (hidden by default, shown when perfil-crediticio tab is active) -->
+                        <div id="creditProfileContainer" class="credit-profile-container" style="display: none;">
+                            <!-- Loading State -->
+                            <div class="credit-profile-loading" style="display: none;">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <p>Cargando tu perfil crediticio...</p>
+                            </div>
+
+                            <!-- No Data State -->
+                            <div class="credit-profile-no-data">
+                                <div class="credit-profile-empty-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                        <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+                                    </svg>
+                                </div>
+                                <h3>Consultá tu Perfil Crediticio del BCU</h3>
+                                <p class="lead">Conocé tu situación crediticia ante la Central de Riesgos del Banco Central del Uruguay</p>
+                                <p>Vortex te facilita la consulta de tu perfil crediticio de forma simple y segura. Solo necesitás tu cédula de identidad.</p>
+                                <button type="button" class="btn btn-primary btn-lg" id="btnRequestCreditProfile">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 0.5rem; vertical-align: -3px;">
+                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                                    </svg>
+                                    Solicitar Consulta
+                                </button>
+                            </div>
+
+                            <!-- Request Pending State -->
+                            <div class="credit-profile-pending" style="display: none;">
+                                <div class="alert alert-info">
+                                    <h4>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 0.5rem; vertical-align: -3px;">
+                                            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                                        </svg>
+                                        Solicitud en Proceso
+                                    </h4>
+                                    <p class="mb-2">Tu solicitud está siendo procesada. El tiempo de generación puede demorar hasta 24 horas dependiendo la demanda.</p>
+                                    <p class="mb-0"><strong>Estado:</strong> <span id="requestStatusBadge" class="badge bg-warning">Pendiente</span></p>
+                                    <p class="mb-0"><strong>Fecha de solicitud:</strong> <span id="requestDate">-</span></p>
+                                    <p class="mb-0"><strong>Cédula:</strong> <span id="requestCedula">-</span></p>
+                                </div>
+                            </div>
+
+                            <!-- Generated Profile State -->
+                            <div class="credit-profile-data" style="display: none;">
+                                <div class="credit-profile-header">
+                                    <h3>Tu Perfil Crediticio</h3>
+                                    <p class="text-muted mb-0">Última actualización: <span id="profileUpdateDate">-</span></p>
+                                </div>
+
+                                <!-- Credit Score Circle -->
+                                <div class="credit-score-section">
+                                    <div class="credit-score-circle">
+                                        <svg width="200" height="200" viewBox="0 0 200 200">
+                                            <circle cx="100" cy="100" r="85" fill="none" stroke="#e0e0e0" stroke-width="12"/>
+                                            <circle id="scoreCircle" cx="100" cy="100" r="85" fill="none" stroke="#28a745" stroke-width="12"
+                                                stroke-dasharray="534.07" stroke-dashoffset="534.07" transform="rotate(-90 100 100)"
+                                                style="transition: stroke-dashoffset 1s ease-in-out, stroke 0.5s ease;"/>
+                                            <text x="100" y="90" text-anchor="middle" font-size="48" font-weight="bold" fill="#333" id="scoreValue">-</text>
+                                            <text x="100" y="115" text-anchor="middle" font-size="14" fill="#666" id="scoreLabel">-</text>
+                                        </svg>
+                                    </div>
+                                    <div class="credit-score-info">
+                                        <h4>Puntaje Crediticio</h4>
+                                        <p>El puntaje crediticio es un valor entre 0 y 1000 que resume tu perfil financiero. Las instituciones financieras lo utilizan para evaluar el riesgo al otorgar créditos.</p>
+                                        <div class="score-scale">
+                                            <div class="scale-bar">
+                                                <div class="scale-segment bad"></div>
+                                                <div class="scale-segment poor"></div>
+                                                <div class="scale-segment fair"></div>
+                                                <div class="scale-segment good"></div>
+                                                <div class="scale-segment excellent"></div>
+                                            </div>
+                                            <div class="scale-labels">
+                                                <span>0-299</span>
+                                                <span>300-449</span>
+                                                <span>450-599</span>
+                                                <span>600-749</span>
+                                                <span>750-1000</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Summary Cards -->
+                                <div class="credit-summary-cards">
+                                    <div class="credit-card">
+                                        <div class="credit-card-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M4 10.781c.148 1.667 1.513 2.85 3.591 3.003V15h1.043v-1.216c2.27-.179 3.678-1.438 3.678-3.3 0-1.59-.947-2.51-2.956-3.028l-.722-.187V3.467c1.122.11 1.879.714 2.07 1.616h1.47c-.166-1.6-1.54-2.748-3.54-2.875V1H7.591v1.233c-1.939.23-3.27 1.472-3.27 3.156 0 1.454.966 2.483 2.661 2.917l.61.162v4.031c-1.149-.17-1.94-.8-2.131-1.718H4zm3.391-3.836c-1.043-.263-1.6-.825-1.6-1.616 0-.944.704-1.641 1.8-1.828v3.495l-.2-.05zm1.591 1.872c1.287.323 1.852.859 1.852 1.769 0 1.097-.826 1.828-2.2 1.939V8.73l.348.086z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="credit-card-content">
+                                            <h5>Deuda Total</h5>
+                                            <p class="credit-card-value" id="totalDebtValue">$ -</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="credit-card">
+                                        <div class="credit-card-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M5.5 7a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zM5 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5z"/>
+                                                <path d="M9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4.5L9.5 0zm0 1v2A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="credit-card-content">
+                                            <h5>Calificación BCU</h5>
+                                            <p class="credit-card-value" id="bcuRatingValue">-</p>
+                                            <small class="text-muted">1A es la mejor, 5 es la peor</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="credit-card">
+                                        <div class="credit-card-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zM2.5 2a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zM1 10.5A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3zm6.5.5A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3zm1.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5h-3z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="credit-card-content">
+                                            <h5>Instituciones</h5>
+                                            <p class="credit-card-value" id="institutionsCount">-</p>
+                                            <small class="text-muted">Entidades financieras</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Institutions Detail -->
+                                <div class="credit-institutions">
+                                    <h4>Detalle por Institución</h4>
+                                    <div class="institutions-list" id="institutionsList">
+                                        <!-- Will be populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </section>
 
                     <section class="surlink-section active" data-surlink-section="construccion" role="tabpanel">
@@ -512,6 +659,136 @@
         </div>
     </div>
 
+    <!-- Modal de Términos y Condiciones de Perfil Crediticio -->
+    <div id="creditProfileTermsModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 1.5rem; border-radius: 8px 8px 0 0;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 12px; font-size: 1.4rem;">
+                    <svg width="28" height="28" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
+                    </svg>
+                    Términos y Condiciones - Consulta de Perfil Crediticio BCU
+                </h2>
+                <button id="creditProfileTermsModalClose" class="modal-close" style="color: white; opacity: 0.9;">&times;</button>
+            </div>
+            <div style="padding: 2rem; max-height: 60vh; overflow-y: auto;">
+                <div style="margin-bottom: 1.5rem;">
+                    <h3 style="color: #1e3c72; margin-bottom: 0.75rem; font-size: 1.2rem;">1. Delegación de Responsabilidad y Permisos</h3>
+                    <p style="color: #555; line-height: 1.7; font-size: 0.95rem;">
+                        Al solicitar la consulta de tu perfil crediticio, <strong>delegás la responsabilidad y otorgás los permisos necesarios</strong>
+                        para que <strong>Vortex</strong> pueda consultar a tu nombre tu perfil crediticio contra la <strong>Central de Riesgos del Banco Central del Uruguay (BCU)</strong>.
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <h3 style="color: #1e3c72; margin-bottom: 0.75rem; font-size: 1.2rem;">2. Fuente de Información</h3>
+                    <p style="color: #555; line-height: 1.7; font-size: 0.95rem;">
+                        El sistema funciona consultando contra la herramienta oficial <a href="https://consultadeuda.bcu.gub.uy/consultadeuda/" target="_blank" rel="noopener noreferrer" style="color: #2a5298; text-decoration: underline;">https://consultadeuda.bcu.gub.uy/consultadeuda/</a>,
+                        la cual está disponible públicamente para cualquier persona. <strong>Vortex simplifica esta tarea</strong> permitiéndote obtener
+                        tu perfil crediticio con solo ingresar tu cédula de identidad.
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <h3 style="color: #1e3c72; margin-bottom: 0.75rem; font-size: 1.2rem;">3. Información Requerida</h3>
+                    <p style="color: #555; line-height: 1.7; font-size: 0.95rem;">
+                        Para realizar la consulta, solo necesitás proporcionar tu <strong>número de cédula de identidad uruguaya</strong>.
+                        Esta información se utiliza exclusivamente para consultar tu perfil crediticio en la Central de Riesgos del BCU.
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <h3 style="color: #1e3c72; margin-bottom: 0.75rem; font-size: 1.2rem;">4. Tiempo de Procesamiento</h3>
+                    <p style="color: #555; line-height: 1.7; font-size: 0.95rem;">
+                        El tiempo de generación del perfil puede <strong>demorar hasta 24 horas</strong> dependiendo de la demanda.
+                        Una vez procesada tu solicitud, recibirás una notificación y podrás visualizar tu perfil crediticio en esta sección.
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <h3 style="color: #1e3c72; margin-bottom: 0.75rem; font-size: 1.2rem;">5. Uso de la Información</h3>
+                    <p style="color: #555; line-height: 1.7; font-size: 0.95rem;">
+                        La información de tu perfil crediticio es <strong>estrictamente confidencial</strong> y se utiliza únicamente para:
+                    </p>
+                    <ul style="color: #555; line-height: 1.7; font-size: 0.95rem; margin-left: 1.5rem;">
+                        <li>Mostrarte tu puntaje crediticio y detalles de deudas</li>
+                        <li>Calcular tu calificación según los estándares del BCU</li>
+                        <li>Proporcionarte información para mejorar tu salud financiera</li>
+                    </ul>
+                    <p style="color: #555; line-height: 1.7; font-size: 0.95rem;">
+                        <strong>Vortex NO comparte, vende ni transfiere</strong> tu información crediticia a terceros.
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <h3 style="color: #1e3c72; margin-bottom: 0.75rem; font-size: 1.2rem;">6. Puntaje Crediticio</h3>
+                    <p style="color: #555; line-height: 1.7; font-size: 0.95rem;">
+                        El puntaje crediticio mostrado (escala 0-1000) es <strong>calculado por Vortex</strong> basándose en los datos
+                        oficiales del BCU. Este puntaje es <strong>orientativo</strong> y resume cómo las instituciones financieras
+                        evalúan tu perfil. Un puntaje más cercano a 1000 indica mayor facilidad para acceder a préstamos y tarjetas de crédito.
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <h3 style="color: #1e3c72; margin-bottom: 0.75rem; font-size: 1.2rem;">7. Responsabilidad</h3>
+                    <p style="color: #555; line-height: 1.7; font-size: 0.95rem;">
+                        La información presentada proviene de la <strong>Central de Riesgos del BCU</strong>. Vortex actúa únicamente
+                        como <strong>intermediario facilitador</strong> de la consulta. No nos hacemos responsables por errores u omisiones
+                        en los datos provistos por la Central de Riesgos. Para discrepancias o reclamos, debés contactar directamente al BCU.
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <h3 style="color: #1e3c72; margin-bottom: 0.75rem; font-size: 1.2rem;">8. Privacidad y Seguridad</h3>
+                    <p style="color: #555; line-height: 1.7; font-size: 0.95rem;">
+                        Tu información se almacena de forma <strong>segura y encriptada</strong>. Solo vos y los administradores de Vortex
+                        (para fines de procesamiento de tu solicitud) tienen acceso a tu perfil crediticio. Tus datos son tratados conforme
+                        a nuestra <a href="/privacy" target="_blank" style="color: #2a5298; text-decoration: underline;">Política de Privacidad</a>.
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <h3 style="color: #1e3c72; margin-bottom: 0.75rem; font-size: 1.2rem;">9. Solicitud de Datos</h3>
+                    <p style="color: #555; line-height: 1.7; font-size: 0.95rem;">
+                        Al hacer clic en "Aceptar y Solicitar", <strong>aceptás estos términos y condiciones</strong> y autorizás a
+                        Vortex a consultar tu perfil crediticio en tu nombre.
+                    </p>
+                </div>
+
+                <div style="background: #f0f4f8; border-left: 4px solid #2a5298; padding: 1rem; border-radius: 4px; margin-bottom: 1.5rem;">
+                    <h4 style="color: #1e3c72; margin: 0 0 0.5rem 0; font-size: 1rem;">
+                        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 0.5rem; vertical-align: -3px;">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M8.93 6.588l-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                        </svg>
+                        Importante
+                    </h4>
+                    <p style="color: #555; margin: 0; font-size: 0.9rem; line-height: 1.6;">
+                        Este servicio es gratuito y está diseñado para ayudarte a entender tu situación crediticia.
+                        Consultá regularmente tu perfil para estar al tanto de tu salud financiera.
+                    </p>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: flex; align-items: flex-start; cursor: pointer; font-size: 0.95rem; color: #555;">
+                        <input type="checkbox" id="acceptTermsCheckbox" style="margin-right: 0.75rem; margin-top: 0.25rem; width: 18px; height: 18px; cursor: pointer;">
+                        <span>He leído y acepto los términos y condiciones para la consulta de mi perfil crediticio ante el BCU</span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 1rem;">
+                    <button id="btnCancelTerms" class="btn btn-secondary" style="flex: 1; padding: 0.875rem; font-size: 1rem;">
+                        Cancelar
+                    </button>
+                    <button id="btnAcceptTerms" class="btn btn-primary" style="flex: 1; padding: 0.875rem; font-size: 1rem; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none;" disabled>
+                        Aceptar y Solicitar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <%- include('partials/footer') %>
 
     <script>
@@ -524,6 +801,7 @@
     </script>
     <script src="/js/notifications.js"></script>
     <script src="/js/surlink.js" defer></script>
+    <script src="/js/credit-profile.js" defer></script>
     <script>
         // Welcome Modal Logic
         function closeWelcomeModal() {

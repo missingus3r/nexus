@@ -49,6 +49,76 @@
     flex-shrink: 0;
 }
 
+/* Filters Button - Desktop */
+.filters-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 210px;
+    z-index: 10;
+    background: linear-gradient(135deg, #7b1fa2 0%, #6a1b9a 100%);
+    color: white;
+    border: none;
+    border-radius: 28px;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(123, 31, 162, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.filters-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.filters-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(123, 31, 162, 0.5), 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.filters-btn:hover::before {
+    left: 100%;
+}
+
+.filters-btn:active {
+    transform: translateY(0px);
+    box-shadow: 0 2px 8px rgba(123, 31, 162, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.filters-btn svg {
+    flex-shrink: 0;
+}
+
+/* Desktop Filters Panel - Hidden by default */
+.map-controls.desktop-only {
+    opacity: 0;
+    transform: translateX(-20px);
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.map-controls.desktop-only.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+/* Close button hover effect */
+.close-filters-btn:hover {
+    background: var(--surface) !important;
+}
+
 /* Incidents List Modal Improvements */
 #incidentsListModal .modal-content {
     animation: slideInUp 0.3s ease-out;
@@ -216,16 +286,22 @@
 
 /* Mobile adjustments */
 @media (max-width: 768px) {
-    .incidents-list-btn span {
+    .incidents-list-btn span,
+    .filters-btn span {
         display: none;
     }
 
-    .incidents-list-btn {
+    .incidents-list-btn,
+    .filters-btn {
         width: 56px;
         height: 56px;
         padding: 0;
         border-radius: 50%;
         justify-content: center;
+    }
+
+    .filters-btn {
+        left: 90px;
     }
 
     .incident-card {

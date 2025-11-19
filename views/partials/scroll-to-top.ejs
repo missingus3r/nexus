@@ -1,0 +1,98 @@
+<!-- Scroll to Top Button -->
+<button id="scrollToTopBtn" class="scroll-to-top-btn" title="Volver arriba" aria-label="Volver arriba">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+    </svg>
+</button>
+
+<style>
+/* Scroll to Top Button */
+.scroll-to-top-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scroll-to-top-btn.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.scroll-to-top-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5), 0 3px 8px rgba(0, 0, 0, 0.25);
+}
+
+.scroll-to-top-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3), 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.scroll-to-top-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+@media (max-width: 768px) {
+    .scroll-to-top-btn {
+        bottom: 20px;
+        right: 20px;
+        width: 48px;
+        height: 48px;
+    }
+
+    .scroll-to-top-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+</style>
+
+<script>
+(function() {
+    const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+
+    if (!scrollToTopBtn) return;
+
+    // Show/hide button based on scroll position
+    function toggleScrollToTopButton() {
+        if (window.pageYOffset > 300) {
+            scrollToTopBtn.classList.add('visible');
+        } else {
+            scrollToTopBtn.classList.remove('visible');
+        }
+    }
+
+    // Scroll to top smoothly
+    function scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+
+    // Event listeners
+    window.addEventListener('scroll', toggleScrollToTopButton);
+    scrollToTopBtn.addEventListener('click', scrollToTop);
+
+    // Initial check
+    toggleScrollToTopButton();
+})();
+</script>
