@@ -38,30 +38,33 @@
                     <span class="icon">🕒</span>
                     <h3>Fecha y Hora</h3>
                 </header>
-                <p class="insight-value">Martes, 04 de febrero · 14:37</p>
-                <p class="insight-meta">Montevideo (UTC-3)</p>
+                <p class="insight-value" id="currentDateTime">Cargando...</p>
+                <p class="insight-meta" id="timezoneInfo">Montevideo (UTC-3)</p>
+                <p class="insight-meta" id="weekInfo" style="margin-top: 0.25rem;">Semana: --</p>
             </div>
             <div class="insight-card">
                 <header>
-                    <span class="icon">🌦️</span>
+                    <span class="icon" id="weatherIcon">🌦️</span>
                     <h3>Clima Actual</h3>
                 </header>
-                <p class="insight-value">26°C · Parcialmente nublado</p>
-                <p class="insight-meta">Sensación térmica 27°C · Viento 12 km/h</p>
+                <p class="insight-value" id="currentWeather">Cargando...</p>
+                <p class="insight-meta" id="weatherMeta">Cargando datos del clima...</p>
             </div>
             <div class="insight-card">
                 <header>
                     <span class="icon">💱</span>
-                    <h3>Divisas</h3>
+                    <h3>Divisas (BCU)</h3>
                 </header>
                 <ul class="insight-list" id="currencyRates">
-                    <li>USD <strong id="usdValue">42,80 UYU</strong></li>
+                    <li>USD <strong id="usdValue">Cargando...</strong></li>
                     <li>EUR <strong id="eurValue">46,10 UYU</strong></li>
-                    <li>ARS <strong id="arsValue">0,045 UYU</strong></li>
-                    <li>BRL <strong id="brlValue">8,25 UYU</strong></li>
-                    <li>UI <strong id="uiValue">5,8247 UYU</strong></li>
-                    <li>UR <strong id="urValue">4.765,32 UYU</strong></li>
+                    <li>ARS <strong id="arsValue">Cargando...</strong></li>
+                    <li>BRL <strong id="brlValue">Cargando...</strong></li>
+                    <li>UI <strong id="uiValue">Cargando...</strong></li>
+                    <li>UR <strong id="urValue">Cargando...</strong></li>
                 </ul>
+                <p class="insight-meta" id="bcuUpdateTime" style="margin-top: 0.5rem; font-size: 0.75rem;">Última actualización: --</p>
+                <p class="insight-meta" id="bcuError" style="color: #dc2626; margin-top: 0.25rem; display: none; font-size: 0.75rem;"></p>
                 <button class="insight-btn" onclick="openCurrencyModal()">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.25rem;">
                         <circle cx="12" cy="12" r="10"></circle>
@@ -75,8 +78,8 @@
                     <span class="icon">₿</span>
                     <h3>Bitcoin</h3>
                 </header>
-                <p class="insight-value">USD 42.580</p>
-                <p class="insight-meta">Cambio 24h: <span class="positive">+2.6%</span></p>
+                <p class="insight-value" id="bitcoinPrice">Cargando...</p>
+                <p class="insight-meta" id="bitcoinChange">Cambio 24h: --</p>
             </div>
             <div class="insight-card donation-insight-card">
                 <header>
@@ -108,33 +111,36 @@
             <div class="dashboard-card">
                 <div class="card-header">
                     <h2><span class="icon">🚨</span> Alertas de Centinel</h2>
-                    <a href="/centinel" class="view-all-btn">Ver todas</a>
                 </div>
                 <div class="item-list" id="centinelList">
                     <div class="loading">Cargando alertas...</div>
                 </div>
+                <a href="/centinel" class="view-all-btn">Ver todas</a>
             </div>
 
             <!-- Surlink Posts Card -->
             <div class="dashboard-card">
                 <div class="card-header">
                     <h2><span class="icon">🏠</span> Nuevos en Surlink</h2>
-                    <a href="/surlink" class="view-all-btn">Ver todas</a>
                 </div>
                 <div class="item-list" id="surlinkList">
-                    <div class="loading">Cargando publicaciones...</div>
+                    <div class="empty-state">
+                        <div class="icon">🚧</div>
+                        <p>Próximamente</p>
+                    </div>
                 </div>
+                <a href="/surlink" class="view-all-btn">Ver todas</a>
             </div>
 
             <!-- Forum Threads Card -->
             <div class="dashboard-card">
                 <div class="card-header">
                     <h2><span class="icon">💬</span> Foro Vortex</h2>
-                    <a href="/forum-vortex" class="view-all-btn">Ver todas</a>
                 </div>
                 <div class="item-list" id="forumList">
                     <div class="loading">Cargando discusiones...</div>
                 </div>
+                <a href="/forum-vortex" class="view-all-btn">Ver todas</a>
             </div>
         </div>
     </div>

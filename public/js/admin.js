@@ -11,6 +11,7 @@
             loadCronSettings();
             loadDonors();
             setupDonorMessageCounter();
+            loadBcuMonitor();
         });
 
         async function loadStats() {
@@ -1822,4 +1823,154 @@
         window.handleDonorSubmit = handleDonorSubmit;
         window.editDonor = editDonor;
         window.deleteDonor = deleteDonor;
+
+        // ===== BCU Monitoring =====
+
+        async function loadBcuMonitor() {
+            try {
+                const response = await fetch('/exchange-rates/raw', {
+                    credentials: 'include'
+                });
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Error al cargar datos BCU');
+                }
+
+                displayBcuMonitor(result.data);
+            } catch (error) {
+                console.error('Error loading BCU monitor:', error);
+                document.getElementById('bcuMonitorContainer').innerHTML = `
+                    <div class="text-center" style="padding: 2rem;">
+                        <p style="color: var(--danger-color);">Error al cargar monitoreo BCU: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function displayBcuMonitor(bcuData) {
+            // Hide loading, show panel
+            document.getElementById('bcuMonitorContainer').style.display = 'none';
+            document.getElementById('bcuMonitorPanel').style.display = 'block';
+
+            // Update status
+            const hasError = bcuData.hasError;
+            const statusIcon = document.getElementById('bcuStatusIcon');
+            const statusTitle = document.getElementById('bcuStatusTitle');
+            const statusMessage = document.getElementById('bcuStatusMessage');
+
+            if (hasError) {
+                statusIcon.textContent = '❌';
+                statusTitle.textContent = 'Error de Sincronización';
+                statusMessage.textContent = 'La última sincronización falló. Se están usando los últimos valores conocidos.';
+                statusMessage.style.color = 'var(--danger-color)';
+            } else {
+                statusIcon.textContent = '✅';
+                statusTitle.textContent = 'Sincronización Exitosa';
+                statusMessage.textContent = 'Las cotizaciones están actualizadas correctamente.';
+                statusMessage.style.color = 'var(--success-color)';
+            }
+
+            // Update last update time
+            if (bcuData.lastSuccessfulUpdate) {
+                const updateTime = new Date(bcuData.lastSuccessfulUpdate);
+                document.getElementById('bcuLastUpdate').textContent = updateTime.toLocaleString('es-UY', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } else {
+                document.getElementById('bcuLastUpdate').textContent = 'Nunca';
+            }
+
+            // Update last attempt
+            if (bcuData.lastSyncAttempt) {
+                const attemptTime = new Date(bcuData.lastSyncAttempt);
+                document.getElementById('bcuLastAttempt').textContent = attemptTime.toLocaleString('es-UY', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } else {
+                document.getElementById('bcuLastAttempt').textContent = 'Nunca';
+            }
+
+            // Show/hide error card
+            const errorCard = document.getElementById('bcuErrorCard');
+            const errorMessage = document.getElementById('bcuErrorMessage');
+            if (hasError && bcuData.errorMessage) {
+                errorMessage.textContent = bcuData.errorMessage;
+                errorCard.style.display = 'block';
+            } else {
+                errorCard.style.display = 'none';
+            }
+
+            // Update current rates preview
+            document.getElementById('bcuUsdRate').textContent = bcuData.usdBillete?.venta ?
+                `${bcuData.usdBillete.venta.toFixed(2)} UYU` : '--';
+            document.getElementById('bcuArsRate').textContent = bcuData.ars?.venta ?
+                `${bcuData.ars.venta.toFixed(3)} UYU` : '--';
+            document.getElementById('bcuBrlRate').textContent = bcuData.brl?.venta ?
+                `${bcuData.brl.venta.toFixed(2)} UYU` : '--';
+            document.getElementById('bcuUiRate').textContent = bcuData.ui?.venta ?
+                `${bcuData.ui.venta.toFixed(4)} UYU` : '--';
+            document.getElementById('bcuUrRate').textContent = bcuData.ur?.venta ?
+                `${bcuData.ur.venta.toFixed(2)} UYU` : '--';
+        }
+
+        async function syncBcuNow() {
+            const statusDiv = document.getElementById('bcuStatus');
+            const syncBtn = document.getElementById('bcuSyncBtn');
+
+            try {
+                // Disable button and show loading
+                syncBtn.disabled = true;
+                syncBtn.textContent = '⏳ Sincronizando...';
+
+                statusDiv.className = 'status-message info';
+                statusDiv.textContent = 'Sincronizando cotizaciones del BCU...';
+                statusDiv.style.display = 'block';
+
+                const response = await fetch('/exchange-rates/sync', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Error al sincronizar');
+                }
+
+                // Success
+                statusDiv.className = 'status-message success';
+                statusDiv.textContent = '✓ Sincronización completada exitosamente';
+
+                // Reload BCU monitor
+                setTimeout(() => {
+                    loadBcuMonitor();
+                    statusDiv.style.display = 'none';
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error syncing BCU rates:', error);
+                statusDiv.className = 'status-message error';
+                statusDiv.textContent = `❌ Error: ${error.message}`;
+            } finally {
+                // Re-enable button
+                syncBtn.disabled = false;
+                syncBtn.textContent = '🔄 Sincronizar ahora';
+            }
+        }
+
+        // Make BCU functions global
+        window.loadBcuMonitor = loadBcuMonitor;
+        window.syncBcuNow = syncBcuNow;
 

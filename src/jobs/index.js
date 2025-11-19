@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { runNewsIngestion } from './newsIngestion.js';
+import { runBcuSync } from './bcuSync.js';
 import { updatePercentiles } from '../services/heatmapService.js';
 import logger from '../utils/logger.js';
 import {
@@ -425,7 +426,8 @@ export async function runScheduledCleanup() {
 let activeCronTasks = {
   newsIngestion: null,
   heatmapUpdate: null,
-  cleanup: null
+  cleanup: null,
+  bcuSync: null
 };
 
 /**
@@ -511,6 +513,21 @@ export async function startCronJobs(io) {
       settings.cronEnabled.cleanup
     );
 
+    // BCU exchange rates sync job
+    scheduleCronJob(
+      'bcuSync',
+      settings.cronSchedules.bcuSync,
+      async () => {
+        logger.info('Running scheduled BCU rates synchronization');
+        try {
+          await runBcuSync();
+        } catch (error) {
+          logger.error('BCU sync cron failed:', error);
+        }
+      },
+      settings.cronEnabled.bcuSync
+    );
+
     logger.info('All cron jobs started successfully');
   } catch (error) {
     logger.error('Failed to start cron jobs:', error);
@@ -535,6 +552,13 @@ export async function startCronJobs(io) {
         await runScheduledCleanup();
       } catch (error) {
         logger.error('Cleanup cron failed:', error);
+      }
+    });
+    scheduleCronJob('bcuSync', '0 8 * * *', async () => {
+      try {
+        await runBcuSync();
+      } catch (error) {
+        logger.error('BCU sync cron failed:', error);
       }
     });
   }

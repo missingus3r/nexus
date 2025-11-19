@@ -1,4 +1,6 @@
 let dashboardData = null;
+let currentTime = null;
+let timeUpdateInterval = null;
 
 // Load dashboard data on page load
 document.addEventListener('DOMContentLoaded', async () => {
@@ -57,6 +59,26 @@ function renderDashboard(data) {
         document.getElementById('notificationBadge').style.display = 'none';
     }
 
+    // Initialize time display
+    if (data.timeData) {
+        initializeTimeDisplay(data.timeData);
+    }
+
+    // Render weather data
+    if (data.weatherData) {
+        renderWeather(data.weatherData);
+    }
+
+    // Render Bitcoin price
+    if (data.bitcoinData) {
+        renderBitcoin(data.bitcoinData);
+    }
+
+    // Render BCU exchange rates
+    if (data.bcuRates) {
+        renderBcuRates(data.bcuRates);
+    }
+
     // Render Centinel alerts
     renderCentinelAlerts(data.incidents);
 
@@ -103,40 +125,133 @@ function renderCentinelAlerts(incidents) {
     }).join('');
 }
 
+/**
+ * Get weather emoji based on WMO weather code
+ */
+function getWeatherEmoji(weatherCode) {
+    // WMO Weather interpretation codes to emojis
+    if (weatherCode === 0) return '☀️'; // Clear sky
+    if (weatherCode === 1) return '🌤️'; // Mainly clear
+    if (weatherCode === 2) return '⛅'; // Partly cloudy
+    if (weatherCode === 3) return '☁️'; // Overcast
+    if (weatherCode === 45 || weatherCode === 48) return '🌫️'; // Fog
+    if (weatherCode >= 51 && weatherCode <= 57) return '🌧️'; // Drizzle
+    if (weatherCode >= 61 && weatherCode <= 67) return '🌧️'; // Rain
+    if (weatherCode >= 71 && weatherCode <= 77) return '❄️'; // Snow
+    if (weatherCode >= 80 && weatherCode <= 82) return '🌦️'; // Rain showers
+    if (weatherCode >= 85 && weatherCode <= 86) return '🌨️'; // Snow showers
+    if (weatherCode >= 95 && weatherCode <= 99) return '⛈️'; // Thunderstorm
+    return '🌦️'; // Default
+}
+
+function renderWeather(weather) {
+    const weatherElement = document.getElementById('currentWeather');
+    const metaElement = document.getElementById('weatherMeta');
+    const iconElement = document.getElementById('weatherIcon');
+
+    if (weatherElement) {
+        weatherElement.textContent = `${weather.temperature}°C · ${weather.description}`;
+    }
+
+    if (metaElement) {
+        metaElement.textContent = `Sensación térmica ${weather.apparentTemperature}°C · Viento ${weather.windSpeed} km/h`;
+    }
+
+    if (iconElement) {
+        iconElement.textContent = getWeatherEmoji(weather.weatherCode);
+    }
+}
+
+function renderBitcoin(bitcoin) {
+    const priceElement = document.getElementById('bitcoinPrice');
+    const changeElement = document.getElementById('bitcoinChange');
+
+    if (priceElement && bitcoin.price) {
+        // Format price with thousands separator
+        const formattedPrice = bitcoin.price.toLocaleString('es-UY', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+        priceElement.textContent = `USD ${formattedPrice}`;
+    }
+
+    if (changeElement && bitcoin.change24h !== undefined) {
+        const change = bitcoin.change24h;
+        const isPositive = change >= 0;
+        const formattedChange = Math.abs(change).toFixed(1);
+        const sign = isPositive ? '+' : '-';
+        const className = isPositive ? 'positive' : 'negative';
+
+        changeElement.innerHTML = `Cambio 24h: <span class="${className}">${sign}${formattedChange}%</span>`;
+    }
+}
+
+function renderBcuRates(bcuRates) {
+    // Update exchange rates object with BCU data
+    if (bcuRates.USD && bcuRates.USD.billete) {
+        exchangeRates.USD = bcuRates.USD.billete;
+    }
+    if (bcuRates.ARS && bcuRates.ARS.value) {
+        exchangeRates.ARS = bcuRates.ARS.value;
+    }
+    if (bcuRates.BRL && bcuRates.BRL.value) {
+        exchangeRates.BRL = bcuRates.BRL.value;
+    }
+    if (bcuRates.UI && bcuRates.UI.value) {
+        exchangeRates.UI = bcuRates.UI.value;
+    }
+    if (bcuRates.UR && bcuRates.UR.value) {
+        exchangeRates.UR = bcuRates.UR.value;
+    }
+
+    // Update currency card display
+    updateCurrencyCard(bcuRates);
+
+    // Update last update time in currency card
+    const bcuUpdateTimeEl = document.getElementById('bcuUpdateTime');
+    if (bcuRates.lastUpdate && bcuUpdateTimeEl) {
+        const updateTime = new Date(bcuRates.lastUpdate);
+        const timeStr = updateTime.toLocaleString('es-UY', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        bcuUpdateTimeEl.textContent = `Última actualización: ${timeStr}`;
+    }
+
+    // Show error message if sync failed
+    const bcuErrorEl = document.getElementById('bcuError');
+    if (bcuRates.hasError && bcuErrorEl) {
+        bcuErrorEl.textContent = '⚠️ No se pudo obtener los nuevos valores desde el BCU';
+        bcuErrorEl.style.display = 'block';
+    } else if (bcuErrorEl) {
+        bcuErrorEl.style.display = 'none';
+    }
+
+    // Update last update time in converter modal
+    if (bcuRates.lastUpdate) {
+        const updateTime = new Date(bcuRates.lastUpdate);
+        const timeStr = updateTime.toLocaleString('es-UY', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        const ratesUpdateTimeEl = document.getElementById('ratesUpdateTime');
+        if (ratesUpdateTimeEl) {
+            ratesUpdateTimeEl.textContent = timeStr;
+        }
+    }
+}
+
 function renderSurlinkPosts(posts) {
     const container = document.getElementById('surlinkList');
 
-    if (posts.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>No hay publicaciones recientes</p></div>';
-        return;
-    }
-
-    container.innerHTML = posts.map(post => {
-        const categoryLabels = {
-            'casas': 'Inmuebles',
-            'autos': 'Autos',
-            'academy': 'Academia'
-        };
-
-        const date = new Date(post.createdAt);
-        const timeAgo = getTimeAgo(date);
-
-        const price = post.price?.amount
-            ? `${post.price.currency} ${post.price.amount.toLocaleString()}`
-            : 'Consultar';
-
-        return `
-            <div class="item" onclick="window.location.href='/surlink?id=${post.id}'">
-                <h3>${post.title}</h3>
-                <div class="item-meta">
-                    <span class="category-badge">${categoryLabels[post.category] || post.category}</span>
-                    <span>💰 ${price}</span>
-                    <span>📍 ${post.city || 'Sin ubicación'}</span>
-                    <span>🕒 ${timeAgo}</span>
-                </div>
-            </div>
-        `;
-    }).join('');
+    // Always show "Próximamente" message
+    container.innerHTML = '<div class="empty-state"><div class="icon">🚧</div><p>Próximamente</p></div>';
 }
 
 function renderForumThreads(threads) {
@@ -352,7 +467,7 @@ function formatNumber(value, decimals = 2) {
     });
 }
 
-function updateCurrencyCard() {
+function updateCurrencyCard(bcuRates = null) {
     // Update all currency values in the card
     const usdValue = document.getElementById('usdValue');
     const eurValue = document.getElementById('eurValue');
@@ -361,27 +476,104 @@ function updateCurrencyCard() {
     const uiValue = document.getElementById('uiValue');
     const urValue = document.getElementById('urValue');
 
+    // Helper function to format value with change indicator
+    const formatWithChange = (value, change) => {
+        const formattedValue = formatNumber(value, value < 1 ? 3 : 2);
+        if (change !== undefined && change !== null && change !== 0) {
+            const isPositive = change >= 0;
+            const sign = isPositive ? '+' : '-';
+            const className = isPositive ? 'positive' : 'negative';
+            return `${formattedValue} UYU <span class="${className}">${sign}${Math.abs(change).toFixed(1)}%</span>`;
+        }
+        return `${formattedValue} UYU`;
+    };
+
     if (usdValue) {
-        usdValue.textContent = formatNumber(exchangeRates.USD, 2) + ' UYU';
+        const change = bcuRates?.USD?.change || null;
+        usdValue.innerHTML = formatWithChange(exchangeRates.USD, change);
     }
 
     if (eurValue) {
+        // EUR not provided by BCU, keep static
         eurValue.textContent = formatNumber(exchangeRates.EUR, 2) + ' UYU';
     }
 
     if (arsValue) {
-        arsValue.textContent = formatNumber(exchangeRates.ARS, 3) + ' UYU';
+        const change = bcuRates?.ARS?.change || null;
+        arsValue.innerHTML = formatWithChange(exchangeRates.ARS, change);
     }
 
     if (brlValue) {
-        brlValue.textContent = formatNumber(exchangeRates.BRL, 2) + ' UYU';
+        const change = bcuRates?.BRL?.change || null;
+        brlValue.innerHTML = formatWithChange(exchangeRates.BRL, change);
     }
 
     if (uiValue) {
-        uiValue.textContent = formatNumber(exchangeRates.UI, 4) + ' UYU';
+        const change = bcuRates?.UI?.change || null;
+        uiValue.innerHTML = formatWithChange(exchangeRates.UI, change);
     }
 
     if (urValue) {
-        urValue.textContent = formatNumber(exchangeRates.UR, 2) + ' UYU';
+        const change = bcuRates?.UR?.change || null;
+        urValue.innerHTML = formatWithChange(exchangeRates.UR, change);
+    }
+}
+
+// ===== REAL-TIME CLOCK =====
+
+function initializeTimeDisplay(timeData) {
+    // Parse the datetime from the API
+    const apiTime = new Date(timeData.datetime);
+
+    // Store initial time data
+    currentTime = apiTime;
+
+    // Clear any existing interval
+    if (timeUpdateInterval) {
+        clearInterval(timeUpdateInterval);
+    }
+
+    // Update the display immediately
+    updateTimeDisplay(timeData.weekNumber, timeData.utcOffset);
+
+    // Update every second
+    timeUpdateInterval = setInterval(() => {
+        currentTime = new Date(currentTime.getTime() + 1000);
+        updateTimeDisplay(timeData.weekNumber, timeData.utcOffset);
+    }, 1000);
+}
+
+function updateTimeDisplay(weekNumber, utcOffset) {
+    if (!currentTime) return;
+
+    // Format day of week and date
+    const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const monthNames = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                       'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+    const dayOfWeek = dayNames[currentTime.getDay()];
+    const day = currentTime.getDate();
+    const month = monthNames[currentTime.getMonth()];
+
+    // Format time with seconds
+    const hours = String(currentTime.getHours()).padStart(2, '0');
+    const minutes = String(currentTime.getMinutes()).padStart(2, '0');
+    const seconds = String(currentTime.getSeconds()).padStart(2, '0');
+
+    // Update the display
+    const dateTimeElement = document.getElementById('currentDateTime');
+    const timezoneElement = document.getElementById('timezoneInfo');
+    const weekElement = document.getElementById('weekInfo');
+
+    if (dateTimeElement) {
+        dateTimeElement.textContent = `${dayOfWeek}, ${day} de ${month} · ${hours}:${minutes}:${seconds}`;
+    }
+
+    if (timezoneElement) {
+        timezoneElement.textContent = `Montevideo (${utcOffset})`;
+    }
+
+    if (weekElement) {
+        weekElement.textContent = `Semana: ${weekNumber}`;
     }
 }

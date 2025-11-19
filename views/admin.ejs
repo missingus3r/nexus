@@ -682,6 +682,93 @@
                 </div>
             </div>
 
+            <!-- BCU Monitoring -->
+            <div class="surlink-controls">
+                <h2>💱 Monitoreo de Cotizaciones BCU</h2>
+                <p>
+                    Estado de la sincronización automática de cotizaciones del Banco Central del Uruguay.
+                </p>
+
+                <div id="bcuMonitorContainer" class="loading" style="margin-top: 1.5rem;">
+                    <p>Cargando estado de sincronización BCU...</p>
+                </div>
+
+                <div id="bcuMonitorPanel" style="display: none; margin-top: 1.5rem;">
+                    <!-- Status Card -->
+                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 250px;">
+                                <h3 style="margin: 0 0 0.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                                    <span id="bcuStatusIcon">⏳</span>
+                                    <span id="bcuStatusTitle">Estado de Sincronización</span>
+                                </h3>
+                                <p id="bcuStatusMessage" style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                                    Verificando estado...
+                                </p>
+                            </div>
+                            <button class="btn btn-primary" onclick="syncBcuNow()" id="bcuSyncBtn">
+                                🔄 Sincronizar ahora
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Last Update Info -->
+                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                        <h4 style="margin: 0 0 1rem 0;">📅 Última Actualización</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                            <div>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 0.25rem 0;">Última sincronización exitosa</p>
+                                <p id="bcuLastUpdate" style="font-weight: 600; margin: 0;">--</p>
+                            </div>
+                            <div>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 0.25rem 0;">Último intento</p>
+                                <p id="bcuLastAttempt" style="font-weight: 600; margin: 0;">--</p>
+                            </div>
+                            <div>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 0.25rem 0;">Próxima ejecución</p>
+                                <p id="bcuNextRun" style="font-weight: 600; margin: 0;">8:00 AM (diario)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Error Message (if any) -->
+                    <div id="bcuErrorCard" style="background: #fef2f2; border: 1px solid #fecaca; padding: 1.5rem; border-radius: 8px; display: none;">
+                        <h4 style="margin: 0 0 0.5rem 0; color: #dc2626;">⚠️ Error de Sincronización</h4>
+                        <p id="bcuErrorMessage" style="color: #991b1b; font-size: 0.9rem; margin: 0; font-family: monospace;">
+                        </p>
+                    </div>
+
+                    <!-- Current Rates Preview -->
+                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem;">
+                        <h4 style="margin: 0 0 1rem 0;">💵 Cotizaciones Actuales</h4>
+                        <div id="bcuRatesPreview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                            <div>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">USD Billete</p>
+                                <p id="bcuUsdRate" style="font-weight: 600; margin: 0.25rem 0 0 0;">--</p>
+                            </div>
+                            <div>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">ARS</p>
+                                <p id="bcuArsRate" style="font-weight: 600; margin: 0.25rem 0 0 0;">--</p>
+                            </div>
+                            <div>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">BRL</p>
+                                <p id="bcuBrlRate" style="font-weight: 600; margin: 0.25rem 0 0 0;">--</p>
+                            </div>
+                            <div>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">UI</p>
+                                <p id="bcuUiRate" style="font-weight: 600; margin: 0.25rem 0 0 0;">--</p>
+                            </div>
+                            <div>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">UR</p>
+                                <p id="bcuUrRate" style="font-weight: 600; margin: 0.25rem 0 0 0;">--</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="bcuStatus" class="status-message" style="margin-top: 1rem; display: none;"></div>
+                </div>
+            </div>
+
         </div>
     </div>
 

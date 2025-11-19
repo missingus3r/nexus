@@ -67,6 +67,11 @@ const systemSettingsSchema = new mongoose.Schema({
       type: String,
       default: '0 3 * * *',
       description: 'Cleanup old data schedule (default: daily at 3 AM)'
+    },
+    bcuSync: {
+      type: String,
+      default: '0 8 * * *',
+      description: 'BCU exchange rates sync schedule (default: daily at 8 AM)'
     }
   },
 
@@ -86,6 +91,11 @@ const systemSettingsSchema = new mongoose.Schema({
       type: Boolean,
       default: true,
       description: 'Enable/disable cleanup job'
+    },
+    bcuSync: {
+      type: Boolean,
+      default: true,
+      description: 'Enable/disable BCU exchange rates sync job'
     }
   },
 
