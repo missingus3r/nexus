@@ -61,6 +61,21 @@ const bcuRatesSchema = new mongoose.Schema({
     default: () => ({}),
     description: 'UNIDAD REAJUSTAB'
   },
+  eur: {
+    type: currencyRateSchema,
+    default: () => ({}),
+    description: 'EURO'
+  },
+  gbp: {
+    type: currencyRateSchema,
+    default: () => ({}),
+    description: 'LIBRA ESTERLINA'
+  },
+  chf: {
+    type: currencyRateSchema,
+    default: () => ({}),
+    description: 'FRANCO SUIZO'
+  },
 
   // Metadata
   lastSuccessfulUpdate: {
@@ -111,7 +126,7 @@ bcuRatesSchema.statics.updateRates = async function(rates, success = true, error
 
   if (success && rates) {
     // Calculate percentage changes before updating
-    const currencyKeys = ['usdBillete', 'usdCable', 'usdPromedio', 'ars', 'brl', 'ui', 'up', 'ur'];
+    const currencyKeys = ['usdBillete', 'usdCable', 'usdPromedio', 'ars', 'brl', 'ui', 'up', 'ur', 'eur', 'gbp', 'chf'];
 
     currencyKeys.forEach(key => {
       if (rates[key]) {
@@ -159,7 +174,10 @@ bcuRatesSchema.methods.getAllRates = function() {
       promedio: this.usdPromedio.venta,
       change: this.usdBillete.change24h
     },
-    EUR: null, // Not provided by BCU in the given HTML
+    EUR: {
+      value: this.eur.venta,
+      change: this.eur.change24h
+    },
     ARS: {
       value: this.ars.venta,
       change: this.ars.change24h
@@ -167,6 +185,14 @@ bcuRatesSchema.methods.getAllRates = function() {
     BRL: {
       value: this.brl.venta,
       change: this.brl.change24h
+    },
+    GBP: {
+      value: this.gbp.venta,
+      change: this.gbp.change24h
+    },
+    CHF: {
+      value: this.chf.venta,
+      change: this.chf.change24h
     },
     UI: {
       value: this.ui.venta,

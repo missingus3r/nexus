@@ -21,3 +21,4 @@ export { default as JobListing } from './JobListing.js';
 export { default as CVDocument } from './CVDocument.js';
 export { default as Donor } from './Donor.js';
 export { default as BcuRates } from './BcuRates.js';
+export { default as BitcoinPrice } from './BitcoinPrice.js';

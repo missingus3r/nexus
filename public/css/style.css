@@ -483,7 +483,8 @@ body {
 }
 
 .layer-controls input[type="checkbox"] {
-    width: auto;
+    width: 24px;
+    height: 24px;
     margin: 0;
 }
 

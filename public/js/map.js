@@ -1167,7 +1167,7 @@ function createIncidentPopupHTML(incident) {
 
     // Nearby buses section (placeholder, will be populated async)
     let nearbyBusesHTML = `
-        <div id="nearby-buses-section" style="margin-top: 10px; padding: 10px; background: #e8f5e9; border-left: 3px solid #4caf50; border-radius: 4px;">
+        <div id="nearby-buses-section" style="margin-top: 5px; padding: 5px; background: #e8f5e9; border-left: 3px solid #4caf50; border-radius: 4px;">
             <div style="font-weight: 600; color: #2e7d32; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
                 <span>🚌</span>
                 <span>Transporte Público Cercano:</span>

@@ -8,16 +8,181 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     flex-wrap: wrap;
     gap: 1rem;
 }
 
+.dashboard-info-bars {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.dashboard-datetime-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--surface);
+    border-radius: 12px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    flex-wrap: wrap;
+}
+
+.dashboard-datetime-bar .datetime-icon {
+    font-size: 1.2rem;
+}
+
+.dashboard-datetime-bar .datetime-separator {
+    color: var(--text-secondary);
+    opacity: 0.5;
+}
+
+.dashboard-datetime-bar span:not(.datetime-separator):not(.datetime-icon) {
+    white-space: nowrap;
+}
+
+.dashboard-weather-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--surface);
+    border-radius: 12px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    flex-wrap: wrap;
+}
+
+.dashboard-weather-bar #weatherIcon {
+    font-size: 1.5rem;
+}
+
+.dashboard-weather-bar #currentWeather {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.dashboard-weather-bar .weather-separator {
+    color: var(--text-secondary);
+    opacity: 0.5;
+}
+
+.dashboard-weather-bar span:not(.weather-separator):not(#weatherIcon) {
+    white-space: nowrap;
+}
+
 .dashboard-insights {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.dashboard-donation-bar {
+    background: linear-gradient(135deg, rgba(16, 198, 255, 0.08), rgba(124, 92, 255, 0.08));
+    border: 1px solid rgba(16, 198, 255, 0.3);
+    border-radius: 16px;
+    padding: 1.5rem;
     margin-bottom: 2.5rem;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+    transition: all 0.3s ease;
+}
+
+.dashboard-donation-bar:hover {
+    border-color: rgba(16, 198, 255, 0.5);
+    box-shadow: 0 20px 40px rgba(16, 198, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.donation-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.donation-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+    min-width: 250px;
+}
+
+.donation-icon {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+}
+
+.donation-info h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.donation-info p {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.donation-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.donation-btn-bar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.875rem 1.5rem;
+    background: linear-gradient(135deg, #10c6ff, #7c5cff);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    gap: 0.5rem;
+    box-shadow: 0 8px 20px rgba(16, 198, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.donation-btn-bar:hover {
+    box-shadow: 0 12px 30px rgba(16, 198, 255, 0.45);
+    transform: translateY(-2px);
+}
+
+.donation-btn-bar:active {
+    transform: translateY(0);
+}
+
+.donors-link-bar {
+    color: rgba(16, 198, 255, 0.9);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.donors-link-bar:hover {
+    color: #10c6ff;
+    transform: translateX(3px);
 }
 
 .insight-card {
@@ -29,6 +194,13 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+}
+
+#creditProfileContent,
+#cvContent {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 
 .insight-card header {
@@ -62,6 +234,14 @@
     margin: 0;
 }
 
+.card-footer {
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
 .insight-list {
     list-style: none;
     padding: 0;
@@ -70,6 +250,12 @@
     gap: 0.4rem;
     font-size: 0.95rem;
     color: var(--text-primary);
+}
+
+.currency-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    font-size: 0.8rem;
 }
 
 .insight-list strong {
@@ -233,6 +419,9 @@
     color: var(--text-primary);
     font-size: 1rem;
     margin: 0 0 0.5rem 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
 }
 
 .item p {
@@ -244,6 +433,7 @@
 
 .item-meta {
     display: flex;
+    flex-wrap: wrap;
     gap: 1rem;
     margin-top: 0.5rem;
     font-size: 0.75rem;
@@ -499,14 +689,18 @@
 @media (max-width: 768px) {
     .dashboard-container {
         padding: 1rem;
+        max-width: 100%;
+        overflow-x: hidden;
     }
 
     .dashboard-insights {
         grid-template-columns: 1fr;
+        gap: 1rem;
     }
 
     .dashboard-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
     }
 
     .dashboard-header {
@@ -514,9 +708,152 @@
         align-items: flex-start;
     }
 
+    .dashboard-info-bars {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .dashboard-datetime-bar {
+        font-size: 0.8rem;
+        padding: 0.6rem 1rem;
+        gap: 0.5rem;
+    }
+
+    .dashboard-weather-bar {
+        font-size: 0.8rem;
+        padding: 0.6rem 1rem;
+        gap: 0.5rem;
+    }
+
+    .dashboard-donation-bar {
+        padding: 1.25rem;
+    }
+
+    .donation-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+    }
+
+    .donation-info {
+        min-width: 100%;
+    }
+
+    .donation-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .donation-btn-bar,
+    .donors-link-bar {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .insight-card {
+        padding: 1.25rem;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .dashboard-card {
+        padding: 1.25rem;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .user-info {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .notifications-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
     .modal-content {
         width: 95%;
         padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-container {
+        padding: 0.75rem;
+    }
+
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .dashboard-datetime-bar {
+        font-size: 0.75rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .dashboard-datetime-bar .datetime-separator {
+        display: none;
+    }
+
+    .dashboard-weather-bar {
+        font-size: 0.75rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+
+    .dashboard-weather-bar .weather-separator {
+        display: none;
+    }
+
+    .dashboard-weather-bar #weatherIcon {
+        font-size: 1.3rem;
+    }
+
+    .dashboard-donation-bar {
+        padding: 1rem;
+    }
+
+    .donation-icon {
+        font-size: 2rem;
+    }
+
+    .donation-info h3 {
+        font-size: 1.1rem;
+    }
+
+    .donation-info p {
+        font-size: 0.8rem;
+    }
+
+    .donation-btn-bar {
+        font-size: 0.875rem;
+        padding: 0.75rem 1.25rem;
+    }
+
+    .donors-link-bar {
+        font-size: 0.8rem;
+    }
+
+    .insight-card header .icon {
+        font-size: 1.3rem;
+    }
+
+    .insight-value {
+        font-size: 1.2rem;
+    }
+
+    .insight-meta {
+        font-size: 0.8rem;
+    }
+
+    .currency-grid {
+        grid-template-columns: 1fr;
+        font-size: 0.75rem;
     }
 }
 

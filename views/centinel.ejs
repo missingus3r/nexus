@@ -88,6 +88,14 @@
                 </svg>
             </button>
 
+            <!-- Desktop floating button for filters -->
+            <button id="filtersBtnDesktop" class="filters-btn desktop-only" title="Filtros y Capas">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                <span>Filtros</span>
+            </button>
+
             <!-- Desktop floating button for incidents list -->
             <button id="incidentsListBtnDesktop" class="incidents-list-btn desktop-only" title="Últimos Incidentes">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -99,14 +107,6 @@
                     <line x1="3" y1="18" x2="3.01" y2="18"></line>
                 </svg>
                 <span>Últimos Incidentes</span>
-            </button>
-
-            <!-- Desktop floating button for filters -->
-            <button id="filtersBtnDesktop" class="filters-btn desktop-only" title="Filtros y Capas">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                </svg>
-                <span>Filtros</span>
             </button>
 
             <!-- Desktop controls -->
@@ -182,8 +182,8 @@
                             </select>
                         </div>
 
-                        <label style="margin-top: 0.75rem;">
-                            <input type="checkbox" id="autoBusRefresh" checked>
+                        <label style="margin-top: 0.75rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" id="autoBusRefresh" checked style="width: 24px; height: 24px;">
                             Auto-actualizar (3s)
                         </label>
                     </div>
@@ -269,8 +269,8 @@
                                 </select>
                             </div>
 
-                            <label style="margin-top: 0.75rem;">
-                                <input type="checkbox" id="autoBusRefreshMobile" checked>
+                            <label style="margin-top: 0.75rem; display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" id="autoBusRefreshMobile" checked style="width: 24px; height: 24px;">
                                 Auto-actualizar (3s)
                             </label>
                         </div>

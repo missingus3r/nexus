@@ -158,6 +158,7 @@
             <div class="hero-nav">
                 <nav class="nav-links" aria-label="Navegación principal">
                     <% if (isAuthenticated) { %>
+                        <a href="/dashboard" title="Ir al Dashboard" aria-label="Ir al Dashboard">Dashboard</a>
                         <a href="/auth/logout" title="Cerrar sesión" aria-label="Cerrar sesión">Cerrar sesión</a>
                     <% } else { %>
                         <a href="/login" title="Acceder a tu cuenta Vortex" aria-label="Iniciar sesión en Vortex">Iniciar sesión</a>

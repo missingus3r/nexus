@@ -32,39 +32,42 @@
             </div>
         </div>
 
+        <div class="dashboard-info-bars">
+            <div class="dashboard-datetime-bar">
+                <span class="datetime-icon">🕒</span>
+                <span id="currentDateTime">Cargando...</span>
+                <span class="datetime-separator">•</span>
+                <span id="timezoneInfo">Montevideo (UTC-3)</span>
+                <span class="datetime-separator">•</span>
+                <span id="weekInfo">Semana: --</span>
+            </div>
+
+            <div class="dashboard-weather-bar">
+                <span id="weatherIcon">🌦️</span>
+                <span id="currentWeather">Cargando clima...</span>
+                <span class="weather-separator">•</span>
+                <span id="weatherMeta">Montevideo, Uruguay</span>
+            </div>
+        </div>
+
         <section class="dashboard-insights">
             <div class="insight-card">
                 <header>
-                    <span class="icon">🕒</span>
-                    <h3>Fecha y Hora</h3>
-                </header>
-                <p class="insight-value" id="currentDateTime">Cargando...</p>
-                <p class="insight-meta" id="timezoneInfo">Montevideo (UTC-3)</p>
-                <p class="insight-meta" id="weekInfo" style="margin-top: 0.25rem;">Semana: --</p>
-            </div>
-            <div class="insight-card">
-                <header>
-                    <span class="icon" id="weatherIcon">🌦️</span>
-                    <h3>Clima Actual</h3>
-                </header>
-                <p class="insight-value" id="currentWeather">Cargando...</p>
-                <p class="insight-meta" id="weatherMeta">Cargando datos del clima...</p>
-            </div>
-            <div class="insight-card">
-                <header>
                     <span class="icon">💱</span>
-                    <h3>Divisas (BCU)</h3>
+                    <h3>Divisas (BROU)</h3>
                 </header>
-                <ul class="insight-list" id="currencyRates">
+                <ul class="insight-list currency-grid" id="currencyRates">
                     <li>USD <strong id="usdValue">Cargando...</strong></li>
-                    <li>EUR <strong id="eurValue">46,10 UYU</strong></li>
+                    <li>EUR <strong id="eurValue">Cargando...</strong></li>
                     <li>ARS <strong id="arsValue">Cargando...</strong></li>
                     <li>BRL <strong id="brlValue">Cargando...</strong></li>
+                    <li>GBP <strong id="gbpValue">Cargando...</strong></li>
+                    <li>CHF <strong id="chfValue">Cargando...</strong></li>
                     <li>UI <strong id="uiValue">Cargando...</strong></li>
                     <li>UR <strong id="urValue">Cargando...</strong></li>
                 </ul>
-                <p class="insight-meta" id="bcuUpdateTime" style="margin-top: 0.5rem; font-size: 0.75rem;">Última actualización: --</p>
-                <p class="insight-meta" id="bcuError" style="color: #dc2626; margin-top: 0.25rem; display: none; font-size: 0.75rem;"></p>
+                <p class="insight-meta" id="bcuUpdateTime" style="margin-top: 0.75rem; font-size: 0.7rem;">Última actualización: --</p>
+                <p class="insight-meta" id="bcuError" style="color: #dc2626; margin-top: 0.25rem; display: none; font-size: 0.7rem;"></p>
                 <button class="insight-btn" onclick="openCurrencyModal()">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.25rem;">
                         <circle cx="12" cy="12" r="10"></circle>
@@ -78,33 +81,59 @@
                     <span class="icon">₿</span>
                     <h3>Bitcoin</h3>
                 </header>
-                <p class="insight-value" id="bitcoinPrice">Cargando...</p>
-                <p class="insight-meta" id="bitcoinChange">Cambio 24h: --</p>
+                <div style="flex: 1;">
+                    <p class="insight-value" id="bitcoinPrice">Cargando...</p>
+                    <p class="insight-meta" id="bitcoinChange">Cambio 15s: --</p>
+                </div>
+                <p class="insight-meta card-footer">
+                    Datos de <a href="https://www.coingecko.com" target="_blank" rel="noopener noreferrer" style="color: var(--primary-color); text-decoration: underline;">CoinGecko</a>
+                </p>
             </div>
-            <div class="insight-card donation-insight-card">
+            <div class="insight-card" id="creditProfileCard">
                 <header>
-                    <span class="icon">💝</span>
-                    <h3>Apoya Vortex</h3>
+                    <span class="icon">💳</span>
+                    <h3>Perfil Crediticio</h3>
                 </header>
-                <p class="insight-value">Tu donación hace la diferencia</p>
-                <p class="insight-meta" style="margin-bottom: 0.5rem;">Ayuda a mantener la plataforma gratuita y en constante mejora</p>
-                <p class="insight-meta" style="margin-bottom: 1rem; font-size: 0.8rem; opacity: 0.8;">Aparece en el muro (actualizado semanalmente)</p>
-                <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: auto;">
+                <div id="creditProfileContent">
+                    <p class="insight-meta" style="text-align: center; padding: 1rem;">Cargando...</p>
+                </div>
+            </div>
+            <div class="insight-card" id="cvCard">
+                <header>
+                    <span class="icon">📄</span>
+                    <h3>Mi CV</h3>
+                </header>
+                <div id="cvContent">
+                    <p class="insight-meta" style="text-align: center; padding: 1rem;">Cargando...</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="dashboard-donation-bar">
+            <div class="donation-content">
+                <div class="donation-info">
+                    <span class="donation-icon">💝</span>
+                    <div>
+                        <h3>Apoya Vortex</h3>
+                        <p>Tu donación ayuda a mantener la plataforma gratuita y en constante mejora</p>
+                    </div>
+                </div>
+                <div class="donation-actions">
                     <a href="https://paypal.me/xplice?locale.x=es_XC&country.x=UY"
                        target="_blank"
                        rel="noopener noreferrer"
-                       class="donation-btn">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;">
+                       class="donation-btn-bar">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
                             <path d="M2 17l10 5 10-5"></path>
                             <path d="M2 12l10 5 10-5"></path>
                         </svg>
                         Donar con PayPal
                     </a>
-                    <a href="/donadores" class="donors-link">Ver muro de donadores →</a>
+                    <a href="/donadores" class="donors-link-bar">Ver muro →</a>
                 </div>
             </div>
-        </section>
+        </div>
 
         <div class="dashboard-grid">
             <!-- Centinel Alerts Card -->
@@ -180,6 +209,8 @@
                             <option value="EUR">EUR - Euro</option>
                             <option value="ARS">ARS - Peso Argentino</option>
                             <option value="BRL">BRL - Real Brasileño</option>
+                            <option value="GBP">GBP - Libra Esterlina</option>
+                            <option value="CHF">CHF - Franco Suizo</option>
                             <option value="UYU" selected>UYU - Peso Uruguayo</option>
                             <option value="UI">UI - Unidad Indexada</option>
                             <option value="UR">UR - Unidad Reajustable</option>
@@ -202,6 +233,8 @@
                             <option value="EUR">EUR - Euro</option>
                             <option value="ARS">ARS - Peso Argentino</option>
                             <option value="BRL">BRL - Real Brasileño</option>
+                            <option value="GBP">GBP - Libra Esterlina</option>
+                            <option value="CHF">CHF - Franco Suizo</option>
                             <option value="UYU">UYU - Peso Uruguayo</option>
                             <option value="UI">UI - Unidad Indexada</option>
                             <option value="UR">UR - Unidad Reajustable</option>

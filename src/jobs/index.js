@@ -3,7 +3,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { runNewsIngestion } from './newsIngestion.js';
-import { runBcuSync } from './bcuSync.js';
+import { runExchangeSync } from './exchangeSync.js';
+import { runBitcoinSync } from './bitcoinSync.js';
 import { updatePercentiles } from '../services/heatmapService.js';
 import logger from '../utils/logger.js';
 import {
@@ -427,7 +428,8 @@ let activeCronTasks = {
   newsIngestion: null,
   heatmapUpdate: null,
   cleanup: null,
-  bcuSync: null
+  bcuSync: null,
+  bitcoinSync: null // Using setInterval instead of cron (every 15 seconds)
 };
 
 /**
@@ -513,20 +515,46 @@ export async function startCronJobs(io) {
       settings.cronEnabled.cleanup
     );
 
-    // BCU exchange rates sync job
+    // Exchange rates sync job (BROU + DGI)
     scheduleCronJob(
-      'bcuSync',
+      'exchangeSync',
       settings.cronSchedules.bcuSync,
       async () => {
-        logger.info('Running scheduled BCU rates synchronization');
+        logger.info('Running scheduled exchange rates synchronization (BROU + DGI)');
         try {
-          await runBcuSync();
+          await runExchangeSync();
         } catch (error) {
-          logger.error('BCU sync cron failed:', error);
+          logger.error('Exchange rates sync cron failed:', error);
         }
       },
       settings.cronEnabled.bcuSync
     );
+
+    // Bitcoin price sync job (every 15 seconds using setInterval)
+    const bitcoinInterval = parseInt(process.env.BITCOIN_CACHE_DURATION) || 15000;
+
+    // Stop existing interval if any
+    if (activeCronTasks.bitcoinSync) {
+      clearInterval(activeCronTasks.bitcoinSync);
+      activeCronTasks.bitcoinSync = null;
+      logger.info('Stopped existing Bitcoin sync interval');
+    }
+
+    // Start Bitcoin sync interval
+    activeCronTasks.bitcoinSync = setInterval(async () => {
+      try {
+        await runBitcoinSync();
+      } catch (error) {
+        logger.error('Bitcoin sync interval failed:', error);
+      }
+    }, bitcoinInterval);
+
+    logger.info(`Scheduled Bitcoin sync interval: every ${bitcoinInterval}ms (${bitcoinInterval/1000}s)`);
+
+    // Run Bitcoin sync immediately on startup
+    runBitcoinSync().catch(error => {
+      logger.error('Initial Bitcoin sync failed:', error);
+    });
 
     logger.info('All cron jobs started successfully');
   } catch (error) {
@@ -560,6 +588,23 @@ export async function startCronJobs(io) {
       } catch (error) {
         logger.error('BCU sync cron failed:', error);
       }
+    });
+
+    // Bitcoin sync fallback (every 15 seconds)
+    const bitcoinInterval = parseInt(process.env.BITCOIN_CACHE_DURATION) || 15000;
+    if (activeCronTasks.bitcoinSync) {
+      clearInterval(activeCronTasks.bitcoinSync);
+    }
+    activeCronTasks.bitcoinSync = setInterval(async () => {
+      try {
+        await runBitcoinSync();
+      } catch (error) {
+        logger.error('Bitcoin sync interval failed:', error);
+      }
+    }, bitcoinInterval);
+    logger.info(`Fallback: Scheduled Bitcoin sync interval every ${bitcoinInterval}ms`);
+    runBitcoinSync().catch(error => {
+      logger.error('Initial Bitcoin sync failed:', error);
     });
   }
 }

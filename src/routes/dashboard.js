@@ -5,16 +5,13 @@ import SurlinkListing from '../models/SurlinkListing.js';
 import ForumThread from '../models/ForumThread.js';
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
+import CreditProfileRequest from '../models/CreditProfileRequest.js';
+import CVDocument from '../models/CVDocument.js';
 import { requireAuth, getAuthenticatedUser } from '../config/auth0.js';
 import { getCurrentRates } from '../services/bcuService.js';
+import { getCurrentPrice } from '../services/bitcoinService.js';
 
 const router = express.Router();
-
-// Bitcoin price cache
-let bitcoinCache = {
-  data: null,
-  timestamp: null
-};
 
 /**
  * Helper function to fetch data from WorldTimeAPI using https module
@@ -130,83 +127,6 @@ function getWeatherDescription(code) {
   return weatherCodes[code] || 'Desconocido';
 }
 
-/**
- * Helper function to fetch Bitcoin price from CoinGecko API
- */
-function fetchBitcoinData(url) {
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      reject(new Error('Request timeout'));
-    }, 5000);
-
-    https.get(url, { timeout: 5000 }, (res) => {
-      let data = '';
-
-      res.on('data', (chunk) => {
-        data += chunk;
-      });
-
-      res.on('end', () => {
-        clearTimeout(timeout);
-        try {
-          const parsed = JSON.parse(data);
-          resolve(parsed);
-        } catch (error) {
-          reject(new Error('Failed to parse Bitcoin JSON response'));
-        }
-      });
-    }).on('error', (error) => {
-      clearTimeout(timeout);
-      reject(error);
-    });
-  });
-}
-
-/**
- * Get Bitcoin price with 1-hour cache
- */
-async function getBitcoinPrice() {
-  const now = Date.now();
-  const cacheDuration = parseInt(process.env.BITCOIN_CACHE_DURATION) || 3600000; // 1 hour default
-
-  // Check if cache is valid
-  if (bitcoinCache.data && bitcoinCache.timestamp && (now - bitcoinCache.timestamp < cacheDuration)) {
-    console.log('Using cached Bitcoin price');
-    return bitcoinCache.data;
-  }
-
-  // Fetch new data
-  try {
-    const response = await fetchBitcoinData(process.env.COINGECKO_API_URL);
-    if (response && response.bitcoin) {
-      const bitcoinData = {
-        price: response.bitcoin.usd,
-        change24h: response.bitcoin.usd_24h_change
-      };
-
-      // Update cache
-      bitcoinCache.data = bitcoinData;
-      bitcoinCache.timestamp = now;
-
-      console.log('Fetched new Bitcoin price from CoinGecko API');
-      return bitcoinData;
-    }
-  } catch (error) {
-    console.error('Error fetching Bitcoin price from CoinGecko:', error.message);
-
-    // Return cached data if available, even if expired
-    if (bitcoinCache.data) {
-      console.log('Using expired cache due to API error');
-      return bitcoinCache.data;
-    }
-
-    // Return fallback data
-    return {
-      price: 0,
-      change24h: 0
-    };
-  }
-}
 
 /**
  * Dashboard home page
@@ -301,16 +221,26 @@ router.get('/dashboard/data', requireAuth, async (req, res, next) => {
       };
     }
 
-    // Get Bitcoin price from CoinGecko API (with 1-hour cache)
-    const bitcoinData = await getBitcoinPrice();
+    // Get Bitcoin price from database
+    let bitcoinData = null;
+    try {
+      bitcoinData = await getCurrentPrice();
+    } catch (error) {
+      console.error('Error fetching Bitcoin price from database:', error.message);
+      // Use fallback data if database read fails
+      bitcoinData = {
+        price: 0,
+        change24h: 0
+      };
+    }
 
-    // Get BCU exchange rates
+    // Get exchange rates (BROU + DGI)
     let bcuRates = null;
     try {
       bcuRates = await getCurrentRates();
     } catch (error) {
-      console.error('Error fetching BCU rates:', error.message);
-      // Continue without BCU rates if they fail to load
+      console.error('Error fetching exchange rates:', error.message);
+      // Continue without exchange rates if they fail to load
     }
 
     // Get latest incidents (Centinel alerts) - last 5
@@ -356,6 +286,53 @@ router.get('/dashboard/data', requireAuth, async (req, res, next) => {
       uid: user.uid,
       read: false
     });
+
+    // Get credit profile status
+    let creditProfile = null;
+    try {
+      const requests = await CreditProfileRequest.find({ uid: user.uid })
+        .sort({ requestedAt: -1 })
+        .limit(1)
+        .lean();
+
+      if (requests.length > 0) {
+        const request = requests[0];
+        creditProfile = {
+          status: request.status,
+          requestedAt: request.requestedAt,
+          generatedAt: request.generatedAt,
+          creditScore: request.creditScore,
+          bcuRating: request.bcuRating,
+          totalDebt: request.totalDebt,
+          hasData: request.status === 'generada' && request.profileData !== null
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching credit profile:', error.message);
+      // Continue without credit profile if it fails to load
+    }
+
+    // Get CV data
+    let cvData = null;
+    try {
+      const cv = await CVDocument.findOne({ userId: user.uid }).lean();
+
+      if (cv) {
+        cvData = {
+          exists: true,
+          hasSummary: !!cv.professionalSummary,
+          experienceCount: cv.experience?.length || 0,
+          educationCount: cv.education?.length || 0,
+          skillsCount: cv.skills?.length || 0,
+          languagesCount: cv.languages?.length || 0,
+          lastGenerated: cv.lastGenerated,
+          generationCount: cv.generationCount || 0
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching CV:', error.message);
+      // Continue without CV if it fails to load
+    }
 
     res.json({
       success: true,
@@ -406,7 +383,9 @@ router.get('/dashboard/data', requireAuth, async (req, res, next) => {
           createdAt: thread.createdAt
         })),
         notifications,
-        unreadNotificationsCount: unreadCount
+        unreadNotificationsCount: unreadCount,
+        creditProfile: creditProfile,
+        cvData: cvData
       }
     });
 

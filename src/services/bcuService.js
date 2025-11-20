@@ -2,7 +2,7 @@ import https from 'https';
 import * as cheerio from 'cheerio';
 import BcuRates from '../models/BcuRates.js';
 import PricingSettings from '../models/PricingSettings.js';
-import logger from '../../logger.js';
+import logger from '../utils/logger.js';
 
 const BCU_URL = 'https://www.bcu.gub.uy/Estadisticas-e-Indicadores/Paginas/Cotizaciones.aspx';
 

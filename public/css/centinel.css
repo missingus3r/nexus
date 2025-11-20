@@ -52,8 +52,8 @@
 /* Filters Button - Desktop */
 .filters-btn {
     position: fixed;
-    bottom: 20px;
-    left: 210px;
+    bottom: 85px;
+    left: 20px;
     z-index: 10;
     background: linear-gradient(135deg, #7b1fa2 0%, #6a1b9a 100%);
     color: white;
@@ -301,7 +301,8 @@
     }
 
     .filters-btn {
-        left: 90px;
+        left: 20px;
+        bottom: 90px;
     }
 
     .incident-card {
@@ -419,6 +420,8 @@
 }
 
 .bus-master-toggle input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
     cursor: pointer;
 }
 

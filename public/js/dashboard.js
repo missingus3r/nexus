@@ -1,6 +1,7 @@
 let dashboardData = null;
 let currentTime = null;
 let timeUpdateInterval = null;
+let bitcoinUpdateInterval = null;
 
 // Load dashboard data on page load
 document.addEventListener('DOMContentLoaded', async () => {
@@ -25,6 +26,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Update currency values in the insight card
     updateCurrencyCard();
+
+    // Start Bitcoin auto-update (every 15 seconds)
+    startBitcoinAutoUpdate();
+});
+
+// Clean up intervals when page unloads
+window.addEventListener('beforeunload', () => {
+    stopBitcoinAutoUpdate();
+    if (timeUpdateInterval) {
+        clearInterval(timeUpdateInterval);
+    }
 });
 
 async function loadDashboardData() {
@@ -79,6 +91,12 @@ function renderDashboard(data) {
         renderBcuRates(data.bcuRates);
     }
 
+    // Render Credit Profile widget
+    renderCreditProfile(data.creditProfile);
+
+    // Render CV widget
+    renderCV(data.cvData);
+
     // Render Centinel alerts
     renderCentinelAlerts(data.incidents);
 
@@ -87,6 +105,49 @@ function renderDashboard(data) {
 
     // Render forum threads
     renderForumThreads(data.forumThreads);
+}
+
+/**
+ * Start Bitcoin auto-update interval
+ * Fetches and updates Bitcoin price every 15 seconds
+ */
+function startBitcoinAutoUpdate() {
+    // Clear any existing interval
+    if (bitcoinUpdateInterval) {
+        clearInterval(bitcoinUpdateInterval);
+    }
+
+    // Get update interval from environment (default 15 seconds)
+    const updateInterval = 15000; // 15 seconds
+
+    // Set up interval to update Bitcoin price
+    bitcoinUpdateInterval = setInterval(async () => {
+        try {
+            const response = await fetch('/dashboard/data', {
+                credentials: 'include'
+            });
+            const result = await response.json();
+
+            if (result.success && result.data.bitcoinData) {
+                renderBitcoin(result.data.bitcoinData);
+            }
+        } catch (error) {
+            console.error('Error updating Bitcoin price:', error);
+        }
+    }, updateInterval);
+
+    console.log(`Bitcoin auto-update started: every ${updateInterval/1000} seconds`);
+}
+
+/**
+ * Stop Bitcoin auto-update interval
+ */
+function stopBitcoinAutoUpdate() {
+    if (bitcoinUpdateInterval) {
+        clearInterval(bitcoinUpdateInterval);
+        bitcoinUpdateInterval = null;
+        console.log('Bitcoin auto-update stopped');
+    }
 }
 
 function renderCentinelAlerts(incidents) {
@@ -182,20 +243,29 @@ function renderBitcoin(bitcoin) {
         const sign = isPositive ? '+' : '-';
         const className = isPositive ? 'positive' : 'negative';
 
-        changeElement.innerHTML = `Cambio 24h: <span class="${className}">${sign}${formattedChange}%</span>`;
+        changeElement.innerHTML = `Cambio 15s: <span class="${className}">${sign}${formattedChange}%</span>`;
     }
 }
 
 function renderBcuRates(bcuRates) {
-    // Update exchange rates object with BCU data
+    // Update exchange rates object with BROU/DGI data
     if (bcuRates.USD && bcuRates.USD.billete) {
         exchangeRates.USD = bcuRates.USD.billete;
+    }
+    if (bcuRates.EUR && bcuRates.EUR.value) {
+        exchangeRates.EUR = bcuRates.EUR.value;
     }
     if (bcuRates.ARS && bcuRates.ARS.value) {
         exchangeRates.ARS = bcuRates.ARS.value;
     }
     if (bcuRates.BRL && bcuRates.BRL.value) {
         exchangeRates.BRL = bcuRates.BRL.value;
+    }
+    if (bcuRates.GBP && bcuRates.GBP.value) {
+        exchangeRates.GBP = bcuRates.GBP.value;
+    }
+    if (bcuRates.CHF && bcuRates.CHF.value) {
+        exchangeRates.CHF = bcuRates.CHF.value;
     }
     if (bcuRates.UI && bcuRates.UI.value) {
         exchangeRates.UI = bcuRates.UI.value;
@@ -209,22 +279,25 @@ function renderBcuRates(bcuRates) {
 
     // Update last update time in currency card
     const bcuUpdateTimeEl = document.getElementById('bcuUpdateTime');
-    if (bcuRates.lastUpdate && bcuUpdateTimeEl) {
-        const updateTime = new Date(bcuRates.lastUpdate);
-        const timeStr = updateTime.toLocaleString('es-UY', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        bcuUpdateTimeEl.textContent = `Última actualización: ${timeStr}`;
+    if (bcuUpdateTimeEl) {
+        if (bcuRates.lastUpdate) {
+            const updateTime = new Date(bcuRates.lastUpdate);
+            const timeStr = updateTime.toLocaleString('es-UY', {
+                day: '2-digit',
+                month: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            bcuUpdateTimeEl.textContent = `Última actualización: ${timeStr}`;
+        } else {
+            bcuUpdateTimeEl.textContent = 'Última actualización: No disponible';
+        }
     }
 
     // Show error message if sync failed
     const bcuErrorEl = document.getElementById('bcuError');
     if (bcuRates.hasError && bcuErrorEl) {
-        bcuErrorEl.textContent = '⚠️ No se pudo obtener los nuevos valores desde el BCU';
+        bcuErrorEl.textContent = '⚠️ No se pudo obtener los nuevos valores desde BROU/DGI';
         bcuErrorEl.style.display = 'block';
     } else if (bcuErrorEl) {
         bcuErrorEl.style.display = 'none';
@@ -372,6 +445,153 @@ function getTimeAgo(date) {
     return 'Hace un momento';
 }
 
+// ===== CREDIT PROFILE WIDGET =====
+
+function renderCreditProfile(creditProfile) {
+    const content = document.getElementById('creditProfileContent');
+
+    if (!creditProfile) {
+        // No credit profile - show button to create
+        content.innerHTML = `
+            <p class="insight-meta" style="margin-bottom: auto; text-align: center;">Genera tu perfil crediticio para conocer tu situación financiera</p>
+            <button class="insight-btn" onclick="window.location.href='/surlink?tab=financial&subtab=perfil-crediticio'" style="margin-top: auto;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.25rem;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                Solicitar Perfil
+            </button>
+        `;
+        return;
+    }
+
+    if (creditProfile.status === 'pendiente' || creditProfile.status === 'procesando') {
+        // Pending request
+        const statusText = creditProfile.status === 'pendiente' ? 'Pendiente' : 'Procesando';
+        const date = new Date(creditProfile.requestedAt).toLocaleDateString('es-UY');
+        content.innerHTML = `
+            <p class="insight-value" style="color: var(--warning-color);">⏳ ${statusText}</p>
+            <p class="insight-meta" style="margin-top: 0.5rem;">Solicitado el ${date}</p>
+            <p class="insight-meta" style="margin-top: 0.5rem; margin-bottom: auto; font-size: 0.75rem;">Tu perfil está siendo generado</p>
+            <button class="insight-btn" onclick="window.location.href='/surlink?tab=financial&subtab=perfil-crediticio'" style="margin-top: auto;">
+                Ver Estado
+            </button>
+        `;
+    } else if (creditProfile.status === 'generada' && creditProfile.hasData) {
+        // Profile generated successfully
+        const score = creditProfile.creditScore || 0;
+        const rating = creditProfile.bcuRating || 'N/A';
+        const debt = creditProfile.totalDebt || 0;
+
+        let scoreColor = 'var(--success-color)';
+        if (score < 400) scoreColor = 'var(--danger-color)';
+        else if (score < 600) scoreColor = 'var(--warning-color)';
+        else if (score < 800) scoreColor = 'var(--primary-color)';
+
+        content.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <div style="position: relative; width: 60px; height: 60px;">
+                    <svg viewBox="0 0 36 36" style="transform: rotate(-90deg);">
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                              fill="none" stroke="#e0e0e0" stroke-width="3"/>
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                              fill="none" stroke="${scoreColor}" stroke-width="3"
+                              stroke-dasharray="${score/10}, 100"/>
+                    </svg>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.9rem; font-weight: bold; color: ${scoreColor};">
+                        ${score}
+                    </div>
+                </div>
+                <div>
+                    <p class="insight-value" style="font-size: 1.2rem; margin: 0;">Puntaje: ${score}/1000</p>
+                    <p class="insight-meta" style="margin: 0;">Calificación BCU: ${rating}</p>
+                </div>
+            </div>
+            <p class="insight-meta" style="margin-bottom: auto;">Deuda total: $${debt.toLocaleString('es-UY')} UYU</p>
+            <button class="insight-btn" onclick="window.location.href='/surlink?tab=financial&subtab=perfil-crediticio'" style="margin-top: auto;">
+                Ver Detalle Completo
+            </button>
+        `;
+    } else if (creditProfile.status === 'error') {
+        // Error generating profile
+        content.innerHTML = `
+            <p class="insight-value" style="color: var(--danger-color);">❌ Error</p>
+            <p class="insight-meta" style="margin-top: 0.5rem; margin-bottom: auto;">Hubo un problema al generar tu perfil</p>
+            <button class="insight-btn" onclick="window.location.href='/surlink?tab=financial&subtab=perfil-crediticio'" style="margin-top: auto;">
+                Intentar de Nuevo
+            </button>
+        `;
+    }
+}
+
+// ===== CV WIDGET =====
+
+function renderCV(cvData) {
+    const content = document.getElementById('cvContent');
+
+    if (!cvData || !cvData.exists || !cvData.hasSummary) {
+        // No CV - show button to create
+        content.innerHTML = `
+            <p class="insight-meta" style="margin-bottom: auto; text-align: center;">Crea tu CV profesional con ayuda de IA</p>
+            <button class="insight-btn" onclick="window.location.href='/surlink?tab=trabajos&subtab=mi-cv'" style="margin-top: auto;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.25rem;">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+                Generar Mi CV
+            </button>
+        `;
+        return;
+    }
+
+    // CV exists - show summary
+
+    const experience = cvData.experienceCount || 0;
+    const education = cvData.educationCount || 0;
+    const skills = cvData.skillsCount || 0;
+    const languages = cvData.languagesCount || 0;
+    const generationsLeft = 5 - (cvData.generationCount || 0);
+
+    let lastGenText = 'Nunca';
+    if (cvData.lastGenerated) {
+        const date = new Date(cvData.lastGenerated);
+        lastGenText = date.toLocaleDateString('es-UY');
+    }
+
+    content.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem;">
+            <div>
+                <p class="insight-meta" style="margin: 0; font-size: 0.75rem;">Experiencia</p>
+                <p class="insight-value" style="font-size: 1.2rem; margin: 0;">${experience}</p>
+            </div>
+            <div>
+                <p class="insight-meta" style="margin: 0; font-size: 0.75rem;">Educación</p>
+                <p class="insight-value" style="font-size: 1.2rem; margin: 0;">${education}</p>
+            </div>
+            <div>
+                <p class="insight-meta" style="margin: 0; font-size: 0.75rem;">Habilidades</p>
+                <p class="insight-value" style="font-size: 1.2rem; margin: 0;">${skills}</p>
+            </div>
+            <div>
+                <p class="insight-meta" style="margin: 0; font-size: 0.75rem;">Idiomas</p>
+                <p class="insight-value" style="font-size: 1.2rem; margin: 0;">${languages}</p>
+            </div>
+        </div>
+        <p class="insight-meta" style="font-size: 0.75rem; margin-bottom: 0.5rem;">Última actualización: ${lastGenText}</p>
+        <p class="insight-meta" style="font-size: 0.75rem; margin-bottom: auto;">Generaciones restantes hoy: ${generationsLeft}/5</p>
+        <button class="insight-btn" onclick="window.location.href='/surlink?tab=trabajos&subtab=mi-cv'" style="margin-top: auto;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.25rem;">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            Editar Mi CV
+        </button>
+    `;
+}
+
 // Close modal when clicking outside
 window.onclick = function(event) {
     const notifModal = document.getElementById('notificationsModal');
@@ -395,6 +615,8 @@ const exchangeRates = {
     EUR: 46.10,
     ARS: 0.045,  // Peso Argentino
     BRL: 8.25,   // Real Brasileño
+    GBP: 52.79,  // Libra Esterlina
+    CHF: 49.86,  // Franco Suizo
     UI: 5.8247,  // Unidad Indexada
     UR: 4765.32  // Unidad Reajustable
 };
@@ -473,6 +695,8 @@ function updateCurrencyCard(bcuRates = null) {
     const eurValue = document.getElementById('eurValue');
     const arsValue = document.getElementById('arsValue');
     const brlValue = document.getElementById('brlValue');
+    const gbpValue = document.getElementById('gbpValue');
+    const chfValue = document.getElementById('chfValue');
     const uiValue = document.getElementById('uiValue');
     const urValue = document.getElementById('urValue');
 
@@ -494,8 +718,8 @@ function updateCurrencyCard(bcuRates = null) {
     }
 
     if (eurValue) {
-        // EUR not provided by BCU, keep static
-        eurValue.textContent = formatNumber(exchangeRates.EUR, 2) + ' UYU';
+        const change = bcuRates?.EUR?.change || null;
+        eurValue.innerHTML = formatWithChange(exchangeRates.EUR, change);
     }
 
     if (arsValue) {
@@ -506,6 +730,16 @@ function updateCurrencyCard(bcuRates = null) {
     if (brlValue) {
         const change = bcuRates?.BRL?.change || null;
         brlValue.innerHTML = formatWithChange(exchangeRates.BRL, change);
+    }
+
+    if (gbpValue) {
+        const change = bcuRates?.GBP?.change || null;
+        gbpValue.innerHTML = formatWithChange(exchangeRates.GBP, change);
+    }
+
+    if (chfValue) {
+        const change = bcuRates?.CHF?.change || null;
+        chfValue.innerHTML = formatWithChange(exchangeRates.CHF, change);
     }
 
     if (uiValue) {

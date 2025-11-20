@@ -1218,6 +1218,29 @@
     const container = elements.results.financial;
     if (!container) return;
 
+    // Special handling for perfil-crediticio tab
+    const creditProfileContainer = document.getElementById('creditProfileContainer');
+    if (subcategory === 'perfil-crediticio') {
+      // Hide regular results, show credit profile container
+      container.style.display = 'none';
+      if (creditProfileContainer) {
+        creditProfileContainer.style.display = 'block';
+      }
+      hideFeedback('financial');
+
+      // Load credit profile data if the module is available
+      if (window.CreditProfile && window.CreditProfile.reload) {
+        window.CreditProfile.reload();
+      }
+      return;
+    }
+
+    // For regular tabs, show results and hide credit profile
+    container.style.display = 'grid';
+    if (creditProfileContainer) {
+      creditProfileContainer.style.display = 'none';
+    }
+
     container.innerHTML = '<div class="surlink-loading">Cargando sitios...</div>';
     hideFeedback('financial');
 
@@ -2550,6 +2573,27 @@
       }
     } catch (e) {
       console.error('Error reading preferences:', e);
+    }
+
+    // Check URL parameters for navigation (overrides saved preferences)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlTab = urlParams.get('tab');
+    const urlSubtab = urlParams.get('subtab');
+
+    if (urlTab) {
+      console.log('[Surlink] URL navigation detected:', { tab: urlTab, subtab: urlSubtab });
+      savedCategory = urlTab;
+
+      // Set subtab based on category
+      if (urlTab === 'construccion' && urlSubtab) {
+        savedConstruccionTab = urlSubtab;
+      } else if (urlTab === 'academy' && urlSubtab) {
+        savedAcademyTab = urlSubtab;
+      } else if (urlTab === 'financial' && urlSubtab) {
+        savedFinancialTab = urlSubtab;
+      } else if (urlTab === 'trabajos' && urlSubtab) {
+        savedTrabajosTab = urlSubtab;
+      }
     }
 
     // Set active quick link
