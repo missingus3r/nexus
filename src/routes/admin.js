@@ -284,7 +284,9 @@ router.patch('/users/:id/status', requireAdmin, async (req, res) => {
       return res.status(400).json({ error: 'ID de usuario inválido' });
     }
 
-    if (req.user?._id && req.user._id.toString() === userId && banned) {
+    // Validate user._id exists before using it
+    const adminId = req.user?._id ? req.user._id.toString() : null;
+    if (adminId && adminId === userId && banned) {
       return res.status(400).json({ error: 'No podés bloquear tu propia cuenta de administrador' });
     }
 
@@ -374,11 +376,16 @@ router.post('/posts', requireAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Title and content are required' });
     }
 
+    // Validate user.uid exists before using it
+    if (!req.user || !req.user.uid) {
+      return res.status(401).json({ error: 'User authentication error - UID missing' });
+    }
+
     const post = new AdminPost({
       title,
       content,
       priority: priority || 'normal',
-      authorUid: req.user.uid || 'admin'
+      authorUid: req.user.uid
     });
 
     await post.save();
@@ -1263,7 +1270,8 @@ router.delete('/visits/purge', requireAdmin, async (req, res) => {
   try {
     const { scope } = req.body || {};
 
-    if (scope !== 'all' && scope !== 50) {
+    // Validate scope (string or number)
+    if (scope !== 'all' && scope !== 50 && scope !== '50') {
       return res.status(400).json({ error: 'Parámetro scope inválido. Usa "all" o 50.' });
     }
 
@@ -1272,7 +1280,7 @@ router.delete('/visits/purge', requireAdmin, async (req, res) => {
     if (scope === 'all') {
       const result = await PageVisit.deleteMany({});
       deletedCount = result.deletedCount || 0;
-    } else {
+    } else if (scope === 50 || scope === '50') {
       const visits = await PageVisit.find({}).sort({ timestamp: -1 }).limit(50).select('_id');
       if (visits.length > 0) {
         const ids = visits.map(v => v._id);
