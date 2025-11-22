@@ -25,6 +25,29 @@ const sanitizeConfig = {
   allowedSchemes: ['http', 'https', 'mailto'],
   allowedSchemesByTag: {
     a: ['http', 'https', 'mailto']
+  },
+  // Enforce URL validation to prevent javascript: URLs
+  allowedIframeHostnames: [],
+  // Disallow <a> tags with href that doesn't match allowed schemes
+  transformTags: {
+    'a': (tagName, attribs) => {
+      const href = attribs.href || '';
+      // Block javascript:, data:, vbscript:, and other dangerous protocols
+      if (href && !/^(https?:\/\/|mailto:)/i.test(href)) {
+        return {
+          tagName: 'span',
+          attribs: {}
+        };
+      }
+      return {
+        tagName: 'a',
+        attribs: {
+          href: attribs.href,
+          target: '_blank',
+          rel: 'noopener noreferrer'
+        }
+      };
+    }
   }
 };
 
@@ -760,8 +783,8 @@ router.delete('/threads/:id', authenticate, async (req, res) => {
 
     // Admin always does hard delete (permanent)
     if (isAdmin) {
-      // Delete all comments of this thread
-      await ForumComment.deleteMany({ thread: req.params.id });
+      // Delete all comments of this thread (using correct field name)
+      await ForumComment.deleteMany({ threadId: req.params.id });
 
       // Delete the thread
       await ForumThread.deleteOne({ _id: req.params.id });
