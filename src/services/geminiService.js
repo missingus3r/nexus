@@ -271,22 +271,26 @@ Responde SOLO con el JSON, sin texto adicional.`;
     } catch (parseError) {
       logger.error('Failed to parse Gemini validation response', {
         text,
-        error: parseError.message
+        error: parseError.message,
+        type: incidentData.type
       });
-      // On parse error, allow the incident (fail open)
+      // On parse error, fail-closed (reject for manual review)
       return {
-        isValid: true,
-        reason: 'Error en validación automática'
+        isValid: false,
+        reason: 'El reporte requiere revisión manual. Contacta soporte si crees que es un error.'
       };
     }
 
     // Validate response structure
     if (typeof validationResult.isValid !== 'boolean' || !validationResult.reason) {
-      logger.error('Invalid Gemini validation response structure', { validationResult });
-      // On invalid structure, allow the incident (fail open)
+      logger.error('Invalid Gemini validation response structure', {
+        validationResult,
+        type: incidentData.type
+      });
+      // On invalid structure, fail-closed (reject for manual review)
       return {
-        isValid: true,
-        reason: 'Error en validación automática'
+        isValid: false,
+        reason: 'El reporte requiere revisión manual. Contacta soporte si crees que es un error.'
       };
     }
 
@@ -301,12 +305,37 @@ Responde SOLO con el JSON, sin texto adicional.`;
   } catch (error) {
     logger.error('Gemini validation error:', {
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
+      type: incidentData.type
     });
-    // On error, allow the incident (fail open to avoid blocking legitimate reports)
+
+    // Fail-closed strategy with degradation:
+    // - Network/timeout errors: fail-open (temporary service issues)
+    // - Other errors: fail-closed (require manual review)
+    const isNetworkError = error.message?.includes('timeout') ||
+                          error.message?.includes('ECONNREFUSED') ||
+                          error.message?.includes('ETIMEDOUT') ||
+                          error.message?.includes('network');
+
+    if (isNetworkError) {
+      logger.warn('Network error in Gemini validation, allowing incident (fail-open for availability)', {
+        type: incidentData.type,
+        error: error.message
+      });
+      return {
+        isValid: true,
+        reason: 'Validación automática no disponible temporalmente'
+      };
+    }
+
+    // For non-network errors, fail closed (reject and require manual review)
+    logger.warn('Gemini validation failed, rejecting incident for manual review (fail-closed)', {
+      type: incidentData.type,
+      error: error.message
+    });
     return {
-      isValid: true,
-      reason: 'Error en validación automática'
+      isValid: false,
+      reason: 'El reporte requiere revisión manual. Contacta soporte si crees que es un error.'
     };
   }
 }

@@ -389,26 +389,32 @@ router.get('/threads/:id', optionalAuth, async (req, res) => {
       .sort({ createdAt: 1 })
       .lean();
 
-    // Build comment tree
-    const commentMap = {};
+    // Build comment tree efficiently using Map for O(1) lookups
+    const commentMap = new Map();
     const rootComments = [];
 
-    comments.forEach(comment => {
+    // First pass: create map with all comments
+    for (const comment of comments) {
       comment.replies = [];
-      commentMap[comment._id] = comment;
-    });
+      commentMap.set(comment._id.toString(), comment);
+    }
 
-    comments.forEach(comment => {
+    // Second pass: build tree structure
+    for (const comment of comments) {
       if (comment.parentCommentId) {
-        const parent = commentMap[comment.parentCommentId];
+        const parentId = comment.parentCommentId.toString();
+        const parent = commentMap.get(parentId);
         if (parent) {
           parent.replies.push(comment);
           parent.repliesCount = (parent.repliesCount || 0) + 1;
+        } else {
+          // Parent not found (deleted or missing), treat as root comment
+          rootComments.push(comment);
         }
       } else {
         rootComments.push(comment);
       }
-    });
+    }
 
     // Add liked status and permissions if user is authenticated
     if (req.user) {
