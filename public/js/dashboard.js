@@ -610,6 +610,7 @@ function renderCV(cvData) {
         </div>
         <p class="insight-meta" style="font-size: 0.75rem; margin-bottom: 0.5rem;">Última actualización: ${lastGenText}</p>
         <p class="insight-meta" style="font-size: 0.75rem; margin-bottom: auto;">Plan ${planText}: ${limitText}</p>
+        <br>
         <button class="insight-btn" onclick="window.location.href='/surlink?tab=trabajos&subtab=mi-cv'" style="margin-top: auto;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.25rem;">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>

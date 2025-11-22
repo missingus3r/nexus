@@ -103,14 +103,6 @@ header {
     gap: 20px;
 }
 
-.platform-nav nav {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    flex-wrap: wrap;
-    font-size: 0.95rem;
-}
-
 .platform-nav nav a {
     color: var(--text-muted);
     text-decoration: none;

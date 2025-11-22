@@ -2,14 +2,39 @@
     (function () {
         var theme = 'light';
         try {
-            var stored = localStorage.getItem('vortex-theme');
-            if (stored === 'dark' || stored === 'light') {
-                theme = stored;
-            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                theme = 'dark';
+            // Try to read from PreferencesService storage (vortex_guest_preferences)
+            var guestPrefs = localStorage.getItem('vortex_guest_preferences');
+            if (guestPrefs) {
+                var prefs = JSON.parse(guestPrefs);
+                var storedTheme = prefs?.ui?.theme;
+                if (storedTheme === 'dark' || storedTheme === 'light') {
+                    theme = storedTheme;
+                } else if (storedTheme !== 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    theme = 'dark';
+                }
+            } else {
+                // Fallback: check old vortex-theme key for backwards compatibility
+                var oldTheme = localStorage.getItem('vortex-theme');
+                if (oldTheme === 'dark' || oldTheme === 'light') {
+                    theme = oldTheme;
+                    // Migrate to new format
+                    var newPrefs = {
+                        favorites: { construccion: [], academy: [], financial: [], listings: [] },
+                        navigation: {},
+                        welcomeModals: {},
+                        ui: { theme: oldTheme }
+                    };
+                    localStorage.setItem('vortex_guest_preferences', JSON.stringify(newPrefs));
+                    localStorage.removeItem('vortex-theme');
+                } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    theme = 'dark';
+                }
             }
         } catch (error) {
             // localStorage might be unavailable (e.g. Safari private mode)
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                theme = 'dark';
+            }
         }
 
         var root = document.documentElement;
