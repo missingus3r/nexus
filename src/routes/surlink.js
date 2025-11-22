@@ -1557,6 +1557,68 @@ router.patch('/cv', requireLogin, async (req, res) => {
 });
 
 /**
+ * PUT /surlink/cv/update
+ * Update CV manually (from editor modal)
+ */
+router.put('/cv/update', requireLogin, async (req, res) => {
+  try {
+    const userId = req.session.user.uid;
+    const { professionalSummary, skills, experience, education, languages, additional } = req.body;
+
+    // Validate required fields
+    if (!professionalSummary || !skills || !Array.isArray(skills)) {
+      return res.status(400).json({ error: 'Resumen profesional y habilidades son requeridos' });
+    }
+
+    // Find existing CV
+    let cv = await CVDocument.findOne({ userId });
+
+    if (!cv) {
+      cv = new CVDocument({
+        userId,
+        personalInfo: {
+          fullName: req.session.user.name || '',
+          email: req.session.user.email || ''
+        }
+      });
+    }
+
+    // Update fields
+    cv.professionalSummary = professionalSummary.trim();
+    cv.skills = skills;
+    cv.experience = experience || [];
+    cv.education = education || [];
+    cv.languages = languages || [];
+    cv.additional = additional || '';
+    cv.lastEditedManually = new Date();
+
+    // Save version
+    cv.versions.push({
+      content: JSON.stringify({
+        professionalSummary: cv.professionalSummary,
+        skills: cv.skills,
+        experience: cv.experience,
+        education: cv.education,
+        languages: cv.languages,
+        additional: cv.additional
+      }),
+      createdAt: new Date(),
+      source: 'manual'
+    });
+
+    await cv.save();
+
+    res.json({
+      cv,
+      message: 'CV actualizado exitosamente'
+    });
+  } catch (error) {
+    logger.error('Error updating CV manually', { error });
+    res.status(500).json({ error: error.message || 'Error al actualizar CV' });
+  }
+});
+
+/**
  * GET /surlink/cv/export/pdf
  * Export CV as PDF
  */

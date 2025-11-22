@@ -297,19 +297,65 @@
                                     <p>Generando tu CV con inteligencia artificial...</p>
                                 </div>
 
-                                <!-- CV Editor (hidden by default) -->
-                                <div id="cvEditor" class="cv-editor" hidden>
-                                    <h3>Editar CV</h3>
-                                    <form id="cvEditorForm">
-                                        <div class="cv-editor-section">
-                                            <label>Resumen Profesional</label>
-                                            <textarea id="editSummary" rows="3"></textarea>
+                                <!-- CV Editor Modal -->
+                                <div id="cvEditModal" class="modal" style="display: none;">
+                                    <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+                                        <div class="modal-header">
+                                            <h2>✏️ Editar CV Manualmente</h2>
+                                            <button id="closeCVEditModal" class="modal-close">&times;</button>
                                         </div>
-                                        <div class="cv-editor-actions">
-                                            <button type="submit" class="btn btn-primary">Guardar cambios</button>
-                                            <button type="button" class="btn btn-secondary" id="cancelEditBtn">Cancelar</button>
-                                        </div>
-                                    </form>
+                                        <form id="cvEditorForm" style="padding: 1.5rem;">
+                                            <!-- Professional Summary -->
+                                            <div class="cv-editor-section">
+                                                <label for="editSummary">Resumen Profesional</label>
+                                                <textarea id="editSummary" rows="4" placeholder="Breve resumen de tu perfil profesional..." required></textarea>
+                                            </div>
+
+                                            <!-- Experience -->
+                                            <div class="cv-editor-section">
+                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                                    <label style="margin: 0;">Experiencia Laboral</label>
+                                                    <button type="button" id="addExperienceBtn" class="btn btn-secondary btn-sm">+ Agregar Experiencia</button>
+                                                </div>
+                                                <div id="experienceList"></div>
+                                            </div>
+
+                                            <!-- Skills -->
+                                            <div class="cv-editor-section">
+                                                <label for="editSkills">Habilidades (separadas por comas)</label>
+                                                <textarea id="editSkills" rows="3" placeholder="JavaScript, React, Node.js, Python..." required></textarea>
+                                            </div>
+
+                                            <!-- Education -->
+                                            <div class="cv-editor-section">
+                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                                    <label style="margin: 0;">Formación Académica</label>
+                                                    <button type="button" id="addEducationBtn" class="btn btn-secondary btn-sm">+ Agregar Formación</button>
+                                                </div>
+                                                <div id="educationList"></div>
+                                            </div>
+
+                                            <!-- Languages -->
+                                            <div class="cv-editor-section">
+                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                                    <label style="margin: 0;">Idiomas</label>
+                                                    <button type="button" id="addLanguageBtn" class="btn btn-secondary btn-sm">+ Agregar Idioma</button>
+                                                </div>
+                                                <div id="languagesList"></div>
+                                            </div>
+
+                                            <!-- Additional Info -->
+                                            <div class="cv-editor-section">
+                                                <label for="editAdditional">Información Adicional (opcional)</label>
+                                                <textarea id="editAdditional" rows="3" placeholder="Certificaciones, cursos, intereses profesionales..."></textarea>
+                                            </div>
+
+                                            <div class="cv-editor-actions" style="display: flex; gap: 1rem; margin-top: 2rem;">
+                                                <button type="submit" class="btn btn-primary" style="flex: 1;">💾 Guardar Cambios</button>
+                                                <button type="button" class="btn btn-secondary" id="cancelEditBtn" style="flex: 1;">Cancelar</button>
+                                            </div>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>

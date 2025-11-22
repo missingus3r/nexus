@@ -781,3 +781,47 @@
             background: #ffebee;
             color: #c62828;
         }
+
+        /* Responsive table styles */
+        @media (max-width: 768px) {
+            .surlink-controls table {
+                font-size: 0.875rem;
+            }
+
+            .surlink-controls th,
+            .surlink-controls td {
+                padding: 0.75rem !important;
+            }
+
+            .surlink-controls .btn {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.8rem;
+            }
+
+            /* Make buttons stack vertically in table cells */
+            .surlink-controls td button {
+                display: block;
+                width: 100%;
+                margin-bottom: 0.25rem;
+            }
+
+            .surlink-controls td button:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .surlink-controls table {
+                font-size: 0.8rem;
+            }
+
+            .surlink-controls th,
+            .surlink-controls td {
+                padding: 0.5rem !important;
+            }
+
+            .surlink-controls .btn {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.75rem;
+            }
+        }

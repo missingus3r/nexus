@@ -2495,6 +2495,237 @@
     }
   };
 
+  // CV Editor Functions
+  let editingCV = null;
+  let experienceCounter = 0;
+  let educationCounter = 0;
+  let languageCounter = 0;
+
+  const openCVEditor = () => {
+    if (!state.cv) {
+      toastError('No hay CV para editar');
+      return;
+    }
+
+    editingCV = JSON.parse(JSON.stringify(state.cv)); // Deep clone
+    const modal = document.getElementById('cvEditModal');
+
+    // Populate form fields
+    document.getElementById('editSummary').value = editingCV.professionalSummary || '';
+    document.getElementById('editSkills').value = (editingCV.skills || []).join(', ');
+    document.getElementById('editAdditional').value = editingCV.additional || '';
+
+    // Clear and populate dynamic fields
+    experienceCounter = 0;
+    educationCounter = 0;
+    languageCounter = 0;
+
+    document.getElementById('experienceList').innerHTML = '';
+    document.getElementById('educationList').innerHTML = '';
+    document.getElementById('languagesList').innerHTML = '';
+
+    // Add existing experience
+    if (editingCV.experience && editingCV.experience.length > 0) {
+      editingCV.experience.forEach(exp => addExperienceField(exp));
+    }
+
+    // Add existing education
+    if (editingCV.education && editingCV.education.length > 0) {
+      editingCV.education.forEach(edu => addEducationField(edu));
+    }
+
+    // Add existing languages
+    if (editingCV.languages && editingCV.languages.length > 0) {
+      editingCV.languages.forEach(lang => addLanguageField(lang));
+    }
+
+    // Show modal
+    modal.style.display = 'flex';
+    setTimeout(() => modal.classList.add('active'), 10);
+  };
+
+  const closeCVEditor = () => {
+    const modal = document.getElementById('cvEditModal');
+    modal.classList.remove('active');
+    setTimeout(() => {
+      modal.style.display = 'none';
+      editingCV = null;
+    }, 300);
+  };
+
+  const addExperienceField = (data = null) => {
+    const id = experienceCounter++;
+    const container = document.getElementById('experienceList');
+    const div = document.createElement('div');
+    div.className = 'cv-edit-item';
+    div.dataset.id = id;
+    div.innerHTML = `
+      <div class="cv-edit-item-header">
+        <h4>Experiencia ${id + 1}</h4>
+        <button type="button" class="btn-remove" onclick="window.Surlink.removeExperience(${id})">✕</button>
+      </div>
+      <div class="cv-edit-item-fields">
+        <div class="form-group">
+          <label>Cargo</label>
+          <input type="text" name="exp_title_${id}" value="${data?.title || ''}" placeholder="Ej: Desarrollador Full Stack" required>
+        </div>
+        <div class="form-group">
+          <label>Empresa</label>
+          <input type="text" name="exp_company_${id}" value="${data?.company || ''}" placeholder="Ej: Tech Company Inc." required>
+        </div>
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea name="exp_description_${id}" rows="2" placeholder="Responsabilidades y logros..." required>${data?.description || ''}</textarea>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  };
+
+  const removeExperience = (id) => {
+    const item = document.querySelector(`#experienceList [data-id="${id}"]`);
+    if (item) item.remove();
+  };
+
+  const addEducationField = (data = null) => {
+    const id = educationCounter++;
+    const container = document.getElementById('educationList');
+    const div = document.createElement('div');
+    div.className = 'cv-edit-item';
+    div.dataset.id = id;
+    div.innerHTML = `
+      <div class="cv-edit-item-header">
+        <h4>Formación ${id + 1}</h4>
+        <button type="button" class="btn-remove" onclick="window.Surlink.removeEducation(${id})">✕</button>
+      </div>
+      <div class="cv-edit-item-fields">
+        <div class="form-group">
+          <label>Título</label>
+          <input type="text" name="edu_degree_${id}" value="${data?.degree || ''}" placeholder="Ej: Ingeniería en Sistemas" required>
+        </div>
+        <div class="form-group">
+          <label>Institución</label>
+          <input type="text" name="edu_institution_${id}" value="${data?.institution || ''}" placeholder="Ej: Universidad ORT" required>
+        </div>
+        <div class="form-group">
+          <label>Descripción (opcional)</label>
+          <textarea name="edu_description_${id}" rows="2" placeholder="Especialización, logros...">${data?.description || ''}</textarea>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  };
+
+  const removeEducation = (id) => {
+    const item = document.querySelector(`#educationList [data-id="${id}"]`);
+    if (item) item.remove();
+  };
+
+  const addLanguageField = (data = null) => {
+    const id = languageCounter++;
+    const container = document.getElementById('languagesList');
+    const div = document.createElement('div');
+    div.className = 'cv-edit-item';
+    div.dataset.id = id;
+    div.innerHTML = `
+      <div class="cv-edit-item-header">
+        <h4>Idioma ${id + 1}</h4>
+        <button type="button" class="btn-remove" onclick="window.Surlink.removeLanguage(${id})">✕</button>
+      </div>
+      <div class="cv-edit-item-fields" style="grid-template-columns: 1fr 1fr;">
+        <div class="form-group">
+          <label>Idioma</label>
+          <input type="text" name="lang_name_${id}" value="${data?.name || ''}" placeholder="Ej: Inglés" required>
+        </div>
+        <div class="form-group">
+          <label>Nivel</label>
+          <select name="lang_level_${id}" required>
+            <option value="">Seleccionar nivel</option>
+            <option value="basic" ${data?.level === 'basic' ? 'selected' : ''}>Básico</option>
+            <option value="intermediate" ${data?.level === 'intermediate' ? 'selected' : ''}>Intermedio</option>
+            <option value="advanced" ${data?.level === 'advanced' ? 'selected' : ''}>Avanzado</option>
+            <option value="native" ${data?.level === 'native' ? 'selected' : ''}>Nativo</option>
+          </select>
+        </div>
+      </div>
+    `;
+    container.appendChild(div);
+  };
+
+  const removeLanguage = (id) => {
+    const item = document.querySelector(`#languagesList [data-id="${id}"]`);
+    if (item) item.remove();
+  };
+
+  const handleCVEdit = async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+
+    // Build CV object from form
+    const cvData = {
+      professionalSummary: document.getElementById('editSummary').value.trim(),
+      skills: document.getElementById('editSkills').value.split(',').map(s => s.trim()).filter(s => s),
+      additional: document.getElementById('editAdditional').value.trim(),
+      experience: [],
+      education: [],
+      languages: []
+    };
+
+    // Collect experience
+    const expContainer = document.getElementById('experienceList');
+    expContainer.querySelectorAll('.cv-edit-item').forEach(item => {
+      const id = item.dataset.id;
+      cvData.experience.push({
+        title: formData.get(`exp_title_${id}`),
+        company: formData.get(`exp_company_${id}`),
+        description: formData.get(`exp_description_${id}`)
+      });
+    });
+
+    // Collect education
+    const eduContainer = document.getElementById('educationList');
+    eduContainer.querySelectorAll('.cv-edit-item').forEach(item => {
+      const id = item.dataset.id;
+      cvData.education.push({
+        degree: formData.get(`edu_degree_${id}`),
+        institution: formData.get(`edu_institution_${id}`),
+        description: formData.get(`edu_description_${id}`) || ''
+      });
+    });
+
+    // Collect languages
+    const langContainer = document.getElementById('languagesList');
+    langContainer.querySelectorAll('.cv-edit-item').forEach(item => {
+      const id = item.dataset.id;
+      cvData.languages.push({
+        name: formData.get(`lang_name_${id}`),
+        level: formData.get(`lang_level_${id}`)
+      });
+    });
+
+    try {
+      const data = await request(`${API_BASE}/cv/update`, {
+        method: 'PUT',
+        body: JSON.stringify(cvData)
+      });
+
+      state.cv = data.cv;
+      closeCVEditor();
+      showCVPreview(data.cv);
+      toastSuccess('CV actualizado exitosamente');
+    } catch (error) {
+      toastError(error.message);
+    }
+  };
+
+  // Expose functions globally for onclick handlers
+  window.Surlink = {
+    removeExperience,
+    removeEducation,
+    removeLanguage
+  };
+
   // Event listeners for trabajos
   const attachTrabajosEvents = () => {
     // Tab switching
@@ -2540,6 +2771,55 @@
       regenerateBtn.addEventListener('click', () => {
         document.getElementById('cvPreview').hidden = true;
         document.getElementById('cvQuestionsForm').hidden = false;
+      });
+    }
+
+    // Edit CV button
+    const editCVBtn = document.getElementById('editCVBtn');
+    if (editCVBtn) {
+      editCVBtn.addEventListener('click', openCVEditor);
+    }
+
+    // CV Editor modal events
+    const closeCVEditModalBtn = document.getElementById('closeCVEditModal');
+    if (closeCVEditModalBtn) {
+      closeCVEditModalBtn.addEventListener('click', closeCVEditor);
+    }
+
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    if (cancelEditBtn) {
+      cancelEditBtn.addEventListener('click', closeCVEditor);
+    }
+
+    // CV Editor form submit
+    const cvEditorForm = document.getElementById('cvEditorForm');
+    if (cvEditorForm) {
+      cvEditorForm.addEventListener('submit', handleCVEdit);
+    }
+
+    // Add buttons for experience, education, languages
+    const addExperienceBtn = document.getElementById('addExperienceBtn');
+    if (addExperienceBtn) {
+      addExperienceBtn.addEventListener('click', () => addExperienceField());
+    }
+
+    const addEducationBtn = document.getElementById('addEducationBtn');
+    if (addEducationBtn) {
+      addEducationBtn.addEventListener('click', () => addEducationField());
+    }
+
+    const addLanguageBtn = document.getElementById('addLanguageBtn');
+    if (addLanguageBtn) {
+      addLanguageBtn.addEventListener('click', () => addLanguageField());
+    }
+
+    // Close modal on backdrop click
+    const cvEditModal = document.getElementById('cvEditModal');
+    if (cvEditModal) {
+      cvEditModal.addEventListener('click', (e) => {
+        if (e.target === cvEditModal) {
+          closeCVEditor();
+        }
       });
     }
   };

@@ -182,16 +182,22 @@
         </div>
         <div class="institution-details">
           <div class="institution-detail-item">
-            <span class="detail-label">Deuda Vigente MN:</span>
+            <span class="detail-label">Deuda Vigente en pesos:</span>
             <span class="detail-value">${formatCurrency(inst.rubros?.vigente?.mn || 0)}</span>
           </div>
           <div class="institution-detail-item">
-            <span class="detail-label">Deuda Vigente ME:</span>
+            <span class="detail-label">Deuda Vigente en otras monedas:</span>
             <span class="detail-value">${formatCurrency(inst.rubros?.vigente?.me_equivalente_mn || 0)}</span>
           </div>
           ${inst.rubros?.contingencias?.mn || inst.rubros?.contingencias?.me_equivalente_mn ? `
           <div class="institution-detail-item">
-            <span class="detail-label">Contingencias:</span>
+            <span class="detail-label">
+              Contingencias:
+              <span class="credit-tooltip">
+                <span class="credit-tooltip-icon">?</span>
+                <span class="credit-tooltip-text">Cuando el BCU habla de contingencias en la Central de Riesgos, se refiere a créditos contingentes o compromisos que todavía no son deuda "consumida" pero pueden transformarse en deuda: garantías que diste, líneas de crédito disponibles, tarjetas con cupo disponible pero con compromiso de pago si se usan, avales, fianzas, etc. El BCU las maneja junto con "contingencias y responsabilidades" en un bloque separado de la info contable del deudor, y las instituciones reportan estos saldos como parte del "riesgo crediticio total" aunque no haya plata efectivamente prestada todavía.</span>
+              </span>
+            </span>
             <span class="detail-value">${formatCurrency((inst.rubros.contingencias.mn || 0) + (inst.rubros.contingencias.me_equivalente_mn || 0))}</span>
           </div>
           ` : ''}

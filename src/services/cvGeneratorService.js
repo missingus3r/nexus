@@ -84,7 +84,7 @@ export async function generateCV(answers) {
   "languages": [
     {
       "name": "Nombre del idioma",
-      "level": "Nivel (básico, intermedio, avanzado, nativo)"
+      "level": "Nivel (basic, intermediate, advanced, native)"
     }
   ],
   "additional": "Información adicional relevante como certificaciones, cursos, intereses profesionales (si aplica)"
@@ -137,6 +137,25 @@ export async function generateCV(answers) {
     cvData.education = cvData.education || [];
     cvData.skills = cvData.skills || [];
     cvData.languages = cvData.languages || [];
+
+    // Normalize language levels (convert Spanish to English)
+    const levelMap = {
+      'básico': 'basic',
+      'basico': 'basic',
+      'intermedio': 'intermediate',
+      'avanzado': 'advanced',
+      'nativo': 'native',
+      'Básico': 'basic',
+      'Basico': 'basic',
+      'Intermedio': 'intermediate',
+      'Avanzado': 'advanced',
+      'Nativo': 'native'
+    };
+
+    cvData.languages = cvData.languages.map(lang => ({
+      ...lang,
+      level: levelMap[lang.level] || lang.level.toLowerCase()
+    }));
 
     logger.info('CV generated successfully', {
       skillsCount: cvData.skills.length,

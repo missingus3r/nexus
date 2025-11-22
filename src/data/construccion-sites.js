@@ -584,6 +584,24 @@ const construccionSites = {
       description: 'Martillero público especializado en remates de inmuebles, vehículos y bienes muebles con amplia trayectoria en Uruguay.',
       category: 'remates',
       featured: true
+    },
+    {
+      id: 'castells',
+      name: 'Castells - Subastas Online',
+      url: 'https://subastascastells.com/',
+      logo: 'https://www.google.com/s2/favicons?domain=subastascastells.com&sz=128',
+      description: 'Empresa de subastas online y remates presenciales especializada en arte moderno y contemporáneo, alhajas, relojes, muebles, antigüedades y gastronomía.',
+      category: 'remates',
+      featured: false
+    },
+    {
+      id: 'bavastro',
+      name: 'Bavastro - Casa de Remates',
+      url: 'https://www.bavastro.com.uy/',
+      logo: 'https://www.google.com/s2/favicons?domain=bavastro.com.uy&sz=128',
+      description: 'Casa de remates con subastas presenciales todos los jueves en Ciudad Vieja. Especializada en mobiliario, antigüedades, electrodomésticos, vehículos y mercadería general.',
+      category: 'remates',
+      featured: false
     }
   ]
 };
