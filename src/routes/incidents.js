@@ -10,6 +10,7 @@ import { validateIncidentRelevance } from '../services/geminiService.js';
 import logger from '../utils/logger.js';
 import crypto from 'crypto';
 import fs from 'fs';
+import { cleanupUploadedFiles } from '../utils/fileHelper.js';
 
 const router = express.Router();
 
@@ -89,9 +90,7 @@ router.post('/', verifyApiAuth, requireAuth, writeRateLimiter, uploadIncidentPho
     // Check if user is authenticated
     if (!req.user) {
       // Clean up uploaded files if auth fails
-      if (req.files) {
-        req.files.forEach(file => fs.unlinkSync(file.path));
-      }
+      cleanupUploadedFiles(req.files);
       return res.status(401).json({ error: 'Necesitas estar logeado para realizar esta acción' });
     }
 
@@ -105,9 +104,7 @@ router.post('/', verifyApiAuth, requireAuth, writeRateLimiter, uploadIncidentPho
         : req.body.location;
     } catch (e) {
       // Clean up uploaded files if parsing fails
-      if (req.files) {
-        req.files.forEach(file => fs.unlinkSync(file.path));
-      }
+      cleanupUploadedFiles(req.files);
       return res.status(400).json({
         error: 'Invalid location format. Must be valid JSON with coordinates.'
       });
@@ -115,9 +112,7 @@ router.post('/', verifyApiAuth, requireAuth, writeRateLimiter, uploadIncidentPho
 
     if (!type || !location || !location.coordinates) {
       // Clean up uploaded files if validation fails
-      if (req.files) {
-        req.files.forEach(file => fs.unlinkSync(file.path));
-      }
+      cleanupUploadedFiles(req.files);
       return res.status(400).json({
         error: 'Missing required fields: type, location.coordinates'
       });
@@ -131,9 +126,7 @@ router.post('/', verifyApiAuth, requireAuth, writeRateLimiter, uploadIncidentPho
 
     if (pendingReport) {
       // Clean up uploaded files if user has pending report
-      if (req.files) {
-        req.files.forEach(file => fs.unlinkSync(file.path));
-      }
+      cleanupUploadedFiles(req.files);
       return res.status(403).json({
         error: 'You have a pending report that needs to be validated before creating a new one',
         pendingReportId: pendingReport._id
@@ -166,15 +159,7 @@ router.post('/', verifyApiAuth, requireAuth, writeRateLimiter, uploadIncidentPho
 
     if (!validationResult.isValid) {
       // Clean up uploaded files if validation fails
-      if (req.files) {
-        req.files.forEach(file => {
-          try {
-            fs.unlinkSync(file.path);
-          } catch (err) {
-            logger.error('Failed to delete file after validation failure:', err);
-          }
-        });
-      }
+      cleanupUploadedFiles(req.files);
 
       logger.info('Incident rejected by Gemini validation', {
         type,
@@ -246,6 +231,8 @@ router.post('/', verifyApiAuth, requireAuth, writeRateLimiter, uploadIncidentPho
       message: 'Incident reported successfully. Awaiting validation.'
     });
   } catch (error) {
+    // Clean up uploaded files on unexpected error
+    cleanupUploadedFiles(req.files);
     next(error);
   }
 });
@@ -265,7 +252,10 @@ router.post('/:id/validate', verifyApiAuth, requireAuth, writeRateLimiter, async
     const { id } = req.params;
     const { vote, confidence, comment } = req.body;
 
-    if (![1, -1].includes(vote)) {
+    // Parse vote to integer if it's a string
+    const parsedVote = parseInt(vote);
+
+    if (![1, -1].includes(parsedVote) || isNaN(parsedVote)) {
       return res.status(400).json({ error: 'Vote must be 1 (valid) or -1 (invalid)' });
     }
 
@@ -301,7 +291,7 @@ router.post('/:id/validate', verifyApiAuth, requireAuth, writeRateLimiter, async
     const validation = new Validation({
       incidentId: id,
       uid: req.user.uid,
-      vote,
+      vote: parsedVote,
       confidence: confidence || 0.5,
       validatorReputation: req.user.reputacion,
       comment
@@ -388,36 +378,28 @@ router.post('/:id/photos', verifyApiAuth, requireAuth, writeRateLimiter, uploadI
   try {
     if (!req.user) {
       // Clean up uploaded files if auth fails
-      if (req.files) {
-        req.files.forEach(file => fs.unlinkSync(file.path));
-      }
+      cleanupUploadedFiles(req.files);
       return res.status(401).json({ error: 'Necesitas estar logeado para realizar esta acción' });
     }
 
     const incident = await Incident.findById(req.params.id);
     if (!incident) {
       // Clean up uploaded files if incident not found
-      if (req.files) {
-        req.files.forEach(file => fs.unlinkSync(file.path));
-      }
+      cleanupUploadedFiles(req.files);
       return res.status(404).json({ error: 'Incident not found' });
     }
 
     // Check if user is the reporter
     if (incident.reporterUid !== req.user.uid) {
       // Clean up uploaded files if not the reporter
-      if (req.files) {
-        req.files.forEach(file => fs.unlinkSync(file.path));
-      }
+      cleanupUploadedFiles(req.files);
       return res.status(403).json({ error: 'Only the reporter can add photos to this incident' });
     }
 
     // Check if incident already has 3 photos
     if (incident.media.length >= 3) {
       // Clean up uploaded files if already has 3 photos
-      if (req.files) {
-        req.files.forEach(file => fs.unlinkSync(file.path));
-      }
+      cleanupUploadedFiles(req.files);
       return res.status(400).json({
         error: 'Maximum 3 photos allowed per incident',
         currentCount: incident.media.length
@@ -428,9 +410,7 @@ router.post('/:id/photos', verifyApiAuth, requireAuth, writeRateLimiter, uploadI
     const totalPhotos = incident.media.length + (req.files ? req.files.length : 0);
     if (totalPhotos > 3) {
       // Clean up uploaded files if would exceed limit
-      if (req.files) {
-        req.files.forEach(file => fs.unlinkSync(file.path));
-      }
+      cleanupUploadedFiles(req.files);
       return res.status(400).json({
         error: `Cannot add ${req.files.length} photos. Only ${3 - incident.media.length} more photo(s) allowed`,
         currentCount: incident.media.length,
@@ -476,15 +456,7 @@ router.post('/:id/photos', verifyApiAuth, requireAuth, writeRateLimiter, uploadI
     }
   } catch (error) {
     // Clean up uploaded files on error
-    if (req.files) {
-      req.files.forEach(file => {
-        try {
-          fs.unlinkSync(file.path);
-        } catch (e) {
-          logger.error('Error deleting file:', e);
-        }
-      });
-    }
+    cleanupUploadedFiles(req.files);
     next(error);
   }
 });

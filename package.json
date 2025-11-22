@@ -9,7 +9,8 @@
     "dev": "nodemon server.js",
     "test": "echo 'No tests configured yet' && exit 0",
     "lint": "eslint .",
-    "recalculate-counters": "node src/scripts/recalculateCounters.js"
+    "recalculate-counters": "node src/scripts/recalculateCounters.js",
+    "create-indexes": "node scripts/createIndexes.js"
   },
   "keywords": [
     "security",

@@ -244,48 +244,73 @@ router.get('/dashboard/data', requireAuth, async (req, res, next) => {
     }
 
     // Get latest incidents (Centinel alerts) - last 5
-    const incidents = await Incident.find({
-      status: { $in: ['verified', 'pending'] },
-      hidden: false
-    })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .select('type severity location description createdAt neighborhoodName')
-      .lean();
+    let incidents = [];
+    try {
+      incidents = await Incident.find({
+        status: { $in: ['verified', 'pending'] },
+        hidden: false
+      })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .select('type severity location description createdAt neighborhoodName')
+        .lean();
+    } catch (error) {
+      console.error('Error fetching incidents for dashboard:', error.message);
+      // Continue with empty incidents array
+    }
 
     // Get latest Surlink posts - last 5
-    const surlinkPosts = await SurlinkListing.find({
-      status: 'active'
-    })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .select('title category price.amount price.currency location.city media createdAt')
-      .lean();
+    let surlinkPosts = [];
+    try {
+      surlinkPosts = await SurlinkListing.find({
+        status: 'active'
+      })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .select('title category price.amount price.currency location.city media createdAt')
+        .lean();
+    } catch (error) {
+      console.error('Error fetching Surlink posts for dashboard:', error.message);
+      // Continue with empty posts array
+    }
 
     // Get latest forum threads - last 5
-    const forumThreads = await ForumThread.find({
-      status: 'active'
-    })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .populate('author', 'name picture')
-      .select('title hashtags likesCount commentsCount createdAt author')
-      .lean();
+    let forumThreads = [];
+    try {
+      forumThreads = await ForumThread.find({
+        status: 'active'
+      })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate('author', 'name picture')
+        .select('title hashtags likesCount commentsCount createdAt author')
+        .lean();
+    } catch (error) {
+      console.error('Error fetching forum threads for dashboard:', error.message);
+      // Continue with empty threads array
+    }
 
     // Get user's unread notifications
-    const notifications = await Notification.find({
-      uid: user.uid,
-      read: false
-    })
-      .sort({ createdAt: -1 })
-      .limit(20)
-      .lean();
+    let notifications = [];
+    let unreadCount = 0;
+    try {
+      notifications = await Notification.find({
+        uid: user.uid,
+        read: false
+      })
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .lean();
 
-    // Count total unread notifications
-    const unreadCount = await Notification.countDocuments({
-      uid: user.uid,
-      read: false
-    });
+      // Count total unread notifications
+      unreadCount = await Notification.countDocuments({
+        uid: user.uid,
+        read: false
+      });
+    } catch (error) {
+      console.error('Error fetching notifications for dashboard:', error.message);
+      // Continue with empty notifications
+    }
 
     // Get credit profile status
     let creditProfile = null;
