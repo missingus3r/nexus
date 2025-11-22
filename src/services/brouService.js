@@ -4,7 +4,7 @@ import BcuRates from '../models/BcuRates.js';
 import PricingSettings from '../models/PricingSettings.js';
 import logger from '../utils/logger.js';
 
-const BROU_URL = 'https://www.brou.com.uy/cotizaciones';
+const BROU_URL = process.env.BROU_COTIZACIONES_URL || 'https://www.brou.com.uy/cotizaciones';
 
 /**
  * Fetch HTML content from BROU website

@@ -1,6 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
-import { SurlinkListing, SiteLike, JobListing, CVDocument } from '../models/index.js';
+import { SurlinkListing, SiteLike, JobListing, CVDocument, User } from '../models/index.js';
 import SiteComment from '../models/SiteComment.js';
 import CreditProfileRequest from '../models/CreditProfileRequest.js';
 import logger from '../utils/logger.js';
@@ -1480,6 +1480,12 @@ router.post('/cv/generate', requireLogin, async (req, res) => {
       return res.status(400).json({ error: 'Faltan respuestas requeridas' });
     }
 
+    // Get user data
+    const user = await User.findOne({ uid: userId });
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
     let cv = await CVDocument.findOne({ userId });
 
     if (!cv) {
@@ -1492,10 +1498,21 @@ router.post('/cv/generate', requireLogin, async (req, res) => {
       });
     }
 
-    // Check generation limit
-    if (!cv.canGenerate()) {
+    // Check generation limit with new system
+    const generationCheck = cv.canGenerate(user);
+
+    if (!generationCheck.allowed) {
+      const isPremium = user.subscription && user.subscription.isPremium;
+      const message = isPremium
+        ? 'Has alcanzado el límite de 3 generaciones por día. Intenta mañana o compra generaciones adicionales.'
+        : `Has alcanzado el límite de 1 generación por semana. Próxima disponible: ${generationCheck.nextAvailable?.toLocaleDateString('es-ES')}. Puedes comprar generaciones adicionales por $0.50 USD cada una.`;
+
       return res.status(429).json({
-        error: 'Has alcanzado el límite de 5 generaciones por día. Intenta mañana.'
+        error: message,
+        nextAvailable: generationCheck.nextAvailable,
+        canPurchase: true,
+        purchasePrice: 0.50,
+        isPremium
       });
     }
 
@@ -1513,7 +1530,7 @@ router.post('/cv/generate', requireLogin, async (req, res) => {
     cv.generatedContent = JSON.stringify(generatedCV);
 
     // Increment generation count
-    cv.incrementGeneration();
+    cv.incrementGeneration(user, generationCheck.source);
 
     // Save version
     cv.versions.push({
@@ -1522,11 +1539,16 @@ router.post('/cv/generate', requireLogin, async (req, res) => {
     });
 
     await cv.save();
+    await user.save(); // Save user if purchased generation was used
 
     res.json({
       cv,
       message: 'CV generado exitosamente',
-      generationsRemaining: 5 - cv.generationCount
+      generationSource: generationCheck.source,
+      generationsRemaining: generationCheck.source === 'purchased'
+        ? user.cvGenerations.purchased
+        : generationCheck.remaining,
+      isPremium: user.subscription && user.subscription.isPremium
     });
   } catch (error) {
     logger.error('Error generating CV', { error });
@@ -1643,6 +1665,99 @@ router.get('/cv/export/pdf', requireLogin, async (req, res) => {
     if (!res.headersSent) {
       res.status(500).json({ error: 'Error al exportar CV' });
     }
+  }
+});
+
+/**
+ * POST /surlink/cv/purchase-generation
+ * Purchase individual CV generations
+ */
+router.post('/cv/purchase-generation', requireLogin, async (req, res) => {
+  try {
+    const userId = req.session.user.uid;
+    const { quantity = 1, paymentConfirmation } = req.body;
+
+    // Validate quantity
+    if (!quantity || quantity < 1 || quantity > 10) {
+      return res.status(400).json({ error: 'Cantidad inválida. Puedes comprar entre 1 y 10 generaciones.' });
+    }
+
+    // Get user
+    const user = await User.findOne({ uid: userId });
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    // For now, we trust the payment confirmation from PayPal
+    // In production, you'd verify this with PayPal API
+    if (!paymentConfirmation) {
+      return res.status(400).json({
+        error: 'Confirmación de pago requerida',
+        paypalUrl: `https://paypal.me/xplice/${(quantity * 0.50).toFixed(2)}`,
+        amount: quantity * 0.50
+      });
+    }
+
+    // Initialize cvGenerations if not exists
+    if (!user.cvGenerations) {
+      user.cvGenerations = { purchased: 0, lastPurchase: null };
+    }
+
+    // Add purchased generations
+    user.cvGenerations.purchased = (user.cvGenerations.purchased || 0) + quantity;
+    user.cvGenerations.lastPurchase = new Date();
+
+    await user.save();
+
+    res.json({
+      message: `Se agregaron ${quantity} generación(es) a tu cuenta`,
+      purchased: user.cvGenerations.purchased,
+      totalCost: quantity * 0.50
+    });
+  } catch (error) {
+    logger.error('Error purchasing CV generation', { error });
+    res.status(500).json({ error: 'Error al procesar la compra' });
+  }
+});
+
+/**
+ * GET /surlink/cv/status
+ * Get CV generation status and limits for current user
+ */
+router.get('/cv/status', requireLogin, async (req, res) => {
+  try {
+    const userId = req.session.user.uid;
+
+    const user = await User.findOne({ uid: userId });
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    const cv = await CVDocument.findOne({ userId });
+
+    // Check generation limits
+    const generationCheck = cv
+      ? cv.canGenerate(user)
+      : { allowed: true, source: 'free', remaining: 1 };
+
+    const isPremium = user.subscription && user.subscription.isPremium &&
+                      user.subscription.endDate && new Date(user.subscription.endDate) > new Date();
+
+    res.json({
+      isPremium,
+      tier: user.subscription?.tier || 'free',
+      purchased: user.cvGenerations?.purchased || 0,
+      generationCheck,
+      limits: {
+        free: '1 generación por semana',
+        premium: '3 generaciones por día',
+        purchased: 'Sin límite hasta agotar',
+        purchasePrice: '$0.50 USD por generación'
+      }
+    });
+  } catch (error) {
+    logger.error('Error getting CV status', { error });
+    res.status(500).json({ error: 'Error al obtener estado' });
   }
 });
 

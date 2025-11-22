@@ -215,14 +215,14 @@
         }
 
         .status-message.success {
-            background: #e8f5e9;
-            color: #2e7d32;
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--success-color);
             border-left: 4px solid var(--success-color);
         }
 
         .status-message.error {
-            background: #ffebee;
-            color: #c62828;
+            background: rgba(244, 67, 54, 0.1);
+            color: var(--danger-color);
             border-left: 4px solid var(--danger-color);
         }
 
@@ -286,18 +286,18 @@
         }
 
         .status-message.info {
-            background: #e3f2fd;
-            color: #1565c0;
+            background: rgba(33, 150, 243, 0.1);
+            color: var(--primary-color);
             border-left: 4px solid var(--primary-color);
         }
 
         /* Filters */
         .filters-container {
-            background: white;
+            background: var(--surface);
             padding: 1.5rem;
             border-radius: 8px;
             margin-bottom: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px var(--shadow-elevation);
         }
 
         .filters-grid {
@@ -321,9 +321,11 @@
 
         .filter-group select {
             padding: 0.5rem;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 4px;
             font-size: 0.875rem;
+            background: var(--background);
+            color: var(--text-primary);
         }
 
         /* Export buttons */
@@ -669,7 +671,7 @@
         }
 
         .modal-content {
-            background: white;
+            background: var(--surface);
             border-radius: 8px;
             width: 90%;
             max-width: 800px;
@@ -681,7 +683,7 @@
 
         .modal-header {
             padding: 1.5rem;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -689,7 +691,7 @@
 
         .modal-header h2 {
             margin: 0;
-            color: var(--primary-color);
+            color: var(--text-primary);
         }
 
         .modal-close {
@@ -735,22 +737,22 @@
         }
 
         .chart-card {
-            background: white;
+            background: var(--surface);
             padding: 1.5rem;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px var(--shadow-elevation);
         }
 
         .chart-card h3 {
             margin-top: 0;
-            color: var(--primary-color);
+            color: var(--text-primary);
             font-size: 1.1rem;
         }
 
         /* Payment history table */
         .payment-item {
             padding: 1rem;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -768,18 +770,18 @@
         }
 
         .payment-status.completed {
-            background: #e8f5e9;
-            color: #2e7d32;
+            background: rgba(76, 175, 80, 0.15);
+            color: var(--success-color);
         }
 
         .payment-status.pending {
-            background: #fff3cd;
-            color: #856404;
+            background: rgba(255, 193, 7, 0.15);
+            color: var(--warning-color);
         }
 
         .payment-status.failed {
-            background: #ffebee;
-            color: #c62828;
+            background: rgba(244, 67, 54, 0.15);
+            color: var(--danger-color);
         }
 
         /* Responsive table styles */

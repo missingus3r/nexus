@@ -83,6 +83,41 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: null,
     description: 'Last login timestamp'
+  },
+  subscription: {
+    isPremium: {
+      type: Boolean,
+      default: false,
+      description: 'Whether user has active premium subscription'
+    },
+    tier: {
+      type: String,
+      enum: ['free', 'bronze', 'silver', 'gold', 'platinum'],
+      default: 'free',
+      description: 'Subscription tier'
+    },
+    startDate: {
+      type: Date,
+      default: null,
+      description: 'Subscription start date'
+    },
+    endDate: {
+      type: Date,
+      default: null,
+      description: 'Subscription end date'
+    }
+  },
+  cvGenerations: {
+    purchased: {
+      type: Number,
+      default: 0,
+      description: 'Number of purchased individual CV generations remaining'
+    },
+    lastPurchase: {
+      type: Date,
+      default: null,
+      description: 'Date of last generation purchase'
+    }
   }
 }, {
   timestamps: true

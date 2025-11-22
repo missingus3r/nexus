@@ -223,6 +223,37 @@
                         <!-- Tab 3: CV Builder -->
                         <div class="trabajos-tab-content" data-trabajos-content="mi-cv" hidden>
                             <div class="cv-builder-container">
+                                <!-- Generation Status -->
+                                <div id="cvGenerationStatus" class="cv-generation-status" style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(124, 92, 255, 0.1); border: 1px solid rgba(124, 92, 255, 0.3); border-radius: 8px; display: none;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <div id="cvStatusText" style="font-weight: 500; margin-bottom: 0.25rem;"></div>
+                                            <div id="cvStatusDetail" style="font-size: 0.9rem; color: var(--text-secondary);"></div>
+                                        </div>
+                                        <div id="cvStatusBadge" style="padding: 0.5rem 1rem; background: rgba(124, 92, 255, 0.2); border-radius: 6px; font-weight: 600;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Out of Generations - PayPal Section -->
+                                <div id="cvOutOfGenerations" class="cv-out-of-generations" style="display: none; padding: 1.25rem; background: rgba(255, 152, 0, 0.1); border: 1px solid rgba(255, 152, 0, 0.3); border-radius: 12px; text-align: center; margin-bottom: 1.5rem;">
+                                    <h3 style="margin-bottom: 0.75rem; color: #ff9800; font-size: 1.1rem;">⚠️ Sin generaciones disponibles</h3>
+                                    <p id="outOfGenerationsMessage" style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;"></p>
+                                    <div style="background: var(--background); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid var(--border-color);">
+                                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.4rem;">Precio por generación</div>
+                                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);">$0.50 USD</div>
+                                    </div>
+                                    <a href="https://paypal.me/xplice/0.50" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 6px; padding: 0.65rem 1rem; font-size: 0.95rem;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                            <line x1="1" y1="10" x2="23" y2="10"></line>
+                                        </svg>
+                                        Comprar 1 generación con PayPal
+                                    </a>
+                                    <p style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-secondary);">
+                                        Después de pagar, las generaciones se agregarán automáticamente a tu cuenta.
+                                    </p>
+                                </div>
+
                                 <!-- CV Questions Form -->
                                 <div id="cvQuestionsForm" class="cv-questions-form">
                                     <h3>Crea tu CV con Inteligencia Artificial</h3>

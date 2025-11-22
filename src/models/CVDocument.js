@@ -152,25 +152,59 @@ const cvDocumentSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Method to check if user can generate CV (max 5 per day)
-cvDocumentSchema.methods.canGenerate = function() {
-  if (!this.lastGenerationDate) return true;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const lastGen = new Date(this.lastGenerationDate);
-  lastGen.setHours(0, 0, 0, 0);
-
-  if (today.getTime() === lastGen.getTime()) {
-    return this.generationCount < 5;
+// Method to check if user can generate CV
+// Free users: 1 per week
+// Premium users: 3 per day
+// Users with purchased generations: use purchased first
+cvDocumentSchema.methods.canGenerate = function(user) {
+  // Check if user has purchased generations
+  if (user.cvGenerations && user.cvGenerations.purchased > 0) {
+    return { allowed: true, source: 'purchased', remaining: user.cvGenerations.purchased };
   }
 
-  return true;
+  const now = new Date();
+  const isPremium = user.subscription && user.subscription.isPremium &&
+                    user.subscription.endDate && new Date(user.subscription.endDate) > now;
+
+  if (!this.lastGenerationDate) {
+    return { allowed: true, source: isPremium ? 'premium' : 'free', remaining: isPremium ? 3 : 1 };
+  }
+
+  if (isPremium) {
+    // Premium: 3 per day
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const lastGen = new Date(this.lastGenerationDate);
+    lastGen.setHours(0, 0, 0, 0);
+
+    if (today.getTime() === lastGen.getTime()) {
+      const remaining = 3 - this.generationCount;
+      return {
+        allowed: this.generationCount < 3,
+        source: 'premium',
+        remaining: Math.max(0, remaining)
+      };
+    }
+
+    return { allowed: true, source: 'premium', remaining: 3 };
+  } else {
+    // Free: 1 per week
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const lastGen = new Date(this.lastGenerationDate);
+
+    const allowed = lastGen < oneWeekAgo;
+    return {
+      allowed,
+      source: 'free',
+      remaining: allowed ? 1 : 0,
+      nextAvailable: allowed ? null : new Date(lastGen.getTime() + 7 * 24 * 60 * 60 * 1000)
+    };
+  }
 };
 
 // Method to increment generation count
-cvDocumentSchema.methods.incrementGeneration = function() {
+cvDocumentSchema.methods.incrementGeneration = function(user, source = 'free') {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -179,11 +213,18 @@ cvDocumentSchema.methods.incrementGeneration = function() {
     lastGen.setHours(0, 0, 0, 0);
   }
 
-  if (lastGen && today.getTime() === lastGen.getTime()) {
-    this.generationCount += 1;
+  // If using purchased generation, decrement purchased count
+  if (source === 'purchased' && user.cvGenerations && user.cvGenerations.purchased > 0) {
+    user.cvGenerations.purchased -= 1;
+    // Don't increment daily count for purchased generations
   } else {
-    this.generationCount = 1;
-    this.lastGenerationDate = new Date();
+    // Regular generation (free or premium)
+    if (lastGen && today.getTime() === lastGen.getTime()) {
+      this.generationCount += 1;
+    } else {
+      this.generationCount = 1;
+      this.lastGenerationDate = new Date();
+    }
   }
 
   this.lastGenerated = new Date();

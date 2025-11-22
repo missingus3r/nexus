@@ -16,27 +16,28 @@
         <header>
             <div class="brand">VORTEX</div>
             <div class="platform-nav">
-                <button class="hamburger" aria-label="Toggle menu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-                <nav>
-                    <a href="/">Inicio</a>
-                    <a href="/plataforma" aria-current="page" class="active">Plataforma</a>
-                    <a href="/centinel">Centinel</a>
-                    <a href="/forum">Foro</a>
-                    <a href="/surlink">Surlink</a>
-                    <a href="/social">Social</a>
-                    <a href="/nexus">Nexus</a>
-                    <a href="/pricing">Pricing</a>
-                    <% if (isAuthenticated) { %>
-                        <a href="/dashboard">Dashboard</a>
-                        <a href="/auth/logout">Cerrar sesión</a>
-                    <% } else { %>
-                        <a href="/login">Iniciar sesión</a>
-                    <% } %>
-                </nav>
+                <!-- Menu hamburguesa siempre visible -->
+                <div class="hamburger-menu">
+                    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menú de navegación" aria-expanded="false">
+                        <span class="hamburger-icon">☰</span>
+                    </button>
+                    <nav class="dropdown-menu" id="dropdownMenu" aria-label="Navegación principal">
+                        <a href="/">Inicio</a>
+                        <a href="/plataforma" aria-current="page" class="active">Plataforma</a>
+                        <a href="/centinel">Centinel</a>
+                        <a href="/forum">Foro</a>
+                        <a href="/surlink">Surlink</a>
+                        <a href="/social">Social</a>
+                        <a href="/nexus">Nexus</a>
+                        <a href="/pricing">Pricing</a>
+                        <% if (isAuthenticated) { %>
+                            <a href="/dashboard">Dashboard</a>
+                            <a href="/auth/logout">Cerrar sesión</a>
+                        <% } else { %>
+                            <a href="/login">Iniciar sesión</a>
+                        <% } %>
+                    </nav>
+                </div>
             </div>
         </header>
 
@@ -350,6 +351,59 @@
                     Valoramos la retroalimentación y colaboración. Este proyecto está desarrollado por y para la comunidad.
                 </p>
             </section>
+
+            <section class="stack coming-soon-section" style="background: linear-gradient(135deg, rgba(124, 92, 255, 0.08), rgba(255, 165, 0, 0.08)); border: 1px solid rgba(124, 92, 255, 0.3);">
+                <div class="stack-title">🚀 Próximamente en Vortex</div>
+                <p class="hero-text" style="margin-bottom: 1.5rem; color: var(--text-muted);">
+                    Estamos trabajando en nuevas funcionalidades que expandirán las capacidades de la plataforma.
+                    Estas características estarán disponibles pronto para mejorar tu experiencia.
+                </p>
+                <div class="coming-soon-features-grid">
+                    <div class="coming-soon-feature">
+                        <span class="feature-emoji">💼</span>
+                        <h4>Ofertas laborales y CVs</h4>
+                        <p>Encuentra oportunidades de empleo verificadas y gestiona tu CV profesional con generación automática.</p>
+                    </div>
+                    <div class="coming-soon-feature">
+                        <span class="feature-emoji">📄</span>
+                        <h4>Facturación electrónica</h4>
+                        <p>Sistema completo de facturación con DGI Uruguay para feriantes, startups, unipersonales, SAS y Pymes.</p>
+                    </div>
+                    <div class="coming-soon-feature">
+                        <span class="feature-emoji">🐾</span>
+                        <h4>Publicar adopciones y rescates</h4>
+                        <p>Difunde iniciativas de adopción y rescate animal con informes geolocalizados y alertas a la comunidad.</p>
+                    </div>
+                    <div class="coming-soon-feature">
+                        <span class="feature-emoji">💝</span>
+                        <h4>Campañas solidarias</h4>
+                        <p>Inicia campañas transparentes con seguimiento en tiempo real y reportes detallados para la comunidad.</p>
+                    </div>
+                    <div class="coming-soon-feature">
+                        <span class="feature-emoji">🔍</span>
+                        <h4>Perdidos y encontrados</h4>
+                        <p>Reporta y busca objetos perdidos o encontrados con foto, geolocalización y sistema de verificación.</p>
+                    </div>
+                    <div class="coming-soon-feature">
+                        <span class="feature-emoji">🏠</span>
+                        <h4>Surlink expandido</h4>
+                        <p>Nuevas categorías y funcionalidades en el marketplace: servicios, productos y más opciones de búsqueda.</p>
+                    </div>
+                    <div class="coming-soon-feature">
+                        <span class="feature-emoji">💬</span>
+                        <h4>Integración Reddit</h4>
+                        <p>Foro comunitario conectado con comunidades relevantes de Reddit para mayor alcance y participación.</p>
+                    </div>
+                    <div class="coming-soon-feature">
+                        <span class="feature-emoji">🤖</span>
+                        <h4>Chatbot IA con GPT-5</h4>
+                        <p>Asistente inteligente para búsqueda avanzada, consultas y navegación optimizada (Plan Premium).</p>
+                    </div>
+                </div>
+                <p class="hero-text" style="margin-top: 1.5rem; text-align: center; color: var(--text-secondary); font-size: 0.95rem;">
+                    ¿Tenés sugerencias o ideas? Compartí tu feedback en el <a href="/forum" style="color: rgba(124, 92, 255, 0.9); text-decoration: underline; font-weight: 500;">foro comunitario</a>
+                </p>
+            </section>
         </main>
 
         <footer>
@@ -365,8 +419,46 @@
 
     <script src="/js/plataforma.js"></script>
     <script>
-        // Logout handler - simplificado
         document.addEventListener('DOMContentLoaded', function() {
+            // Hamburger menu functionality
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+
+            if (hamburgerBtn && dropdownMenu) {
+                // Toggle menu on button click
+                hamburgerBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const isActive = dropdownMenu.classList.toggle('active');
+                    hamburgerBtn.setAttribute('aria-expanded', isActive);
+                });
+
+                // Close menu when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!hamburgerBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                        dropdownMenu.classList.remove('active');
+                        hamburgerBtn.setAttribute('aria-expanded', 'false');
+                    }
+                });
+
+                // Close menu when clicking on a menu item
+                dropdownMenu.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', function() {
+                        dropdownMenu.classList.remove('active');
+                        hamburgerBtn.setAttribute('aria-expanded', 'false');
+                    });
+                });
+
+                // Close menu on ESC key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && dropdownMenu.classList.contains('active')) {
+                        dropdownMenu.classList.remove('active');
+                        hamburgerBtn.setAttribute('aria-expanded', 'false');
+                        hamburgerBtn.focus();
+                    }
+                });
+            }
+
+            // Logout handler - simplificado
             const logoutLinks = document.querySelectorAll('a[href="/auth/logout"]');
             logoutLinks.forEach(link => {
                 link.addEventListener('click', function(e) {

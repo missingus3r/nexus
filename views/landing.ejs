@@ -156,14 +156,27 @@
                 <span itemprop="name">VORTEX</span>
             </div>
             <div class="hero-nav">
-                <nav class="nav-links" aria-label="Navegación principal">
-                    <% if (isAuthenticated) { %>
-                        <a href="/dashboard" title="Ir al Dashboard" aria-label="Ir al Dashboard">Dashboard</a>
-                        <a href="/auth/logout" title="Cerrar sesión" aria-label="Cerrar sesión">Cerrar sesión</a>
-                    <% } else { %>
+                <% if (isAuthenticated) { %>
+                    <!-- Menu hamburguesa para usuarios autenticados -->
+                    <div class="hamburger-menu">
+                        <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menú de usuario" aria-expanded="false">
+                            <span class="hamburger-icon">☰</span>
+                        </button>
+                        <nav class="dropdown-menu" id="dropdownMenu" aria-label="Navegación de usuario">
+                            <a href="/dashboard" title="Ir al Dashboard" aria-label="Ir al Dashboard">
+                                <span>Dashboard</span>
+                            </a>
+                            <a href="/auth/logout" title="Cerrar sesión" aria-label="Cerrar sesión">
+                                <span>Cerrar sesión</span>
+                            </a>
+                        </nav>
+                    </div>
+                <% } else { %>
+                    <!-- Botón de inicio de sesión para usuarios no autenticados -->
+                    <nav class="nav-links" aria-label="Navegación principal">
                         <a href="/login" title="Acceder a tu cuenta Vortex" aria-label="Iniciar sesión en Vortex">Iniciar sesión</a>
-                    <% } %>
-                </nav>
+                    </nav>
+                <% } %>
             </div>
         </header>
         <span class="hero-eyebrow">Seguridad • Inmuebles • Autos • Educación • Finanzas</span>
@@ -223,8 +236,46 @@
 
     <script src="/js/landing.js"></script>
     <script>
-        // Logout handler - simplificado
         document.addEventListener('DOMContentLoaded', function() {
+            // Hamburger menu functionality
+            const hamburgerBtn = document.getElementById('hamburgerBtn');
+            const dropdownMenu = document.getElementById('dropdownMenu');
+
+            if (hamburgerBtn && dropdownMenu) {
+                // Toggle menu on button click
+                hamburgerBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const isActive = dropdownMenu.classList.toggle('active');
+                    hamburgerBtn.setAttribute('aria-expanded', isActive);
+                });
+
+                // Close menu when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!hamburgerBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                        dropdownMenu.classList.remove('active');
+                        hamburgerBtn.setAttribute('aria-expanded', 'false');
+                    }
+                });
+
+                // Close menu when clicking on a menu item
+                dropdownMenu.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', function() {
+                        dropdownMenu.classList.remove('active');
+                        hamburgerBtn.setAttribute('aria-expanded', 'false');
+                    });
+                });
+
+                // Close menu on ESC key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && dropdownMenu.classList.contains('active')) {
+                        dropdownMenu.classList.remove('active');
+                        hamburgerBtn.setAttribute('aria-expanded', 'false');
+                        hamburgerBtn.focus();
+                    }
+                });
+            }
+
+            // Logout handler - simplificado
             const logoutLinks = document.querySelectorAll('a[href="/auth/logout"]');
             logoutLinks.forEach(link => {
                 link.addEventListener('click', function(e) {

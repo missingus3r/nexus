@@ -343,6 +343,32 @@ router.get('/dashboard/data', requireAuth, async (req, res, next) => {
       const cv = await CVDocument.findOne({ userId: user.uid }).lean();
 
       if (cv) {
+        const isPremium = user.roles?.premium || false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const lastGenDate = cv.lastGenerationDate ? new Date(cv.lastGenerationDate) : null;
+        let generationsUsed = 0;
+        let canGenerate = true;
+
+        if (isPremium) {
+          // Premium: 3 per day
+          if (lastGenDate) {
+            lastGenDate.setHours(0, 0, 0, 0);
+            // If last generation was today, use the count, otherwise it's 0
+            if (today.getTime() === lastGenDate.getTime()) {
+              generationsUsed = cv.generationCount || 0;
+            }
+          }
+        } else {
+          // Free: 1 per week
+          if (lastGenDate) {
+            const oneWeekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            canGenerate = lastGenDate < oneWeekAgo;
+            generationsUsed = canGenerate ? 0 : 1;
+          }
+        }
+
         cvData = {
           exists: true,
           hasSummary: !!cv.professionalSummary,
@@ -351,7 +377,10 @@ router.get('/dashboard/data', requireAuth, async (req, res, next) => {
           skillsCount: cv.skills?.length || 0,
           languagesCount: cv.languages?.length || 0,
           lastGenerated: cv.lastGenerated,
-          generationCount: cv.generationCount || 0
+          generationsUsed: generationsUsed,
+          canGenerate: canGenerate,
+          isPremium: isPremium,
+          lastGenerationDate: cv.lastGenerationDate
         };
       }
     } catch (error) {

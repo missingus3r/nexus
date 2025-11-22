@@ -17,27 +17,28 @@
         <header>
             <div class="brand">VORTEX</div>
             <div class="platform-nav">
-                <button class="hamburger" aria-label="Toggle menu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-                <nav>
-                    <a href="/">Inicio</a>
-                    <a href="/plataforma">Plataforma</a>
-                    <a href="/centinel">Centinel</a>
-                    <a href="/forum">Foro</a>
-                    <a href="/surlink">Surlink</a>
-                    <a href="/social" aria-current="page" class="active">Social</a>
-                    <a href="/nexus">Nexus</a>
-                    <a href="/pricing">Pricing</a>
-                    <% if (isAuthenticated) { %>
-                        <a href="/dashboard">Dashboard</a>
-                        <a href="/auth/logout">Cerrar sesión</a>
-                    <% } else { %>
-                        <a href="/login">Iniciar sesión</a>
-                    <% } %>
-                </nav>
+                <!-- Menu hamburguesa siempre visible -->
+                <div class="hamburger-menu">
+                    <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menú de navegación" aria-expanded="false">
+                        <span class="hamburger-icon">☰</span>
+                    </button>
+                    <nav class="dropdown-menu" id="dropdownMenu" aria-label="Navegación principal">
+                        <a href="/">Inicio</a>
+                        <a href="/plataforma">Plataforma</a>
+                        <a href="/centinel">Centinel</a>
+                        <a href="/forum">Foro</a>
+                        <a href="/surlink">Surlink</a>
+                        <a href="/social" aria-current="page" class="active">Social</a>
+                        <a href="/nexus">Nexus</a>
+                        <a href="/pricing">Pricing</a>
+                        <% if (isAuthenticated) { %>
+                            <a href="/dashboard">Dashboard</a>
+                            <a href="/auth/logout">Cerrar sesión</a>
+                        <% } else { %>
+                            <a href="/login">Iniciar sesión</a>
+                        <% } %>
+                    </nav>
+                </div>
             </div>
         </header>
 
@@ -319,8 +320,46 @@
 
     <script src="/js/social.js"></script>
     <script>
-    // Logout handler - simplificado
     document.addEventListener('DOMContentLoaded', function() {
+        // Hamburger menu functionality
+        const hamburgerBtn = document.getElementById('hamburgerBtn');
+        const dropdownMenu = document.getElementById('dropdownMenu');
+
+        if (hamburgerBtn && dropdownMenu) {
+            // Toggle menu on button click
+            hamburgerBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isActive = dropdownMenu.classList.toggle('active');
+                hamburgerBtn.setAttribute('aria-expanded', isActive);
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!hamburgerBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                    dropdownMenu.classList.remove('active');
+                    hamburgerBtn.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            // Close menu when clicking on a menu item
+            dropdownMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', function() {
+                    dropdownMenu.classList.remove('active');
+                    hamburgerBtn.setAttribute('aria-expanded', 'false');
+                });
+            });
+
+            // Close menu on ESC key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && dropdownMenu.classList.contains('active')) {
+                    dropdownMenu.classList.remove('active');
+                    hamburgerBtn.setAttribute('aria-expanded', 'false');
+                    hamburgerBtn.focus();
+                }
+            });
+        }
+
+        // Logout handler - simplificado
         const logoutLinks = document.querySelectorAll('a[href="/auth/logout"]');
         logoutLinks.forEach(link => {
             link.addEventListener('click', function(e) {

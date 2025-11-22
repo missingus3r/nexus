@@ -4,7 +4,7 @@ import BcuRates from '../models/BcuRates.js';
 import PricingSettings from '../models/PricingSettings.js';
 import logger from '../utils/logger.js';
 
-const BCU_URL = 'https://www.bcu.gub.uy/Estadisticas-e-Indicadores/Paginas/Cotizaciones.aspx';
+const BCU_URL = process.env.BCU_COTIZACIONES_URL || 'https://www.bcu.gub.uy/Estadisticas-e-Indicadores/Paginas/Cotizaciones.aspx';
 
 /**
  * Fetch HTML content from BCU website

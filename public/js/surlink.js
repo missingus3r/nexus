@@ -690,7 +690,10 @@
 
     if (!response.ok) {
       const message = data.error || 'Ocurrió un error inesperado';
-      throw new Error(message);
+      const error = new Error(message);
+      error.status = response.status;
+      error.data = data;
+      throw error;
     }
 
     return data;
@@ -2364,8 +2367,80 @@
       if (data.cv && data.cv.professionalSummary) {
         showCVPreview(data.cv);
       }
+
+      // Load generation status
+      await loadCVGenerationStatus();
     } catch (error) {
       console.error('Error loading CV:', error);
+    }
+  };
+
+  // Load and display CV generation status
+  const loadCVGenerationStatus = async () => {
+    try {
+      const data = await request(`${API_BASE}/cv/status`);
+      updateCVGenerationStatusUI(data);
+    } catch (error) {
+      console.error('Error loading CV generation status:', error);
+    }
+  };
+
+  // Update CV generation status UI
+  const updateCVGenerationStatusUI = (statusData) => {
+    const statusContainer = document.getElementById('cvGenerationStatus');
+    const statusText = document.getElementById('cvStatusText');
+    const statusDetail = document.getElementById('cvStatusDetail');
+    const statusBadge = document.getElementById('cvStatusBadge');
+    const outOfGenerationsSection = document.getElementById('cvOutOfGenerations');
+    const outOfGenerationsMessage = document.getElementById('outOfGenerationsMessage');
+
+    if (!statusContainer || !statusData) return;
+
+    const { isPremium, tier, purchased, generationCheck, limits } = statusData;
+    const { allowed, source, remaining, nextAvailable } = generationCheck;
+
+    // Show status container
+    statusContainer.style.display = 'block';
+
+    if (purchased > 0) {
+      statusText.textContent = `Generaciones compradas disponibles: ${purchased}`;
+      statusDetail.textContent = limits.purchased;
+      statusBadge.textContent = `${purchased} compradas`;
+      statusBadge.style.background = 'rgba(76, 175, 80, 0.3)';
+      statusBadge.style.color = '#4caf50';
+      outOfGenerationsSection.style.display = 'none';
+    } else if (isPremium) {
+      statusText.textContent = `Plan Premium - ${tier}`;
+      statusDetail.textContent = limits.premium;
+      statusBadge.textContent = `${remaining} de 3`;
+      statusBadge.style.background = 'rgba(124, 92, 255, 0.3)';
+      statusBadge.style.color = '#7c5cff';
+
+      if (!allowed) {
+        outOfGenerationsSection.style.display = 'block';
+        outOfGenerationsMessage.textContent = 'Has alcanzado el límite de 3 generaciones por día. Puedes esperar hasta mañana o comprar generaciones adicionales.';
+      } else {
+        outOfGenerationsSection.style.display = 'none';
+      }
+    } else {
+      statusText.textContent = 'Plan Gratuito';
+      statusDetail.textContent = limits.free;
+      statusBadge.textContent = remaining > 0 ? '1 disponible' : '0 disponibles';
+      statusBadge.style.background = 'rgba(158, 158, 158, 0.3)';
+      statusBadge.style.color = '#9e9e9e';
+
+      if (!allowed && nextAvailable) {
+        outOfGenerationsSection.style.display = 'block';
+        const nextDate = new Date(nextAvailable).toLocaleDateString('es-ES', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        outOfGenerationsMessage.textContent = `Has usado tu generación semanal. La próxima estará disponible el ${nextDate}. Puedes comprar generaciones adicionales ahora.`;
+      } else {
+        outOfGenerationsSection.style.display = 'none';
+      }
     }
   };
 
@@ -2458,11 +2533,23 @@
       document.getElementById('cvLoading').hidden = true;
       showCVPreview(data.cv);
 
-      toastSuccess(`CV generado exitosamente! Te quedan ${data.generationsRemaining} generaciones hoy.`);
+      // Update generation status after successful generation
+      await loadCVGenerationStatus();
+
+      const sourceText = data.generationSource === 'purchased' ? 'comprada' :
+                        data.generationSource === 'premium' ? 'premium' : 'gratuita';
+      toastSuccess(`CV generado exitosamente usando generación ${sourceText}! Te quedan ${data.generationsRemaining} generaciones.`);
     } catch (error) {
       document.getElementById('cvLoading').hidden = true;
       document.getElementById('cvQuestionsForm').hidden = false;
-      toastError(error.message);
+
+      // If it's a 429 error (out of generations), refresh status to show PayPal button
+      if (error.status === 429) {
+        await loadCVGenerationStatus();
+        toastError(error.message || 'Has alcanzado tu límite de generaciones. Puedes comprar generaciones adicionales.');
+      } else {
+        toastError(error.message);
+      }
     }
   };
 
