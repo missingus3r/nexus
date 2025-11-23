@@ -12,6 +12,7 @@
             loadDonors();
             setupDonorMessageCounter();
             loadBcuMonitor();
+            loadExternalLinksSummary();
         });
 
         async function loadStats() {
@@ -1973,4 +1974,265 @@
         // Make BCU functions global
         window.loadBcuMonitor = loadBcuMonitor;
         window.syncBcuNow = syncBcuNow;
+
+        // ===========================
+        // External Links Monitor (All hardcoded external URLs)
+        // ===========================
+
+        async function loadExternalLinksSummary() {
+            const container = document.getElementById('externalLinksContainer');
+            const panel = document.getElementById('externalLinksPanel');
+
+            try {
+                const response = await fetch('/admin/external-sites-monitor/summary', {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar resumen de enlaces');
+                }
+
+                const data = await response.json();
+
+                // Hide loading, show panel
+                container.style.display = 'none';
+                panel.style.display = 'block';
+
+                // Update total count
+                document.getElementById('externalLinksTotalCount').textContent = data.summary.totalSites || 0;
+
+                // Render sections
+                const sectionsList = document.getElementById('externalLinksSectionsList');
+                sectionsList.innerHTML = data.sections.map(section => `
+                    <div style="background: var(--surface-elevated); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                            <div style="flex: 1;">
+                                <h5 style="margin: 0 0 0.5rem 0; font-size: 0.95rem;">${section.name}</h5>
+                                <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 0.5rem 0;">${section.description}</p>
+                                <p style="font-weight: 600; color: var(--primary-color); margin: 0;">${section.count} sitios</p>
+                            </div>
+                            <button
+                                class="btn btn-secondary"
+                                style="font-size: 0.85rem; padding: 0.5rem 0.75rem;"
+                                onclick="checkSectionLinks('${section.key}')"
+                            >
+                                🔍 Verificar
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading external links summary:', error);
+                container.innerHTML = `<p style="color: #ef4444;">❌ Error al cargar información de enlaces externos</p>`;
+            }
+        }
+
+        async function checkAllExternalLinks() {
+            const statusDiv = document.getElementById('externalLinksStatus');
+            const checkBtn = document.getElementById('checkAllLinksBtn');
+            const resultsDiv = document.getElementById('externalLinksResults');
+
+            if (!statusDiv || !checkBtn) return;
+
+            try {
+                checkBtn.disabled = true;
+                checkBtn.textContent = '⏳ Verificando... (esto puede tardar varios minutos)';
+
+                statusDiv.className = 'status-message info';
+                statusDiv.textContent = 'Verificando todos los enlaces externos... Por favor espera.';
+                statusDiv.style.display = 'block';
+
+                const response = await fetch('/admin/external-sites-monitor/check-all', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ concurrency: 15 })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Error al verificar enlaces');
+                }
+
+                statusDiv.className = 'status-message success';
+                statusDiv.textContent = `✓ Verificación completada en ${(result.stats.totalCheckTime / 1000).toFixed(2)}s`;
+
+                // Update stats
+                document.getElementById('externalLinksOnlineCount').textContent = result.stats.online;
+                document.getElementById('externalLinksOfflineCount').textContent = result.stats.offline;
+                document.getElementById('externalLinksAvgResponse').textContent = `${result.stats.averageResponseTime}ms`;
+
+                document.getElementById('externalLinksOnlineDiv').style.display = 'block';
+                document.getElementById('externalLinksOfflineDiv').style.display = 'block';
+                document.getElementById('externalLinksAvgResponseDiv').style.display = 'block';
+
+                // Update last check time
+                const lastCheckEl = document.getElementById('externalLinksLastCheck');
+                if (lastCheckEl) {
+                    const checkTime = new Date(result.checkedAt);
+                    lastCheckEl.textContent = `Última verificación: ${checkTime.toLocaleString('es-UY')}`;
+                }
+
+                // Display detailed results
+                displayExternalLinksResults(result.sections);
+
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+
+            } catch (error) {
+                console.error('Error checking all external links:', error);
+                statusDiv.className = 'status-message error';
+                statusDiv.textContent = `❌ Error: ${error.message}`;
+            } finally {
+                checkBtn.disabled = false;
+                checkBtn.textContent = '🔄 Verificar Todos los Enlaces';
+            }
+        }
+
+        async function checkSectionLinks(sectionKey) {
+            const statusDiv = document.getElementById('externalLinksStatus');
+
+            try {
+                statusDiv.className = 'status-message info';
+                statusDiv.textContent = `Verificando enlaces de la sección...`;
+                statusDiv.style.display = 'block';
+
+                const response = await fetch(`/admin/external-sites-monitor/check-section/${sectionKey}`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ concurrency: 10 })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Error al verificar sección');
+                }
+
+                statusDiv.className = 'status-message success';
+                statusDiv.textContent = `✓ Sección verificada: ${result.stats.online}/${result.stats.total} sitios en línea`;
+
+                // Display section results
+                const sectionsObj = {};
+                sectionsObj[sectionKey] = {
+                    section: result.section,
+                    sites: result.sites
+                };
+                displayExternalLinksResults(sectionsObj);
+
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+
+            } catch (error) {
+                console.error('Error checking section:', error);
+                statusDiv.className = 'status-message error';
+                statusDiv.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+
+        function displayExternalLinksResults(sections) {
+            const resultsDiv = document.getElementById('externalLinksResults');
+            const resultsContent = document.getElementById('externalLinksResultsContent');
+
+            if (!resultsDiv || !resultsContent) return;
+
+            let html = '';
+
+            Object.keys(sections).forEach(sectionKey => {
+                const sectionData = sections[sectionKey];
+                const onlineSites = sectionData.sites.filter(s => s.status.online);
+                const offlineSites = sectionData.sites.filter(s => !s.status.online);
+
+                html += `
+                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                        <h5 style="margin: 0 0 1rem 0; font-size: 1.1rem;">
+                            ${sectionData.section}
+                            <span style="color: var(--text-secondary); font-size: 0.9rem; font-weight: normal;">
+                                (${onlineSites.length} online / ${offlineSites.length} offline)
+                            </span>
+                        </h5>
+
+                        ${offlineSites.length > 0 ? `
+                            <div style="margin-bottom: 1.5rem;">
+                                <h6 style="margin: 0 0 0.75rem 0; color: #ef4444; font-size: 0.95rem;">🔴 Sitios Fuera de Línea (${offlineSites.length})</h6>
+                                <div style="display: grid; gap: 0.75rem;">
+                                    ${offlineSites.map(site => `
+                                        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 1rem; border-radius: 6px;">
+                                            <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem;">
+                                                <div style="flex: 1;">
+                                                    <p style="margin: 0 0 0.25rem 0; font-weight: 600;">${site.name}</p>
+                                                    <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: var(--text-secondary); word-break: break-all;">
+                                                        <a href="${site.url}" target="_blank" style="color: var(--primary-color);">${site.url}</a>
+                                                    </p>
+                                                    ${site.status.error ? `
+                                                        <p style="margin: 0; font-size: 0.85rem; color: #dc2626; font-family: monospace;">
+                                                            Error: ${site.status.error}${site.status.errorCode ? ` (${site.status.errorCode})` : ''}
+                                                        </p>
+                                                    ` : ''}
+                                                    ${site.status.statusCode ? `
+                                                        <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #dc2626;">
+                                                            HTTP ${site.status.statusCode}: ${site.status.statusMessage || ''}
+                                                        </p>
+                                                    ` : ''}
+                                                </div>
+                                                ${site.status.responseTime ? `
+                                                    <span style="background: rgba(239, 68, 68, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; white-space: nowrap;">
+                                                        ${site.status.responseTime}ms
+                                                    </span>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        ${onlineSites.length > 0 ? `
+                            <div>
+                                <h6 style="margin: 0 0 0.75rem 0; color: #10b981; font-size: 0.95rem;">🟢 Sitios En Línea (${onlineSites.length})</h6>
+                                <details style="cursor: pointer;">
+                                    <summary style="padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; font-size: 0.9rem;">
+                                        Ver sitios en línea (${onlineSites.length})
+                                    </summary>
+                                    <div style="display: grid; gap: 0.5rem; margin-top: 0.75rem; padding-left: 1rem;">
+                                        ${onlineSites.map(site => `
+                                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.5rem; font-size: 0.85rem;">
+                                                <div style="flex: 1; min-width: 0;">
+                                                    <span style="font-weight: 600;">${site.name}</span>
+                                                    <span style="color: var(--text-secondary); margin-left: 0.5rem;">
+                                                        ${site.status.statusCode ? `(HTTP ${site.status.statusCode})` : ''}
+                                                    </span>
+                                                </div>
+                                                ${site.status.responseTime ? `
+                                                    <span style="background: rgba(16, 185, 129, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; white-space: nowrap;">
+                                                        ${site.status.responseTime}ms
+                                                    </span>
+                                                ` : ''}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </details>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            resultsContent.innerHTML = html;
+            resultsDiv.style.display = 'block';
+        }
+
+        // Make external links monitor functions global
+        window.loadExternalLinksSummary = loadExternalLinksSummary;
+        window.checkAllExternalLinks = checkAllExternalLinks;
+        window.checkSectionLinks = checkSectionLinks;
 

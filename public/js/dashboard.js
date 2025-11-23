@@ -61,7 +61,30 @@ function renderDashboard(data) {
     // Render user info
     document.getElementById('userName').textContent = data.user.name;
     document.getElementById('userEmail').textContent = data.user.email;
-    document.getElementById('userAvatar').src = data.user.picture || '/images/default-avatar.png';
+
+    // Load avatar with spinner
+    const avatarImg = document.getElementById('userAvatar');
+    const avatarSpinner = document.getElementById('avatarSpinner');
+    const avatarSrc = data.user.picture || '/images/default-avatar.png';
+
+    // Show spinner while loading
+    avatarSpinner.classList.remove('hidden');
+    avatarImg.classList.remove('loaded');
+
+    // Create a new image to preload
+    const img = new Image();
+    img.onload = function() {
+        avatarImg.src = avatarSrc;
+        avatarImg.classList.add('loaded');
+        avatarSpinner.classList.add('hidden');
+    };
+    img.onerror = function() {
+        // If image fails to load, use default
+        avatarImg.src = '/images/default-avatar.png';
+        avatarImg.classList.add('loaded');
+        avatarSpinner.classList.add('hidden');
+    };
+    img.src = avatarSrc;
 
     // Update notification badge
     if (data.unreadNotificationsCount > 0) {
@@ -233,7 +256,13 @@ function renderBitcoin(bitcoin) {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         });
-        priceElement.textContent = `USD ${formattedPrice}`;
+        priceElement.textContent = `1 BTC = USD ${formattedPrice}`;
+
+        // Update BTC exchange rate for converter
+        // Bitcoin price is in USD, need to convert to UYU
+        if (bitcoin.price && exchangeRates.USD) {
+            exchangeRates.BTC = bitcoin.price * exchangeRates.USD;
+        }
     }
 
     if (changeElement && bitcoin.change24h !== undefined) {
@@ -646,6 +675,7 @@ const exchangeRates = {
     BRL: 8.25,   // Real Brasileño
     GBP: 52.79,  // Libra Esterlina
     CHF: 49.86,  // Franco Suizo
+    BTC: 4280000, // Bitcoin (will be updated with real-time data)
     UI: 5.8247,  // Unidad Indexada
     UR: 4765.32  // Unidad Reajustable
 };
@@ -700,7 +730,10 @@ function performConversion() {
 
 function formatCurrency(value, currency) {
     // Format based on currency
-    if (currency === 'ARS' || currency === 'UYU') {
+    if (currency === 'BTC') {
+        // Bitcoin: show up to 8 decimals
+        return value.toLocaleString('es-UY', { minimumFractionDigits: 8, maximumFractionDigits: 8 });
+    } else if (currency === 'ARS' || currency === 'UYU') {
         return value.toLocaleString('es-UY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     } else if (currency === 'UI') {
         return value.toLocaleString('es-UY', { minimumFractionDigits: 4, maximumFractionDigits: 4 });

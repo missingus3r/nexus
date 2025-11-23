@@ -1,5 +1,6 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import axios from 'axios';
 import Incident from '../models/Incident.js';
 import NewsEvent from '../models/NewsEvent.js';
 import { AdminPost, Notification, User, SurlinkListing, ForumThread, ForumComment, ForumSettings, PricingSettings, PageVisit, SystemSettings, ApiToken, Donor } from '../models/index.js';
@@ -11,6 +12,12 @@ import { Parser } from 'json2csv';
 import ExcelJS from 'exceljs';
 import { getMaintenanceStatus } from '../middleware/maintenanceCheck.js';
 import { getAuthenticatedUser } from '../config/auth0.js';
+import {
+  checkAllExternalSites,
+  checkSectionSites,
+  getSiteSummary
+} from '../services/siteStatusChecker.js';
+import { getSectionSummary } from '../data/external-sites.js';
 
 const router = express.Router();
 
@@ -2169,12 +2176,16 @@ router.get('/credit-profile/requests/:id', requireAdmin, async (req, res) => {
     // Get user details
     const user = await User.findOne({ uid: request.uid }).select('email name').lean();
 
+    // Detectar si la cédula cambió respecto a la anterior
+    const cedulaChanged = request.previousCedula && request.previousCedula !== request.cedula;
+
     res.json({
       success: true,
       request: {
         ...request,
         userEmail: user?.email || 'Desconocido',
-        userName: user?.name || 'Desconocido'
+        userName: user?.name || 'Desconocido',
+        cedulaChanged: cedulaChanged
       }
     });
   } catch (error) {
@@ -2194,7 +2205,7 @@ router.put('/credit-profile/requests/:id/status', requireAdmin, async (req, res)
   try {
     const { status, adminNotes } = req.body;
 
-    if (!['pendiente', 'procesando', 'generada', 'error'].includes(status)) {
+    if (!['pendiente', 'procesando', 'generada', 'error', 'eliminada'].includes(status)) {
       return res.status(400).json({
         success: false,
         error: 'Estado inválido'
@@ -2387,6 +2398,86 @@ router.get('/credit-profile/stats', requireAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Error al obtener estadísticas'
+    });
+  }
+});
+
+/**
+ * GET /admin/external-sites-monitor/summary
+ * Get summary of all external sites (no actual checks, just counts)
+ */
+router.get('/external-sites-monitor/summary', requireAdmin, (req, res) => {
+  try {
+    const summary = getSiteSummary();
+    const sections = getSectionSummary();
+
+    res.json({
+      success: true,
+      summary,
+      sections
+    });
+  } catch (error) {
+    logger.error('Error getting external sites summary:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al obtener resumen de sitios'
+    });
+  }
+});
+
+/**
+ * POST /admin/external-sites-monitor/check-all
+ * Check status of all external sites
+ */
+router.post('/external-sites-monitor/check-all', requireAdmin, async (req, res) => {
+  try {
+    logger.info('Checking all external sites', {
+      triggeredBy: req.user.email,
+      timestamp: new Date()
+    });
+
+    const concurrency = req.body.concurrency || 15;
+    const results = await checkAllExternalSites(concurrency);
+
+    res.json({
+      success: true,
+      ...results
+    });
+  } catch (error) {
+    logger.error('Error checking all external sites:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al verificar sitios externos'
+    });
+  }
+});
+
+/**
+ * POST /admin/external-sites-monitor/check-section/:sectionKey
+ * Check status of sites in a specific section
+ */
+router.post('/external-sites-monitor/check-section/:sectionKey', requireAdmin, async (req, res) => {
+  try {
+    const { sectionKey } = req.params;
+    const concurrency = req.body.concurrency || 10;
+
+    logger.info('Checking external sites for section', {
+      section: sectionKey,
+      triggeredBy: req.user.email,
+      timestamp: new Date()
+    });
+
+    const results = await checkSectionSites(sectionKey, concurrency);
+
+    res.json({
+      success: true,
+      ...results
+    });
+  } catch (error) {
+    logger.error('Error checking section sites:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Error al verificar sitios de la sección'
     });
   }
 });

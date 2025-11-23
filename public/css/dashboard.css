@@ -361,12 +361,57 @@
     gap: 1rem;
 }
 
+.avatar-container {
+    position: relative;
+    width: 50px;
+    height: 50px;
+}
+
 .user-avatar {
     width: 50px;
     height: 50px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid var(--primary-color);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.user-avatar.loaded {
+    opacity: 1;
+}
+
+.avatar-spinner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--card-background, #f5f5f5);
+    border: 2px solid var(--primary-color);
+}
+
+.avatar-spinner.hidden {
+    display: none;
+}
+
+.avatar-spinner .spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(124, 92, 255, 0.2);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: avatar-spin 0.8s linear infinite;
+}
+
+@keyframes avatar-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .user-details {
@@ -875,9 +920,24 @@
         width: 100%;
     }
 
+    .avatar-container {
+        width: 90px;
+        height: 90px;
+    }
+
     .user-avatar {
         width: 90px;
         height: 90px;
+    }
+
+    .avatar-spinner {
+        width: 90px;
+        height: 90px;
+    }
+
+    .avatar-spinner .spinner {
+        width: 36px;
+        height: 36px;
     }
 
     .notifications-btn {

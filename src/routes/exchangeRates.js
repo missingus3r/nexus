@@ -1,7 +1,7 @@
 import express from 'express';
 import { getCurrentRates, syncBcuRates } from '../services/bcuService.js';
 import { BcuRates } from '../models/index.js';
-import { requireAuth } from '../config/auth0.js';
+import { requireAuth, getAuthenticatedUser } from '../config/auth0.js';
 import logger from '../utils/logger.js';
 
 const router = express.Router();
@@ -58,14 +58,16 @@ router.get('/raw', async (req, res) => {
 router.post('/sync', requireAuth, async (req, res) => {
   try {
     // Check if user is admin
-    if (!req.oidc?.user?.['https://vortex.com/roles']?.includes('admin')) {
+    const user = await getAuthenticatedUser(req);
+
+    if (!user || user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         error: 'No tienes permisos para realizar esta acción'
       });
     }
 
-    logger.info('Manual BCU sync triggered by admin');
+    logger.info(`Manual BCU sync triggered by admin: ${user.email}`);
     const updatedRates = await syncBcuRates();
 
     res.json({

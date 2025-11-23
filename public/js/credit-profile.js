@@ -101,12 +101,35 @@
     elements.pendingEl.style.display = 'none';
     elements.dataEl.style.display = 'block';
 
-    // Update header
+    // Update header with last and next update dates
     const profileUpdateDate = document.getElementById('profileUpdateDate');
+    const profileNextUpdate = document.getElementById('profileNextUpdate');
+
     if (profileUpdateDate && request.generatedAt) {
       const date = new Date(request.generatedAt);
       profileUpdateDate.textContent = date.toLocaleDateString('es-UY');
+
+      // Calculate next update date (30 days after generation)
+      if (profileNextUpdate) {
+        const nextUpdateDate = new Date(date);
+        nextUpdateDate.setDate(nextUpdateDate.getDate() + 30);
+        profileNextUpdate.textContent = nextUpdateDate.toLocaleDateString('es-UY');
+
+        // Check if it's time to show "Request New Status" button (≤7 days)
+        const daysUntilUpdate = Math.ceil((nextUpdateDate - new Date()) / (1000 * 60 * 60 * 24));
+        const requestNewBtn = document.getElementById('requestNewProfileBtn');
+        if (requestNewBtn) {
+          if (daysUntilUpdate <= 7 && daysUntilUpdate >= 0) {
+            requestNewBtn.style.display = 'inline-block';
+          } else {
+            requestNewBtn.style.display = 'none';
+          }
+        }
+      }
     }
+
+    // Store current request ID for deletion
+    window.currentProfileRequestId = request.id;
 
     // Update credit score circle
     updateCreditScore(request.creditScore);
@@ -284,6 +307,80 @@
       showNoData();
     }
   }
+
+  // Request new profile (opens terms modal)
+  function requestNewProfile() {
+    openTermsModal();
+  }
+
+  // Delete credit profile
+  async function deleteProfile() {
+    if (!window.currentProfileRequestId) {
+      alert('No hay perfil para eliminar');
+      return;
+    }
+
+    // Show confirmation modal
+    const confirmModal = document.getElementById('deleteProfileModal');
+    if (confirmModal) {
+      confirmModal.style.display = 'flex';
+      setTimeout(() => {
+        confirmModal.classList.add('active');
+      }, 10);
+
+      // Add click-to-close on overlay
+      const closeOnOverlayClick = (e) => {
+        if (e.target === confirmModal) {
+          closeDeleteModal();
+          confirmModal.removeEventListener('click', closeOnOverlayClick);
+        }
+      };
+      confirmModal.addEventListener('click', closeOnOverlayClick);
+    }
+  }
+
+  // Confirm deletion
+  async function confirmDeleteProfile() {
+    const requestId = window.currentProfileRequestId;
+
+    try {
+      const response = await fetch(`/surlink/credit-profile/${requestId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(data.message || 'Perfil eliminado exitosamente');
+        closeDeleteModal();
+        // Reload profile data
+        loadCreditProfile();
+      } else {
+        alert(data.error || 'Error al eliminar el perfil');
+      }
+    } catch (error) {
+      console.error('Error deleting profile:', error);
+      alert('Error al eliminar el perfil');
+    }
+  }
+
+  // Close delete modal
+  function closeDeleteModal() {
+    const confirmModal = document.getElementById('deleteProfileModal');
+    if (confirmModal) {
+      confirmModal.classList.remove('active');
+      setTimeout(() => {
+        confirmModal.style.display = 'none';
+      }, 300);
+    }
+  }
+
+  // Make functions globally available
+  window.requestNewProfile = requestNewProfile;
+  window.deleteProfile = deleteProfile;
+  window.confirmDeleteProfile = confirmDeleteProfile;
+  window.closeDeleteModal = closeDeleteModal;
 
   // Open terms modal
   function openTermsModal() {

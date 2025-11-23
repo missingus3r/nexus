@@ -109,6 +109,7 @@
             <option value="procesando" ${state.statusFilter === 'procesando' ? 'selected' : ''}>Procesando</option>
             <option value="generada" ${state.statusFilter === 'generada' ? 'selected' : ''}>Generadas</option>
             <option value="error" ${state.statusFilter === 'error' ? 'selected' : ''}>Error</option>
+            <option value="eliminada" ${state.statusFilter === 'eliminada' ? 'selected' : ''}>Eliminadas</option>
           </select>
         </label>
         <button onclick="AdminCreditProfile.refreshRequests()" style="padding: 0.5rem 1rem; background: var(--primary-color); color: white; border: none; border-radius: 4px; cursor: pointer;">
@@ -225,7 +226,8 @@
       'pendiente': '<span style="padding: 0.25rem 0.75rem; background: #ff9800; color: white; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">Pendiente</span>',
       'procesando': '<span style="padding: 0.25rem 0.75rem; background: #2196f3; color: white; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">Procesando</span>',
       'generada': '<span style="padding: 0.25rem 0.75rem; background: #4caf50; color: white; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">Generada</span>',
-      'error': '<span style="padding: 0.25rem 0.75rem; background: #f44336; color: white; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">Error</span>'
+      'error': '<span style="padding: 0.25rem 0.75rem; background: #f44336; color: white; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">Error</span>',
+      'eliminada': '<span style="padding: 0.25rem 0.75rem; background: #9e9e9e; color: white; border-radius: 12px; font-size: 0.85rem; font-weight: 600;">Eliminada</span>'
     };
     let badge = badges[status] || status;
 
@@ -265,11 +267,27 @@
 
           <h2 style="margin-bottom: 1.5rem; color: var(--text-primary);">Detalles de Solicitud de Perfil Crediticio</h2>
 
+          ${request.cedulaChanged ? `
+          <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+            <p style="color: #856404; margin: 0; font-weight: bold;">⚠️ Este usuario solicitó un perfil con una cédula diferente</p>
+            <p style="color: #856404; margin: 0.5rem 0 0 0; font-size: 0.9rem;">Cédula anterior: ${request.previousCedula}</p>
+            <p style="color: #856404; margin: 0.25rem 0 0 0; font-size: 0.9rem;">Cédula actual: ${request.cedula}</p>
+          </div>
+          ` : ''}
+
+          ${request.deletedByUser ? `
+          <div style="background-color: #f8d7da; border: 1px solid #dc3545; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+            <p style="color: #721c24; margin: 0; font-weight: bold;">🗑️ Perfil eliminado por el usuario</p>
+            <p style="color: #721c24; margin: 0.5rem 0 0 0; font-size: 0.9rem;">Fecha de eliminación: ${request.deletedAt ? new Date(request.deletedAt).toLocaleString('es-UY') : 'N/A'}</p>
+          </div>
+          ` : ''}
+
           <div style="margin-bottom: 1.5rem;">
             <h3 style="color: var(--text-primary);">Información del Usuario</h3>
             <p style="color: var(--text-primary);"><strong>Nombre:</strong> ${request.userName || 'Desconocido'}</p>
             <p style="color: var(--text-primary);"><strong>Email:</strong> ${request.userEmail || 'Desconocido'}</p>
             <p style="color: var(--text-primary);"><strong>Cédula:</strong> ${request.cedula}</p>
+            ${request.previousCedula ? `<p style="color: var(--text-secondary); font-size: 0.9rem;"><em>(Cédula anterior: ${request.previousCedula})</em></p>` : ''}
           </div>
 
           <div style="margin-bottom: 1.5rem;">

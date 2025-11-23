@@ -785,6 +785,80 @@
                 </div>
             </div>
 
+            <!-- External Links Monitor -->
+            <div class="surlink-controls">
+                <h2>🔗 Monitoreo de Enlaces Externos</h2>
+                <p>
+                    Verificación de disponibilidad de todos los enlaces externos hardcodeados en la plataforma (Social, Nexus, Surlink Academy/Financial/Proyectos/Contenedores/Remates, Ministerio del Interior).
+                </p>
+
+                <div id="externalLinksContainer" class="loading" style="margin-top: 1.5rem;">
+                    <p>Cargando información de enlaces externos...</p>
+                </div>
+
+                <div id="externalLinksPanel" style="display: none; margin-top: 1.5rem;">
+                    <!-- Summary Stats -->
+                    <div style="background: var(--surface-elevated); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 250px;">
+                                <h3 style="margin: 0 0 1rem 0;">📊 Resumen de Enlaces</h3>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                                    <div>
+                                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Total de Enlaces</p>
+                                        <p id="externalLinksTotalCount" style="font-weight: 600; font-size: 1.5rem; margin: 0.25rem 0 0 0; color: var(--primary-color);">--</p>
+                                    </div>
+                                    <div id="externalLinksOnlineDiv" style="display: none;">
+                                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">En Línea</p>
+                                        <p id="externalLinksOnlineCount" style="font-weight: 600; font-size: 1.5rem; margin: 0.25rem 0 0 0; color: #10b981;">--</p>
+                                    </div>
+                                    <div id="externalLinksOfflineDiv" style="display: none;">
+                                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Fuera de Línea</p>
+                                        <p id="externalLinksOfflineCount" style="font-weight: 600; font-size: 1.5rem; margin: 0.25rem 0 0 0; color: #ef4444;">--</p>
+                                    </div>
+                                    <div id="externalLinksAvgResponseDiv" style="display: none;">
+                                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Tiempo Respuesta Promedio</p>
+                                        <p id="externalLinksAvgResponse" style="font-weight: 600; font-size: 1.5rem; margin: 0.25rem 0 0 0; color: var(--primary-color);">--</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <button class="btn btn-primary" onclick="checkAllExternalLinks()" id="checkAllLinksBtn">
+                                    🔄 Verificar Todos los Enlaces
+                                </button>
+                                <p id="externalLinksLastCheck" style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; text-align: right;">
+                                    Última verificación: Nunca
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sections Summary -->
+                    <div id="externalLinksSectionsContainer" style="margin-bottom: 1.5rem;">
+                        <h4 style="margin: 0 0 1rem 0;">Secciones</h4>
+                        <div id="externalLinksSectionsList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+                            <!-- Sections will be rendered here by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Detailed Results (shown after check) -->
+                    <div id="externalLinksResults" style="display: none;">
+                        <h4 style="margin: 0 0 1rem 0;">Resultados Detallados</h4>
+                        <div id="externalLinksResultsContent">
+                            <!-- Results will be rendered here by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Info Box -->
+                    <div style="background: rgba(33, 150, 243, 0.08); border: 1px solid rgba(33, 150, 243, 0.3); border-radius: 8px; padding: 1rem; margin-top: 1.5rem;">
+                        <p style="color: var(--primary-color); margin: 0; font-size: 0.9rem;">
+                            ℹ️ Este monitor verifica todos los enlaces externos hardcodeados en la plataforma. La verificación puede tomar varios minutos dependiendo de la cantidad de sitios. Los tiempos de respuesta pueden variar según la ubicación y carga de los servidores externos.
+                        </p>
+                    </div>
+
+                    <div id="externalLinksStatus" class="status-message" style="display: none; margin-top: 1rem;"></div>
+                </div>
+            </div>
+
         </div>
     </div>
 

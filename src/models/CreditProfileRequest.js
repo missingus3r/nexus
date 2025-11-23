@@ -19,12 +19,29 @@ const creditProfileRequestSchema = new mongoose.Schema({
     trim: true
   },
 
+  // Cédula anterior (para detectar cambios)
+  previousCedula: {
+    type: String,
+    default: null
+  },
+
   // Estado de la solicitud
   status: {
     type: String,
-    enum: ['pendiente', 'procesando', 'generada', 'error'],
+    enum: ['pendiente', 'procesando', 'generada', 'error', 'eliminada'],
     default: 'pendiente',
     index: true
+  },
+
+  // Eliminación suave
+  deletedAt: {
+    type: Date,
+    default: null
+  },
+
+  deletedByUser: {
+    type: Boolean,
+    default: false
   },
 
   // Datos del perfil crediticio (JSON completo del BCU)
@@ -222,6 +239,38 @@ creditProfileRequestSchema.statics.getPendingRequests = function() {
 // Método estático para obtener solicitudes de un usuario
 creditProfileRequestSchema.statics.getUserRequests = function(uid) {
   return this.find({ uid }).sort({ requestedAt: -1 });
+};
+
+// Método para verificar si puede solicitar un nuevo perfil
+creditProfileRequestSchema.methods.canRequestNew = function() {
+  // Si no fue eliminado, no aplica
+  if (!this.deletedByUser || !this.deletedAt) {
+    return { canRequest: true, daysRemaining: 0 };
+  }
+
+  // Calcular días desde eliminación
+  const daysSinceDeletion = Math.floor((Date.now() - this.deletedAt.getTime()) / (1000 * 60 * 60 * 24));
+  const daysRemaining = Math.max(0, 30 - daysSinceDeletion);
+
+  return {
+    canRequest: daysSinceDeletion >= 30,
+    daysRemaining
+  };
+};
+
+// Método estático para verificar si un usuario puede solicitar nuevo perfil
+creditProfileRequestSchema.statics.canUserRequestNew = async function(uid) {
+  const lastDeleted = await this.findOne({
+    uid,
+    deletedByUser: true,
+    deletedAt: { $ne: null }
+  }).sort({ deletedAt: -1 });
+
+  if (!lastDeleted) {
+    return { canRequest: true, daysRemaining: 0 };
+  }
+
+  return lastDeleted.canRequestNew();
 };
 
 const CreditProfileRequest = mongoose.model('CreditProfileRequest', creditProfileRequestSchema);

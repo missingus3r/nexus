@@ -7,7 +7,7 @@ import logger from '../utils/logger.js';
 const BROU_URL = process.env.BROU_COTIZACIONES_URL || 'https://www.brou.com.uy/cotizaciones';
 
 /**
- * Fetch HTML content from BROU website
+ * Fetch HTML content from BROU portlet
  * @returns {Promise<string>} HTML content
  */
 function fetchBrouHtml() {
@@ -16,14 +16,23 @@ function fetchBrouHtml() {
       reject(new Error('Request timeout - BROU website did not respond in time'));
     }, 15000); // 15 second timeout
 
-    https.get(BROU_URL, { timeout: 15000 }, (res) => {
+    const options = {
+      timeout: 15000,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Node.js'
+      }
+    };
+
+    logger.info(`Fetching BROU from: ${BROU_URL}`);
+
+    https.get(BROU_URL, options, (res) => {
       // Follow redirects
       if (res.statusCode === 301 || res.statusCode === 302) {
         clearTimeout(timeout);
         const redirectUrl = res.headers.location;
         logger.info(`BROU URL redirected to: ${redirectUrl}`);
 
-        https.get(redirectUrl, { timeout: 15000 }, (redirectRes) => {
+        https.get(redirectUrl, options, (redirectRes) => {
           let data = '';
           redirectRes.on('data', (chunk) => { data += chunk; });
           redirectRes.on('end', () => {
@@ -59,8 +68,8 @@ function fetchBrouHtml() {
 }
 
 /**
- * Parse BROU HTML to extract exchange rates
- * @param {string} html - HTML content from BROU
+ * Parse BROU portlet HTML to extract exchange rates
+ * @param {string} html - HTML content from BROU portlet
  * @returns {Object} Parsed exchange rates
  */
 function parseBrouRates(html) {
@@ -79,45 +88,75 @@ function parseBrouRates(html) {
     'Unidad Indexada': 'ui'
   };
 
-  // Find all table rows in tbody
-  $('tbody tr').each((index, element) => {
-    const $row = $(element);
-    const cells = $row.find('td');
+  // Buscar el div.caja.full cuyo h3 diga "Cotizaciones"
+  let tablaCotizaciones = null;
 
-    if (cells.length >= 5) {
-      // Extract currency name from first cell
-      const moneda = $(cells[0]).find('p.moneda').text().trim();
+  $('div.caja.full').each((index, divElement) => {
+    const $div = $(divElement);
+    const h3Text = $div.find('h3').first().text().trim();
 
-      // Extract values from cells with class "valor"
-      const valores = [];
-      $row.find('p.valor').each((i, el) => {
-        const text = $(el).text().trim();
-        if (text && text !== '-') {
-          valores.push(text);
-        }
-      });
+    if (h3Text === 'Cotizaciones') {
+      tablaCotizaciones = $div.find('table').first();
+      logger.info('Found Cotizaciones table in portlet');
+      return false; // break the loop
+    }
+  });
 
-      // Check if this is a currency we're tracking
-      const modelKey = currencyMap[moneda];
-      if (modelKey && valores.length >= 2) {
-        // For BROU: valores[0] = compra, valores[1] = venta
-        const compra = parseFloat(valores[0].replace(/\./g, '').replace(',', '.'));
-        const venta = parseFloat(valores[1].replace(/\./g, '').replace(',', '.'));
+  if (!tablaCotizaciones || tablaCotizaciones.length === 0) {
+    logger.error('Could not find Cotizaciones table in BROU portlet');
+    logger.debug('HTML preview:', html.substring(0, 500));
+    throw new Error('No se encontró la tabla de "Cotizaciones" en el HTML del portlet');
+  }
 
-        // Calculate arbitraje (spread)
-        const arbitraje = !isNaN(venta) && !isNaN(compra) ? venta - compra : 0;
+  // Helper function to get cell value
+  function getValor(cell) {
+    if (!cell) return null;
+    const text = $(cell).text().trim();
+    if (!text || text === '-') return null;
+    return text;
+  }
 
-        // Only update if we haven't seen this currency yet, or if it's "Dólar eBROU" (preferred over regular "Dólar")
-        if (!rates[modelKey] || moneda === 'Dólar eBROU') {
-          rates[modelKey] = {
-            venta: isNaN(venta) ? 0 : venta,
-            compra: isNaN(compra) ? 0 : compra,
-            arbitraje: isNaN(arbitraje) ? 0 : arbitraje,
-            fecha: new Date().toISOString().split('T')[0] // Use current date
-          };
+  // Recorrer las filas de la tabla
+  tablaCotizaciones.find('tr').each((index, row) => {
+    const cells = $(row).find('td');
 
-          logger.info(`Parsed ${moneda}: Compra=${compra}, Venta=${venta}`);
-        }
+    // Según el HTML del portlet:
+    // 0: Moneda
+    // 2: Compra
+    // 4: Venta
+    // 6: Arbitraje Compra
+    // 8: Arbitraje Venta
+    if (cells.length < 9) return; // skip this row
+
+    const moneda = $(cells[0]).text().trim();
+    if (!moneda) return; // skip if no currency name
+
+    const compraText = getValor(cells[2]);
+    const ventaText = getValor(cells[4]);
+    const arbitrajeCompraText = getValor(cells[6]);
+    const arbitrajeVentaText = getValor(cells[8]);
+
+    // Check if this is a currency we're tracking
+    const modelKey = currencyMap[moneda];
+
+    if (modelKey && compraText && ventaText) {
+      // Parse values (format: "1.234,56" -> 1234.56)
+      const compra = parseFloat(compraText.replace(/\./g, '').replace(',', '.'));
+      const venta = parseFloat(ventaText.replace(/\./g, '').replace(',', '.'));
+
+      // Calculate arbitraje (spread)
+      const arbitraje = !isNaN(venta) && !isNaN(compra) ? venta - compra : 0;
+
+      // Only update if we haven't seen this currency yet, or if it's "Dólar eBROU" (preferred)
+      if (!rates[modelKey] || moneda === 'Dólar eBROU') {
+        rates[modelKey] = {
+          venta: isNaN(venta) ? 0 : venta,
+          compra: isNaN(compra) ? 0 : compra,
+          arbitraje: isNaN(arbitraje) ? 0 : arbitraje,
+          fecha: new Date().toISOString().split('T')[0]
+        };
+
+        logger.info(`Parsed ${moneda}: Compra=${compra}, Venta=${venta}, Arbitraje=${arbitraje}`);
       }
     }
   });
@@ -131,9 +170,10 @@ function parseBrouRates(html) {
   }
 
   if (Object.keys(rates).length === 0) {
-    throw new Error('No exchange rates found in BROU HTML - website structure may have changed');
+    throw new Error('No exchange rates found in BROU portlet HTML - website structure may have changed');
   }
 
+  logger.info(`Successfully parsed ${Object.keys(rates).length} currencies from BROU portlet`);
   return rates;
 }
 

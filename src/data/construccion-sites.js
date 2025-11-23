@@ -227,6 +227,42 @@ const construccionSites = {
       description: 'Desarrolladora inmobiliaria con presencia en América Latina especializada en proyectos innovadores y sostenibles.',
       category: 'proyectos',
       featured: false
+    },
+    {
+      id: 'feel',
+      name: 'Feel',
+      url: 'https://feel.com.uy',
+      logo: 'https://www.google.com/s2/favicons?domain=feel.com.uy&sz=128',
+      description: 'Desarrolladora inmobiliaria con proyectos residenciales modernos y diseño innovador.',
+      category: 'proyectos',
+      featured: false
+    },
+    {
+      id: 'distritocalcagno',
+      name: 'Distrito Calcagno',
+      url: 'https://distritocalcagno.com',
+      logo: 'https://www.google.com/s2/favicons?domain=distritocalcagno.com&sz=128',
+      description: 'Proyecto inmobiliario urbano con diseño contemporáneo y espacios integrados en ubicación estratégica.',
+      category: 'proyectos',
+      featured: false
+    },
+    {
+      id: 'greenconcept',
+      name: 'Green Concept',
+      url: 'https://greenconcept.com.uy',
+      logo: 'https://www.google.com/s2/favicons?domain=greenconcept.com.uy&sz=128',
+      description: 'Desarrolladora inmobiliaria con proyectos residenciales sustentables y diseño ecológico.',
+      category: 'proyectos',
+      featured: false
+    },
+    {
+      id: 'brusco',
+      name: 'Brusco',
+      url: 'https://brusco.com.uy',
+      logo: 'https://www.google.com/s2/favicons?domain=brusco.com.uy&sz=128',
+      description: 'Desarrolladora inmobiliaria con proyectos residenciales y comerciales en Uruguay.',
+      category: 'proyectos',
+      featured: false
     }
   ],
 

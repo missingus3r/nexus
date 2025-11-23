@@ -1786,6 +1786,15 @@ router.post('/credit-profile/request', requireLogin, async (req, res) => {
       return res.status(400).json({ error: 'Formato de cédula inválido' });
     }
 
+    // Verificar si puede solicitar nuevo perfil (período de espera de 30 días)
+    const canRequest = await CreditProfileRequest.canUserRequestNew(userId);
+    if (!canRequest.canRequest) {
+      return res.status(400).json({
+        error: `Debes esperar ${canRequest.daysRemaining} días más para solicitar un nuevo perfil crediticio.`,
+        daysRemaining: canRequest.daysRemaining
+      });
+    }
+
     // Verificar si ya existe una solicitud pendiente o procesando
     const existingRequest = await CreditProfileRequest.findOne({
       uid: userId,
@@ -1799,11 +1808,18 @@ router.post('/credit-profile/request', requireLogin, async (req, res) => {
       });
     }
 
+    // Obtener la última solicitud generada para guardar cédula anterior
+    const lastGeneratedRequest = await CreditProfileRequest.findOne({
+      uid: userId,
+      status: 'generada'
+    }).sort({ generatedAt: -1 });
+
     // Crear nueva solicitud
     const request = new CreditProfileRequest({
       uid: userId,
       username,
       cedula: cedulaClean,
+      previousCedula: lastGeneratedRequest ? lastGeneratedRequest.cedula : null,
       status: 'pendiente'
     });
 
@@ -1812,7 +1828,8 @@ router.post('/credit-profile/request', requireLogin, async (req, res) => {
     logger.info('Credit profile request created', {
       userId,
       requestId: request._id,
-      cedula: cedulaClean
+      cedula: cedulaClean,
+      previousCedula: request.previousCedula
     });
 
     res.json({
@@ -1832,13 +1849,16 @@ router.post('/credit-profile/request', requireLogin, async (req, res) => {
 
 /**
  * GET /surlink/credit-profile
- * Get all credit profile requests for current user
+ * Get all credit profile requests for current user (excluding deleted)
  */
 router.get('/credit-profile', requireLogin, async (req, res) => {
   try {
     const userId = req.session.user.uid;
 
-    const requests = await CreditProfileRequest.find({ uid: userId })
+    const requests = await CreditProfileRequest.find({
+      uid: userId,
+      deletedByUser: { $ne: true } // Excluir perfiles eliminados por el usuario
+    })
       .sort({ requestedAt: -1 })
       .lean();
 
@@ -1907,7 +1927,7 @@ router.get('/credit-profile/:id', requireLogin, async (req, res) => {
 
 /**
  * DELETE /surlink/credit-profile/:id
- * Delete a credit profile request (only if pending)
+ * Soft delete a credit profile request (only if pending) - Hard delete for pending requests
  */
 router.delete('/credit-profile/:id', requireLogin, async (req, res) => {
   try {
@@ -1925,22 +1945,40 @@ router.delete('/credit-profile/:id', requireLogin, async (req, res) => {
       return res.status(403).json({ error: 'No tienes permiso para eliminar esta solicitud' });
     }
 
-    // Solo permitir eliminar si está pendiente
-    if (request.status !== 'pendiente') {
-      return res.status(400).json({ error: 'Solo puedes eliminar solicitudes pendientes' });
+    // Solo permitir eliminar si está pendiente (hard delete) o generada (soft delete)
+    if (request.status === 'pendiente') {
+      // Hard delete para solicitudes pendientes
+      await request.deleteOne();
+
+      logger.info('Credit profile request deleted (hard)', {
+        userId,
+        requestId
+      });
+
+      return res.json({
+        success: true,
+        message: 'Solicitud eliminada exitosamente'
+      });
+    } else if (request.status === 'generada') {
+      // Soft delete para perfiles generados
+      request.status = 'eliminada';
+      request.deletedByUser = true;
+      request.deletedAt = new Date();
+      await request.save();
+
+      logger.info('Credit profile soft deleted', {
+        userId,
+        requestId,
+        deletedAt: request.deletedAt
+      });
+
+      return res.json({
+        success: true,
+        message: 'Perfil crediticio eliminado. Podrás solicitar uno nuevo en 30 días.'
+      });
+    } else {
+      return res.status(400).json({ error: 'Solo puedes eliminar solicitudes pendientes o perfiles generados' });
     }
-
-    await request.deleteOne();
-
-    logger.info('Credit profile request deleted', {
-      userId,
-      requestId
-    });
-
-    res.json({
-      success: true,
-      message: 'Solicitud eliminada exitosamente'
-    });
   } catch (error) {
     logger.error('Error deleting credit profile request', { error });
     res.status(500).json({ error: 'Error al eliminar la solicitud' });

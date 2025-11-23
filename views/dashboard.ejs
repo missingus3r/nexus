@@ -21,7 +21,12 @@
                 <p style="color: var(--text-secondary); margin-top: 0.5rem;">Tu resumen de actividad reciente</p>
             </div>
             <div class="user-info">
-                <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
+                <div class="avatar-container">
+                    <img id="userAvatar" class="user-avatar" src="" alt="Avatar">
+                    <div class="avatar-spinner" id="avatarSpinner">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
                 <div class="user-details">
                     <h3 id="userName">Cargando...</h3>
                     <p id="userEmail">usuario@ejemplo.com</p>
@@ -76,6 +81,9 @@
                     </svg>
                     Convertir divisas
                 </button>
+                <p class="insight-meta card-footer">
+                    Datos de <a href="https://www.brou.com.uy/cotizaciones" target="_blank" rel="noopener noreferrer" style="color: var(--primary-color); text-decoration: underline;">BROU</a> / <a href="https://www.bcu.gub.uy/Estadisticas-e-Indicadores/Paginas/Cotizaciones.aspx" target="_blank" rel="noopener noreferrer" style="color: var(--primary-color); text-decoration: underline;">BCU</a>
+                </p>
             </div>
             <div class="insight-card">
                 <header>
@@ -255,6 +263,7 @@
                             <option value="BRL">BRL - Real Brasileño</option>
                             <option value="GBP">GBP - Libra Esterlina</option>
                             <option value="CHF">CHF - Franco Suizo</option>
+                            <option value="BTC">BTC - Bitcoin</option>
                             <option value="UYU" selected>UYU - Peso Uruguayo</option>
                             <option value="UI">UI - Unidad Indexada</option>
                             <option value="UR">UR - Unidad Reajustable</option>
@@ -279,6 +288,7 @@
                             <option value="BRL">BRL - Real Brasileño</option>
                             <option value="GBP">GBP - Libra Esterlina</option>
                             <option value="CHF">CHF - Franco Suizo</option>
+                            <option value="BTC">BTC - Bitcoin</option>
                             <option value="UYU">UYU - Peso Uruguayo</option>
                             <option value="UI">UI - Unidad Indexada</option>
                             <option value="UR">UR - Unidad Reajustable</option>
