@@ -136,7 +136,7 @@ router.get('/dashboard', requireAuth, async (req, res, next) => {
   try {
     // Simply render dashboard - authentication is verified by requireAuth middleware
     res.render('dashboard', {
-      title: 'Dashboard - Vortex'
+      title: 'Dashboard - Austra'
     });
   } catch (error) {
     console.error('Error rendering dashboard:', error);

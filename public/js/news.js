@@ -50,7 +50,7 @@ async function reverseGeocode(lat, lon) {
         const response = await fetch(
             `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
             {
-                headers: { 'User-Agent': 'Vortex-UY/1.0' }
+                headers: { 'User-Agent': 'Austra-UY/1.0' }
             }
         );
         const data = await response.json();

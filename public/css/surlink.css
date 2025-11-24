@@ -1852,3 +1852,50 @@ html[data-theme="dark"] .credit-card .text-muted {
         border-color: transparent transparent #333 transparent;
     }
 }
+
+/* ================================================
+   COMING SOON / PRÓXIMAMENTE SECTIONS
+   ================================================ */
+
+.surlink-coming-soon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    min-height: 400px;
+}
+
+.surlink-coming-soon h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.surlink-coming-soon p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    max-width: 500px;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+}
+
+.surlink-coming-soon p.secondary-text {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    opacity: 0.8;
+}
+
+html[data-theme="dark"] .surlink-coming-soon h3 {
+    color: #ffffff;
+}
+
+html[data-theme="dark"] .surlink-coming-soon p {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+html[data-theme="dark"] .surlink-coming-soon p.secondary-text {
+    color: rgba(255, 255, 255, 0.6);
+}

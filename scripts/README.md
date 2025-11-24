@@ -41,7 +41,7 @@ node scripts/createIndexes.js
 
 ```bash
 # Conectarse a MongoDB
-mongosh vortex
+mongosh austra
 
 # Ver índices de una colección específica
 db.users.getIndexes()
@@ -85,7 +85,7 @@ Después de crear los índices, deberías notar mejoras en:
 **Error: "Index already exists with different options"**
 ```bash
 # Eliminar el índice viejo y volver a ejecutar el script
-mongosh vortex --eval "db.users.dropIndex('nombre_del_indice')"
+mongosh austra --eval "db.users.dropIndex('nombre_del_indice')"
 npm run create-indexes
 ```
 

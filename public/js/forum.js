@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Check which page we're on
   const path = window.location.pathname;
 
-  if (path === '/forum-vortex') {
+  if (path === '/forum-austra') {
     initForumList();
   } else if (path.startsWith('/forum-thread/')) {
     currentThreadId = path.split('/').pop();
@@ -576,7 +576,7 @@ async function displayThread(thread) {
       ${thread.hashtags && thread.hashtags.length > 0 ? `
         <div class="thread-hashtags" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem;">
           ${thread.hashtags.map(tag => `
-            <a href="/forum-vortex?hashtag=${tag}" class="hashtag-tag">#${tag}</a>
+            <a href="/forum-austra?hashtag=${tag}" class="hashtag-tag">#${tag}</a>
           `).join('')}
         </div>
       ` : ''}
@@ -1102,7 +1102,7 @@ async function deleteThread(threadId) {
         // Completely deleted - redirect to forum
         toastSuccess(data.isAdmin ? 'Thread y todos sus comentarios eliminados permanentemente por admin' : 'Thread eliminado completamente');
         setTimeout(() => {
-          window.location.href = '/forum-vortex';
+          window.location.href = '/forum-austra';
         }, 600);
       } else {
         // Soft deleted - reload to show [ELIMINADO]

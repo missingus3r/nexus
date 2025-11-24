@@ -36,17 +36,17 @@ router.use((req, res, next) => {
  */
 router.get('/', (req, res) => {
   res.render('landing', {
-    title: 'VORTEX - Plataforma Integral',
+    title: 'AUSTRA - Plataforma Integral',
     page: 'landing'
   });
 });
 
 /**
- * Detalle plataforma Vortex
+ * Detalle plataforma Austra
  */
 router.get('/plataforma', (req, res) => {
   res.render('plataforma', {
-    title: 'VORTEX Plataforma - Capacidades y Experiencia',
+    title: 'AUSTRA Plataforma - Capacidades y Experiencia',
     page: 'plataforma'
   });
 });
@@ -56,7 +56,7 @@ router.get('/plataforma', (req, res) => {
  */
 router.get('/social', (req, res) => {
   res.render('social', {
-    title: 'Social Comunitario - Vortex',
+    title: 'Social Comunitario - Austra',
     page: 'social'
   });
 });
@@ -66,7 +66,7 @@ router.get('/social', (req, res) => {
  */
 router.get('/centinel', checkMaintenance('centinel'), (req, res) => {
   res.render('centinel', {
-    title: 'VORTEX Centinel - Mapa en Tiempo Real',
+    title: 'AUSTRA Centinel - Mapa en Tiempo Real',
     page: 'centinel'
   });
 });
@@ -80,27 +80,27 @@ router.get('/centinel', checkMaintenance('centinel'), (req, res) => {
  */
 router.get('/forum', checkMaintenance('forum'), (req, res) => {
   res.render('forum', {
-    title: 'Foro Comunitario - Vortex',
+    title: 'Foro Comunitario - Austra',
     page: 'forum'
   });
 });
 
 /**
- * Vortex Forum - Thread list
+ * Austra Forum - Thread list
  */
-router.get('/forum-vortex', checkMaintenance('forum'), (req, res) => {
-  res.render('forum-vortex', {
-    title: 'Foro Vortex - Vortex',
+router.get('/forum-austra', checkMaintenance('forum'), (req, res) => {
+  res.render('forum-austra', {
+    title: 'Foro Austra - Austra',
     page: 'forum'
   });
 });
 
 /**
- * Vortex Forum - Thread view
+ * Austra Forum - Thread view
  */
 router.get('/forum-thread/:id', checkMaintenance('forum'), (req, res) => {
   res.render('forum-thread', {
-    title: 'Thread - Foro Vortex',
+    title: 'Thread - Foro Austra',
     page: 'forum'
   });
 });
@@ -110,7 +110,7 @@ router.get('/forum-thread/:id', checkMaintenance('forum'), (req, res) => {
  */
 router.get('/enlacesminterior', (req, res) => {
   res.render('enlacesminterior', {
-    title: 'Enlaces Oficiales - Ministerio del Interior - Vortex',
+    title: 'Enlaces Oficiales - Ministerio del Interior - Austra',
     page: 'enlacesminterior'
   });
 });
@@ -120,7 +120,7 @@ router.get('/enlacesminterior', (req, res) => {
  */
 router.get('/surlink', checkMaintenance('surlink'), (req, res) => {
   res.render('surlink', {
-    title: 'VORTEX Surlink - Ecosistema inmobiliario, académico y automotriz',
+    title: 'AUSTRA Surlink - Ecosistema inmobiliario, académico y automotriz',
     page: 'surlink',
     isAuthenticated: !!req.session?.user,
     user: req.session?.user || null
@@ -132,7 +132,7 @@ router.get('/surlink', checkMaintenance('surlink'), (req, res) => {
  */
 router.get('/pricing', (req, res) => {
   res.render('pricing', {
-    title: 'Planes y Precios - Vortex',
+    title: 'Planes y Precios - Austra',
     page: 'pricing'
   });
 });
@@ -142,7 +142,7 @@ router.get('/pricing', (req, res) => {
  */
 router.get('/nexus', (req, res) => {
   res.render('nexus', {
-    title: 'Nexus - Vortex',
+    title: 'Nexus - Austra',
     page: 'nexus'
   });
 });
@@ -152,7 +152,7 @@ router.get('/nexus', (req, res) => {
  */
 router.get('/donadores', (req, res) => {
   res.render('donadores', {
-    title: 'Muro de Donadores - Vortex',
+    title: 'Muro de Donadores - Austra',
     page: 'donadores'
   });
 });
@@ -167,7 +167,7 @@ router.get('/perfil', async (req, res) => {
     return res.redirect('/login');
   }
   res.render('perfil', {
-    title: 'Mi Perfil - Vortex',
+    title: 'Mi Perfil - Austra',
     page: 'perfil',
     user
   });
@@ -183,7 +183,7 @@ router.get('/perfil', async (req, res) => {
  */
 router.get('/privacy', (req, res) => {
   res.render('privacy', {
-    title: 'Política de Privacidad - Vortex',
+    title: 'Política de Privacidad - Austra',
     page: 'privacy'
   });
 });
@@ -193,7 +193,7 @@ router.get('/privacy', (req, res) => {
  */
 router.get('/terms', (req, res) => {
   res.render('terms', {
-    title: 'Términos de Servicio - Vortex',
+    title: 'Términos de Servicio - Austra',
     page: 'terms'
   });
 });
@@ -213,7 +213,7 @@ router.get('/admin', async (req, res) => {
   }
 
   res.render('admin', {
-    title: 'Panel de Administración - Vortex',
+    title: 'Panel de Administración - Austra',
     page: 'admin',
     user
   });

@@ -585,6 +585,22 @@
 }
 
 /* Dark Mode Styles */
+html[data-theme="dark"] .credit-profile-loading p {
+  color: #a0a0a0;
+}
+
+html[data-theme="dark"] .credit-profile-no-data h3 {
+  color: #93c5fd;
+}
+
+html[data-theme="dark"] .credit-profile-no-data .lead {
+  color: #d1d5db;
+}
+
+html[data-theme="dark"] .credit-profile-no-data p {
+  color: #9ca3af;
+}
+
 html[data-theme="dark"] .credit-profile-header h3 {
   color: white;
 }
@@ -612,6 +628,40 @@ html[data-theme="dark"] .delete-modal-content .modal-close-btn {
 
 html[data-theme="dark"] .delete-modal-content .modal-close-btn:hover {
   color: var(--text-color, #e5e5e5);
+}
+
+/* Dark Mode - Credit Profile Terms Modal */
+html[data-theme="dark"] #creditProfileTermsModal .modal-content {
+  background: var(--surface, #1a1a1a);
+  color: var(--text-color, #e5e5e5);
+}
+
+html[data-theme="dark"] #creditProfileTermsModal h3 {
+  color: #93c5fd !important;
+}
+
+html[data-theme="dark"] #creditProfileTermsModal h4 {
+  color: #93c5fd !important;
+}
+
+html[data-theme="dark"] #creditProfileTermsModal p,
+html[data-theme="dark"] #creditProfileTermsModal ul,
+html[data-theme="dark"] #creditProfileTermsModal li,
+html[data-theme="dark"] #creditProfileTermsModal span {
+  color: var(--text-secondary, #d1d5db) !important;
+}
+
+html[data-theme="dark"] #creditProfileTermsModal a {
+  color: #60a5fa !important;
+}
+
+html[data-theme="dark"] #creditProfileTermsModal label {
+  color: var(--text-secondary, #d1d5db) !important;
+}
+
+html[data-theme="dark"] #creditProfileTermsModal .modal-content > div:nth-child(2) > div[style*="background: #f0f4f8"] {
+  background: rgba(56, 189, 248, 0.1) !important;
+  border-left-color: #60a5fa !important;
 }
 
 /* Responsive Design */

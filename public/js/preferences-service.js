@@ -23,7 +23,7 @@
    */
   const loadGuestPreferences = () => {
     try {
-      const stored = localStorage.getItem('vortex_guest_preferences');
+      const stored = localStorage.getItem('austra_guest_preferences');
       if (stored) {
         return JSON.parse(stored);
       }
@@ -38,7 +38,7 @@
    */
   const saveGuestPreferences = (preferences) => {
     try {
-      localStorage.setItem('vortex_guest_preferences', JSON.stringify(preferences));
+      localStorage.setItem('austra_guest_preferences', JSON.stringify(preferences));
     } catch (error) {
       console.error('Error saving guest preferences to localStorage:', error);
     }

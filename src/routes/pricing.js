@@ -56,7 +56,7 @@ router.get('/plans', async (req, res) => {
     res.json({
       success: true,
       plans,
-      contactEmail: 'info.vortexlabs@protonmail.com'
+      contactEmail: 'info.austra@protonmail.com'
     });
   } catch (error) {
     console.error('Error fetching plans:', error);

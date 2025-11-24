@@ -1,9 +1,9 @@
-# Vortex - Plataforma Comunitaria
+# Austra - Plataforma Comunitaria
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Node](https://img.shields.io/badge/node-22+-green.svg)
 
-**Vortex** es una plataforma web comunitaria para Uruguay que integra:
+**Austra** es una plataforma web comunitaria para Uruguay que integra:
 - **Centinel**: Mapeo de incidentes de seguridad ciudadana
 - **Surlink**: Marketplace multi-categoría
 - **Foro**: Espacio de discusión comunitaria
@@ -117,7 +117,7 @@ https://www.google.com/s2/favicons?domain=brou.com.uy&sz=64
 - Fallback automático si no hay favicon disponible
 - Alta disponibilidad y velocidad
 
-**Uso en Vortex:**
+**Uso en Austra:**
 Los sitios estáticos de Surlink (Construcción, Academy, Financial) utilizan este servicio para mostrar los logos de las instituciones de forma automática, sin necesidad de almacenar imágenes localmente.
 
 **Implementación:**
@@ -152,8 +152,8 @@ Este proyecto está bajo la Licencia MIT. Ver [LICENSE](LICENSE) para más detal
 
 ## 📧 Contacto
 
-- Email: info.vortexlabs@protonmail.com
-- Twitter: @vortex_uy
+- Email: info.austra@protonmail.com
+- Twitter: @austra_uy
 
 ---
 

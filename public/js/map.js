@@ -19,11 +19,70 @@ function isMobileDevice() {
            (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
 }
 
+/**
+ * Check if WebGL is supported
+ */
+function isWebGLSupported() {
+    try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        return !!gl;
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
+ * Show WebGL error message
+ */
+function showWebGLError() {
+    const mapContainer = document.getElementById('map');
+    if (!mapContainer) return;
+
+    mapContainer.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 2rem; background: var(--surface); text-align: center;">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--warning-color); margin-bottom: 1.5rem;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <h3 style="color: var(--text-primary); margin: 0 0 1rem 0;">WebGL no está disponible</h3>
+            <p style="color: var(--text-secondary); max-width: 500px; line-height: 1.6; margin-bottom: 1.5rem;">
+                El mapa de Centinel requiere WebGL para funcionar. Tu navegador parece tener WebGL deshabilitado o no es compatible.
+            </p>
+            <div style="background: var(--surface-elevated); border-radius: 12px; padding: 1.5rem; max-width: 600px; text-align: left;">
+                <h4 style="color: var(--text-primary); margin: 0 0 1rem 0; font-size: 1rem;">Posibles soluciones:</h4>
+                <ul style="color: var(--text-secondary); line-height: 1.8; margin: 0; padding-left: 1.5rem;">
+                    <li>Habilita la aceleración de hardware en tu navegador</li>
+                    <li>Actualiza los drivers de tu tarjeta gráfica</li>
+                    <li>Prueba con un navegador diferente (Chrome, Firefox, Edge)</li>
+                    <li>Verifica que WebGL esté habilitado en la configuración del navegador</li>
+                </ul>
+            </div>
+            <a href="/" style="margin-top: 1.5rem; padding: 0.75rem 1.5rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: 8px; font-weight: 500;">
+                Volver al inicio
+            </a>
+        </div>
+    `;
+}
+
 // Initialize map on page load
 document.addEventListener('DOMContentLoaded', () => {
-    initializeMap();
-    connectWebSocket();
-    setupEventListeners();
+    // Check WebGL support before initializing
+    if (!isWebGLSupported()) {
+        console.error('[Map] WebGL is not supported');
+        showWebGLError();
+        return;
+    }
+
+    try {
+        initializeMap();
+        connectWebSocket();
+        setupEventListeners();
+    } catch (error) {
+        console.error('[Map] Error initializing map:', error);
+        showWebGLError();
+    }
 });
 
 function initializeMap() {

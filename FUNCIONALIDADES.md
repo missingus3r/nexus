@@ -1,10 +1,10 @@
-# VORTEX - DOCUMENTACIÓN COMPLETA DE FUNCIONALIDADES
+# AUSTRA - DOCUMENTACIÓN COMPLETA DE FUNCIONALIDADES
 
 ## Índice
 1. [Autenticación y Gestión de Usuarios](#1-autenticación-y-gestión-de-usuarios)
 2. [Centinel - Sistema de Mapeo de Incidentes](#2-centinel---sistema-de-mapeo-de-incidentes)
 3. [Sistema de Agregación de Noticias](#3-sistema-de-agregación-de-noticias)
-4. [Sistema de Foros (Vortex Forum)](#4-sistema-de-foros-vortex-forum)
+4. [Sistema de Foros (Austra Forum)](#4-sistema-de-foros-austra-forum)
 5. [Surlink - Sistema de Marketplace](#5-surlink---sistema-de-marketplace)
 6. [Panel de Administración](#6-panel-de-administración)
 7. [Sistema de Notificaciones](#7-sistema-de-notificaciones)
@@ -144,7 +144,7 @@
 
 ---
 
-## 4. SISTEMA DE FOROS (VORTEX FORUM)
+## 4. SISTEMA DE FOROS (AUSTRA FORUM)
 
 ### Gestión de Hilos
 - **Crear hilos**: Con título, contenido, hashtags
@@ -630,7 +630,7 @@ Auto, Camioneta, Moto, SUV, Utilitario, Otro
 ### Páginas de Aplicación
 - **Mapa Centinel** (/centinel)
 - **Página de noticias** (/news)
-- **Lista del foro** (/forum, /forum-vortex)
+- **Lista del foro** (/forum, /forum-austra)
 - **Vista de hilo del foro** (/forum-thread/:id)
 - **Marketplace Surlink** (/surlink)
 - **Enlaces Ministerio del Interior** (/enlacesminterior)
@@ -841,7 +841,7 @@ Auto, Camioneta, Moto, SUV, Utilitario, Otro
 
 ## 19. FUNCIONALIDADES PLANIFICADAS (PRÓXIMAMENTE)
 
-Las siguientes funcionalidades están en fase de planificación y serán implementadas próximamente en la plataforma Vortex:
+Las siguientes funcionalidades están en fase de planificación y serán implementadas próximamente en la plataforma Austra:
 
 ### 1. Transporte Urbano
 **Descripción**: Integración completa de servicios de movilidad urbana
@@ -959,11 +959,11 @@ Estas características están mencionadas en el plan Premium pero aún no implem
 
 ## RESUMEN EJECUTIVO
 
-**Vortex** es una plataforma comunitaria integral que combina:
+**Austra** es una plataforma comunitaria integral que combina:
 
 1. **Centinel**: Sistema de mapeo colaborativo de incidentes de seguridad con validación comunitaria y visualización de mapa de calor
 2. **Agregación de Noticias**: Ingesta automática y geocodificación de noticias de seguridad de múltiples fuentes
-3. **Foro Vortex**: Sistema de discusión comunitaria con hilos, comentarios anidados y sistema de hashtags
+3. **Foro Austra**: Sistema de discusión comunitaria con hilos, comentarios anidados y sistema de hashtags
 4. **Surlink**: Marketplace con múltiples categorías (casas, autos, educación, servicios financieros, construcción)
 5. **Panel de Administración**: Completo sistema de gestión con estadísticas, análisis y controles
 6. **Sistema de Notificaciones**: Notificaciones en tiempo real para eventos de la plataforma

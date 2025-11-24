@@ -37,7 +37,7 @@ const initialDonors = [
 async function seedDonors() {
   try {
     // Connect to MongoDB
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/vortex';
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/austra';
     console.log('Conectando a MongoDB...');
     await mongoose.connect(mongoUri);
     console.log('✓ Conectado a MongoDB');

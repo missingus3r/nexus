@@ -1,5 +1,5 @@
 // External sites database for monitoring and verification
-// All hardcoded external URLs in the Vortex platform organized by section
+// All hardcoded external URLs in the Austra platform organized by section
 
 const externalSites = {
   social: {
@@ -39,6 +39,13 @@ const externalSites = {
         name: 'Involucrate.uy',
         url: 'https://involucrate.uy',
         category: 'Voluntariado',
+        checkMethod: 'HEAD'
+      },
+      {
+        id: 'crowderfund',
+        name: 'Crowder Fund',
+        url: 'https://www.crowder.fund/',
+        category: 'Crowdfunding',
         checkMethod: 'HEAD'
       }
     ]

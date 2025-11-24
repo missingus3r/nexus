@@ -1,4 +1,4 @@
-/* Mobile-first responsive styles for Vortex */
+/* Mobile-first responsive styles for Austra */
 
 :root {
     color-scheme: light;
@@ -960,7 +960,7 @@ html[data-theme="dark"] #welcomeModal strong.consejo-text {
 }
 
 /* Forum Styles */
-.forum-vortex-container,
+.forum-austra-container,
 .forum-thread-container {
     padding: 2rem 0;
 }

@@ -12,7 +12,7 @@ dotenv.config();
 async function createIndexes() {
   try {
     // Connect to MongoDB
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/vortex';
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/austra';
     await mongoose.connect(mongoUri);
     logger.info('Connected to MongoDB');
 
@@ -128,7 +128,7 @@ async function createIndexes() {
 
     logger.info('\n✅ All indexes created successfully!');
     logger.info('\nTo verify indexes, run:');
-    logger.info('  mongosh vortex --eval "db.users.getIndexes()"');
+    logger.info('  mongosh austra --eval "db.users.getIndexes()"');
 
   } catch (error) {
     logger.error('Error creating indexes:', error);

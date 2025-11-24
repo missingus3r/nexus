@@ -2,8 +2,8 @@
     (function () {
         var theme = 'light';
         try {
-            // Try to read from PreferencesService storage (vortex_guest_preferences)
-            var guestPrefs = localStorage.getItem('vortex_guest_preferences');
+            // Try to read from PreferencesService storage (austra_guest_preferences)
+            var guestPrefs = localStorage.getItem('austra_guest_preferences');
             if (guestPrefs) {
                 var prefs = JSON.parse(guestPrefs);
                 var storedTheme = prefs?.ui?.theme;
@@ -13,8 +13,8 @@
                     theme = 'dark';
                 }
             } else {
-                // Fallback: check old vortex-theme key for backwards compatibility
-                var oldTheme = localStorage.getItem('vortex-theme');
+                // Fallback: check old austra-theme key for backwards compatibility
+                var oldTheme = localStorage.getItem('austra-theme');
                 if (oldTheme === 'dark' || oldTheme === 'light') {
                     theme = oldTheme;
                     // Migrate to new format
@@ -24,8 +24,8 @@
                         welcomeModals: {},
                         ui: { theme: oldTheme }
                     };
-                    localStorage.setItem('vortex_guest_preferences', JSON.stringify(newPrefs));
-                    localStorage.removeItem('vortex-theme');
+                    localStorage.setItem('austra_guest_preferences', JSON.stringify(newPrefs));
+                    localStorage.removeItem('austra-theme');
                 } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                     theme = 'dark';
                 }

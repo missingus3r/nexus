@@ -1,5 +1,5 @@
 {
-  "name": "vortex",
+  "name": "austra",
   "version": "1.0.0",
   "description": "Plataforma comunitaria para Uruguay - Mapeo de incidentes, marketplace y foro",
   "main": "server.js",
@@ -21,7 +21,7 @@
     "forum",
     "realtime"
   ],
-  "author": "Vortex Team",
+  "author": "Austra Team",
   "license": "MIT",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

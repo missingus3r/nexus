@@ -7,7 +7,7 @@ const logger = winston.createLogger({
     winston.format.errors({ stack: true }),
     winston.format.json()
   ),
-  defaultMeta: { service: 'vortex-api' },
+  defaultMeta: { service: 'austra-api' },
   transports: [
     // Write all logs to console
     new winston.transports.Console({

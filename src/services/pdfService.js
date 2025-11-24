@@ -317,7 +317,7 @@ export function generateCVPDF(cv, res) {
          .fontSize(8)
          .fillColor(colors.lightGray)
          .text(
-           `Generado con VORTEX Surlink - ${new Date().toLocaleDateString('es-ES')} - Página ${i + 1} de ${pageCount}`,
+           `Generado con Austra Surlink - ${new Date().toLocaleDateString('es-ES')} - Página ${i + 1} de ${pageCount}`,
            50,
            doc.page.height - 30,
            {

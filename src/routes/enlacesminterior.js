@@ -46,7 +46,7 @@ router.get('/mi', (req, res) => {
         description: 'Área de Estadística y Criminología Aplicada del Ministerio del Interior. Datos oficiales sobre criminalidad, seguridad pública y análisis estadístico del delito en Uruguay.'
       }
     ],
-    disclaimer: 'Estos enlaces son proporcionados para acceso a información oficial. Vortex no almacena ni procesa datos de personas procesadas.'
+    disclaimer: 'Estos enlaces son proporcionados para acceso a información oficial. Austra no almacena ni procesa datos de personas procesadas.'
   });
 });
 

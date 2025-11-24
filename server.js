@@ -80,7 +80,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  name: 'vortex.sid', // Custom cookie name
+  name: 'austra.sid', // Custom cookie name
   store: MongoStore.create({
     mongoUrl: process.env.MONGO_URI,
     collectionName: 'sessions',

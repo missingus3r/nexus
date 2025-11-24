@@ -12,33 +12,33 @@
     <script src="/js/theme-toggle.js" defer></script>
 </head>
 <body>
-    <%- include('partials/header-forum-vortex', { page: page, isAuthenticated: isAuthenticated }) %>
+    <%- include('partials/header-forum-austra', { page: page, isAuthenticated: isAuthenticated }) %>
 
     <div class="main-content">
         <div class="container">
             <div class="forum-container">
-                <p>Participa en la discusión sobre temas del momento en la comunidad Vortex. Elige tu plataforma preferida:</p>
+                <p>Participa en la discusión sobre temas del momento en la comunidad Austra. Elige tu plataforma preferida:</p>
 
                 <!-- Forum Options -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 2rem 0;">
 
-                    <!-- Vortex Forum -->
+                    <!-- Austra Forum -->
                     <div style="text-align: center; padding: 3rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; border: 2px solid var(--primary-color); box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); position: relative; overflow: hidden;">
                         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" style="margin-bottom: 1rem;">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                         </svg>
-                        <h3 style="margin-bottom: 0.75rem; color: white;">Foro Vortex</h3>
+                        <h3 style="margin-bottom: 0.75rem; color: white;">Foro Austra</h3>
                         <p style="margin-bottom: 1.5rem; color: rgba(255, 255, 255, 0.9); font-size: 0.95rem;">
                             Nuestro foro interno con sistema de threads, comentarios anidados, likes e imágenes.
                         </p>
-                        <a href="/forum-vortex" class="btn" style="background: white; color: #667eea; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.5rem; font-size: 1.05rem; font-weight: 600; text-decoration: none;">
+                        <a href="/forum-austra" class="btn" style="background: white; color: #667eea; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.5rem; font-size: 1.05rem; font-weight: 600; text-decoration: none;">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                                 <circle cx="9" cy="7" r="4"></circle>
                                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                             </svg>
-                            Ir al Foro Vortex
+                            Ir al Foro Austra
                         </a>
                     </div>
 
@@ -51,7 +51,7 @@
                         </svg>
                         <h3 style="margin-bottom: 0.75rem; color: var(--text-primary);">Foro Reddit</h3>
                         <p style="margin-bottom: 1.5rem; color: var(--text-secondary); font-size: 0.95rem;">
-                            Únete a la comunidad de r/Vortex en Reddit para discusiones más amplias.
+                            Únete a la comunidad de r/Austra en Reddit para discusiones más amplias.
                         </p>
                         <button class="btn btn-secondary" disabled style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 1.5rem; font-size: 1.05rem; opacity: 0.6; cursor: not-allowed;">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">

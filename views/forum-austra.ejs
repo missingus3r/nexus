@@ -23,11 +23,11 @@
     <script src="/js/forum.js" defer></script>
 </head>
 <body>
-    <%- include('partials/header-forum-vortex', { page: page, isAuthenticated: isAuthenticated }) %>
+    <%- include('partials/header-forum-austra', { page: page, isAuthenticated: isAuthenticated }) %>
 
     <div class="main-content">
         <div class="container">
-            <div class="forum-vortex-container" style="max-width: 900px; margin: 0 auto;">
+            <div class="forum-austra-container" style="max-width: 900px; margin: 0 auto;">
 
                 <!-- Back Button -->
                 <a href="/forum" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; text-decoration: none;">
@@ -41,7 +41,7 @@
                 <!-- Header -->
                 <div class="forum-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                     <div>
-                        <p style="margin: 0; color: var(--text-secondary);">Comparte y discute sobre Centinel, Surlink y todos los servicios de Vortex</p>
+                        <p style="margin: 0; color: var(--text-secondary);">Comparte y discute sobre Centinel, Surlink y todos los servicios de Austra</p>
                     </div>
                     <% if (isAuthenticated) { %>
                         <button id="newThreadBtn" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
@@ -188,18 +188,18 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin: 0;">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                     </svg>
-                    <h2 style="margin: 0;">Bienvenido al Foro Vortex</h2>
+                    <h2 style="margin: 0;">Bienvenido al Foro Austra</h2>
                 </div>
                 <button class="modal-close" onclick="closeWelcomeForumModal()">&times;</button>
             </div>
             <div style="padding: 1.5rem;">
                 <p style="margin-bottom: 1.5rem; color: var(--text-secondary); line-height: 1.6;">
-                    El Foro Vortex es un espacio de discusión comunitaria para todos los temas relacionados con Vortex: seguridad ciudadana (Centinel), inmuebles y autos (Surlink), y más. Comparte experiencias, haz preguntas y participa en debates constructivos.
+                    El Foro Austra es un espacio de discusión comunitaria para todos los temas relacionados con Austra: seguridad ciudadana (Centinel), inmuebles y autos (Surlink), y más. Comparte experiencias, haz preguntas y participa en debates constructivos.
                 </p>
 
                 <h3 style="margin-bottom: 1rem; color: var(--primary-color);">Características del Foro</h3>
                 <ul style="margin-bottom: 1.5rem; line-height: 1.8; color: var(--text-secondary);">
-                    <li><strong>Threads de discusión:</strong> Crea temas sobre Centinel, Surlink, o cualquier servicio de Vortex</li>
+                    <li><strong>Threads de discusión:</strong> Crea temas sobre Centinel, Surlink, o cualquier servicio de Austra</li>
                     <li><strong>Comentarios anidados:</strong> Responde a otros usuarios (hasta 5 niveles)</li>
                     <li><strong>Editor de texto enriquecido:</strong> Formato, enlaces, listas y más</li>
                     <li><strong>Imágenes:</strong> Sube hasta 5 imágenes por publicación</li>
@@ -222,7 +222,7 @@
                     <ul style="line-height: 1.6; color: var(--text-secondary); font-size: 0.9rem; list-style-position: inside; text-align: center; margin: 0 auto;">
                         <li>Trata a otros usuarios con respeto</li>
                         <li>No publiques contenido ofensivo, ilegal o spam</li>
-                        <li>Mantén las discusiones relevantes a los servicios de Vortex</li>
+                        <li>Mantén las discusiones relevantes a los servicios de Austra</li>
                         <li>No difundas información falsa o rumores</li>
                         <li>Respeta los límites de publicación establecidos</li>
                     </ul>

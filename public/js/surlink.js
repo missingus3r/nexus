@@ -531,7 +531,7 @@
 
     return parts.length
       ? parts.join('')
-      : '<span>Contactá al equipo Vortex para más información.</span>';
+      : '<span>Contactá al equipo Austra para más información.</span>';
   };
 
   const buildProgramsList = listing => {
@@ -576,7 +576,7 @@
       <section class="surlink-comments">
         <header class="surlink-section-header">
           <h3>Comunidad</h3>
-          <p>Leé experiencias y comentarios de otros usuarios Vortex.</p>
+          <p>Leé experiencias y comentarios de otros usuarios Austra.</p>
         </header>
         <div id="surlinkCommentList">
           ${comments || '<div class="surlink-empty">Todavía no hay comentarios. Sé el primero en participar.</div>'}

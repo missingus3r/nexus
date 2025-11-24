@@ -317,8 +317,8 @@ router.post('/migrate', async (req, res, next) => {
     }
 
     // Migrar tema
-    if (localData['vortex-theme']) {
-      preferences.ui.theme = localData['vortex-theme'];
+    if (localData['austra-theme']) {
+      preferences.ui.theme = localData['austra-theme'];
     }
 
     await preferences.save();

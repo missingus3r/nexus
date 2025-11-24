@@ -14,7 +14,7 @@ router.get('/', async (req, res, next) => {
   // If no query params, render the view instead of returning JSON
   if (Object.keys(req.query).length === 0) {
     return res.render('news', {
-      title: 'Noticias Geolocalizadas - Vortex',
+      title: 'Noticias Geolocalizadas - Austra',
       page: 'news'
     });
   }

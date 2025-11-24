@@ -31,7 +31,7 @@ export const checkSiteStatus = (url, timeout = DEFAULT_TIMEOUT, redirectCount = 
         path: parsedUrl.pathname + parsedUrl.search,
         timeout: timeout,
         headers: {
-          'User-Agent': 'Vortex-SiteChecker/1.0 (External Site Monitor)',
+          'User-Agent': 'Austra-SiteChecker/1.0 (External Site Monitor)',
           'Accept': '*/*'
         }
       };
