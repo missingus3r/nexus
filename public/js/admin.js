@@ -514,7 +514,7 @@
             const stats = data.stats;
 
             statsContainer.innerHTML = `
-                <div class="dashboard-grid" style="margin-bottom: 2rem;">
+                <div class="user-stats-grid" style="margin-bottom: 2rem;">
                     <div class="stat-card">
                         <h3>Total Usuarios</h3>
                         <div class="value">${stats.total}</div>

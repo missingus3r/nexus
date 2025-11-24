@@ -918,31 +918,41 @@
 
     .user-info {
         width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
     }
 
     .avatar-container {
-        width: 90px;
-        height: 90px;
+        width: 60px;
+        height: 60px;
+        flex-shrink: 0;
+        margin-top: 0.5rem;
     }
 
     .user-avatar {
-        width: 90px;
-        height: 90px;
+        width: 60px;
+        height: 60px;
     }
 
     .avatar-spinner {
-        width: 90px;
-        height: 90px;
+        width: 60px;
+        height: 60px;
     }
 
     .avatar-spinner .spinner {
-        width: 36px;
-        height: 36px;
+        width: 30px;
+        height: 30px;
+    }
+
+    .user-details {
+        flex: 1;
+        min-width: 0;
     }
 
     .notifications-btn {
         padding: 0.75rem 1rem;
-        margin-left: auto;
+        flex-shrink: 0;
     }
 
     .modal-content {

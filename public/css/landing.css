@@ -245,6 +245,60 @@ main {
     letter-spacing: 0.48em;
     text-transform: uppercase;
     color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.eyebrow-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    position: relative;
+    transition: all 0.3s ease;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.eyebrow-link:hover {
+    color: var(--accent);
+    background: rgba(124, 92, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.eyebrow-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--accent);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.eyebrow-link:hover::after {
+    width: 80%;
+}
+
+.eyebrow-separator {
+    color: var(--text-muted);
+    opacity: 0.5;
+    user-select: none;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .hero-title {
@@ -456,6 +510,21 @@ footer a:hover {
 
     .hero-nav .nav-links {
         gap: 8px;
+    }
+
+    .hero-eyebrow {
+        font-size: 0.65rem;
+        gap: 0.35rem;
+        letter-spacing: 0.3em;
+    }
+
+    .eyebrow-link {
+        padding: 0.2rem 0.35rem;
+        font-size: 0.65rem;
+    }
+
+    .eyebrow-separator {
+        font-size: 0.65rem;
     }
 
     .nav-links a {
