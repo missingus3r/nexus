@@ -789,7 +789,7 @@
             <div class="surlink-controls">
                 <h2>🔗 Monitoreo de Enlaces Externos</h2>
                 <p>
-                    Verificación de disponibilidad de todos los enlaces externos hardcodeados en la plataforma (Social, Nexus, Surlink Academy/Financial/Proyectos/Contenedores/Remates, Ministerio del Interior).
+                    Verificación de disponibilidad de enlaces externos en toda la plataforma.
                 </p>
 
                 <div id="externalLinksContainer" class="loading" style="margin-top: 1.5rem;">
@@ -1050,5 +1050,64 @@
     <script src="/js/admin.js"></script>
     <script src="/js/admin-reports.js"></script>
     <script src="/js/admin-credit-profile.js"></script>
+
+    <!-- Scroll Buttons -->
+    <div class="scroll-buttons">
+        <button id="scrollToTopBtn" class="scroll-btn" title="Ir arriba" aria-label="Ir arriba">
+            ↑
+        </button>
+        <button id="scrollToBottomBtn" class="scroll-btn" title="Ir abajo" aria-label="Ir abajo">
+            ↓
+        </button>
+    </div>
+
+    <script>
+        // Scroll button functionality
+        const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+        const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
+
+        function updateScrollButtons() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight;
+            const clientHeight = document.documentElement.clientHeight;
+            const scrollBottom = scrollHeight - scrollTop - clientHeight;
+
+            // Show top button if scrolled down more than 300px
+            if (scrollTop > 300) {
+                scrollToTopBtn.classList.add('visible');
+            } else {
+                scrollToTopBtn.classList.remove('visible');
+            }
+
+            // Show bottom button if not at bottom (more than 300px from bottom)
+            if (scrollBottom > 300) {
+                scrollToBottomBtn.classList.add('visible');
+            } else {
+                scrollToBottomBtn.classList.remove('visible');
+            }
+        }
+
+        // Smooth scroll to top
+        scrollToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Smooth scroll to bottom
+        scrollToBottomBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: document.documentElement.scrollHeight,
+                behavior: 'smooth'
+            });
+        });
+
+        // Update button visibility on scroll
+        window.addEventListener('scroll', updateScrollButtons);
+
+        // Initial check
+        updateScrollButtons();
+    </script>
 </body>
 </html>
