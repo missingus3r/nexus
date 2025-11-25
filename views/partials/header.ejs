@@ -13,7 +13,7 @@
 <div class="<%= headerClasses.join(' ') %>">
     <div class="container">
         <% const logoHref = isAdminPage ? '/admin' : (isDashboardPage ? '/dashboard' : '/'); %>
-        <% const logoText = isAdminPage ? 'AUSTRA - Admin' : (isDashboardPage ? 'AUSTRA - Dashboard' : 'AUSTRA Surlink'); %>
+        <% const logoText = isAdminPage ? 'AUSTRA - Admin' : (isDashboardPage ? 'AUSTRA Dashboard' : 'AUSTRA Surlink'); %>
         <a href="<%= logoHref %>" class="logo">
             <span class="logo-text"><%= logoText %></span>
         </a>

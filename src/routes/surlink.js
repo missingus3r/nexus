@@ -1875,8 +1875,16 @@ router.get('/credit-profile', requireLogin, async (req, res) => {
       hasData: !!req.profileData
     }));
 
+    // Verificar si el usuario puede solicitar un nuevo perfil
+    const canRequestInfo = await CreditProfileRequest.canUserRequestNew(userId);
+
     res.json({
-      requests: formattedRequests
+      requests: formattedRequests,
+      canRequestNew: canRequestInfo.canRequest,
+      daysUntilCanRequest: canRequestInfo.daysRemaining,
+      deletionInfo: canRequestInfo.daysRemaining > 0 ? {
+        waitUntil: new Date(Date.now() + canRequestInfo.daysRemaining * 24 * 60 * 60 * 1000)
+      } : null
     });
   } catch (error) {
     logger.error('Error fetching credit profile requests', { error });

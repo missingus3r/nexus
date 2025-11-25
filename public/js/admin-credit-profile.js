@@ -53,7 +53,7 @@
       renderRequests(data.requests, data.pagination);
     } catch (error) {
       console.error('Error loading credit profile requests:', error);
-      alert('Error al cargar las solicitudes');
+      toastError('Error al cargar las solicitudes');
     }
   }
 
@@ -254,7 +254,7 @@
       showRequestModal(data.request);
     } catch (error) {
       console.error('Error loading request:', error);
-      alert('Error al cargar los detalles de la solicitud');
+      toastError('Error al cargar los detalles de la solicitud');
     }
   }
 
@@ -364,12 +364,12 @@
         throw new Error(error.error || 'Error al cargar datos');
       }
 
-      alert('Datos cargados exitosamente');
+      toastSuccess('Datos cargados exitosamente');
       loadRequests(state.currentPage, state.statusFilter);
       loadStats();
     } catch (error) {
       console.error('Error uploading data:', error);
-      alert('Error: ' + error.message);
+      toastError('Error: ' + error.message);
     }
   }
 

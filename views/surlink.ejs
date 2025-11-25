@@ -462,6 +462,54 @@
                                 </button>
                             </div>
 
+                            <!-- Wait Period State (after deletion) -->
+                            <div class="credit-profile-wait-period" style="display: none;">
+                                <div style="text-align: center; padding: 3rem 2rem; background: var(--surface); border-radius: 12px; border: 2px solid #ff9800;">
+                                    <div style="font-size: 4rem; margin-bottom: 1rem;">⏳</div>
+                                    <h3 style="color: #ff9800; margin-bottom: 1rem;">Período de Espera Activo</h3>
+                                    <p style="color: var(--text-secondary); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                                        Has eliminado tu perfil crediticio recientemente. Debes esperar 30 días antes de poder solicitar uno nuevo.
+                                    </p>
+
+                                    <!-- Countdown Timer -->
+                                    <div style="background: var(--background); padding: 2rem; border-radius: 8px; margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto;">
+                                        <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem; font-weight: 600;">TIEMPO RESTANTE</div>
+                                        <div id="countdownTimer" style="display: flex; gap: 1.5rem; justify-content: center; align-items: center; flex-wrap: wrap;">
+                                            <div style="text-align: center;">
+                                                <div id="countdownDays" style="font-size: 2.5rem; font-weight: 700; color: var(--primary-color); line-height: 1;">0</div>
+                                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 1px;">Días</div>
+                                            </div>
+                                            <div style="font-size: 2rem; color: var(--text-secondary); font-weight: 300;">:</div>
+                                            <div style="text-align: center;">
+                                                <div id="countdownHours" style="font-size: 2.5rem; font-weight: 700; color: var(--primary-color); line-height: 1;">0</div>
+                                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 1px;">Horas</div>
+                                            </div>
+                                            <div style="font-size: 2rem; color: var(--text-secondary); font-weight: 300;">:</div>
+                                            <div style="text-align: center;">
+                                                <div id="countdownMinutes" style="font-size: 2.5rem; font-weight: 700; color: var(--primary-color); line-height: 1;">0</div>
+                                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 1px;">Minutos</div>
+                                            </div>
+                                            <div style="font-size: 2rem; color: var(--text-secondary); font-weight: 300;">:</div>
+                                            <div style="text-align: center;">
+                                                <div id="countdownSeconds" style="font-size: 2.5rem; font-weight: 700; color: var(--primary-color); line-height: 1;">0</div>
+                                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 1px;">Segundos</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                                        <p style="color: #856404; margin: 0; font-size: 0.9rem;">
+                                            <strong>Podrás solicitar un nuevo perfil el:</strong><br>
+                                            <span id="canRequestDate" style="font-weight: 600; font-size: 1.1rem;">-</span>
+                                        </p>
+                                    </div>
+
+                                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">
+                                        Este período de espera es una medida de seguridad para proteger tu información crediticia.
+                                    </p>
+                                </div>
+                            </div>
+
                             <!-- Request Pending State -->
                             <div class="credit-profile-pending" style="display: none;">
                                 <div class="alert alert-info">
@@ -858,6 +906,24 @@
                         Este servicio es gratuito y está diseñado para ayudarte a entender tu situación crediticia.
                         Consultá regularmente tu perfil para estar al tanto de tu salud financiera.
                     </p>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #333; font-size: 0.95rem;">
+                        Número de Cédula de Identidad
+                    </label>
+                    <input
+                        type="text"
+                        id="cedulaInput"
+                        placeholder="Ingresá tu número de cédula (sin puntos ni guiones)"
+                        style="width: 100%; padding: 0.75rem; border: 2px solid #d1d5db; border-radius: 6px; font-size: 1rem; transition: border-color 0.2s;"
+                        maxlength="8"
+                        pattern="[0-9]*"
+                        inputmode="numeric"
+                    >
+                    <small style="display: block; margin-top: 0.5rem; color: #6b7280; font-size: 0.85rem;">
+                        Ingresá entre 7 y 8 dígitos sin puntos ni guiones
+                    </small>
                 </div>
 
                 <div style="margin-bottom: 1rem;">

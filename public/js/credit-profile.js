@@ -9,7 +9,10 @@
   // State
   const state = {
     currentRequest: null,
-    isLoading: false
+    isLoading: false,
+    canRequestNew: true,
+    waitUntil: null,
+    countdownInterval: null
   };
 
   // Elements
@@ -17,6 +20,7 @@
     container: null,
     loadingEl: null,
     noDataEl: null,
+    waitPeriodEl: null,
     pendingEl: null,
     dataEl: null,
     btnRequest: null,
@@ -32,6 +36,7 @@
     elements.container = document.getElementById('creditProfileContainer');
     elements.loadingEl = document.querySelector('.credit-profile-loading');
     elements.noDataEl = document.querySelector('.credit-profile-no-data');
+    elements.waitPeriodEl = document.querySelector('.credit-profile-wait-period');
     elements.pendingEl = document.querySelector('.credit-profile-pending');
     elements.dataEl = document.querySelector('.credit-profile-data');
     elements.btnRequest = document.getElementById('btnRequestCreditProfile');
@@ -54,16 +59,48 @@
   function showNoData() {
     elements.loadingEl.style.display = 'none';
     elements.noDataEl.style.display = 'block';
+    elements.waitPeriodEl.style.display = 'none';
     elements.pendingEl.style.display = 'none';
     elements.dataEl.style.display = 'none';
+    stopCountdown();
+  }
+
+  // Show wait period state
+  function showWaitPeriod(waitUntil) {
+    elements.loadingEl.style.display = 'none';
+    elements.noDataEl.style.display = 'none';
+    elements.waitPeriodEl.style.display = 'block';
+    elements.pendingEl.style.display = 'none';
+    elements.dataEl.style.display = 'none';
+
+    state.waitUntil = waitUntil;
+
+    // Set the date when user can request again
+    const canRequestDateEl = document.getElementById('canRequestDate');
+    if (canRequestDateEl) {
+      const date = new Date(waitUntil);
+      canRequestDateEl.textContent = date.toLocaleString('es-UY', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // Start countdown
+    startCountdown(waitUntil);
   }
 
   // Show pending state
   function showPending(request) {
     elements.loadingEl.style.display = 'none';
     elements.noDataEl.style.display = 'none';
+    elements.waitPeriodEl.style.display = 'none';
     elements.pendingEl.style.display = 'block';
     elements.dataEl.style.display = 'none';
+    stopCountdown();
 
     // Update pending info
     const statusBadge = document.getElementById('requestStatusBadge');
@@ -98,8 +135,10 @@
   function showProfileData(request) {
     elements.loadingEl.style.display = 'none';
     elements.noDataEl.style.display = 'none';
+    elements.waitPeriodEl.style.display = 'none';
     elements.pendingEl.style.display = 'none';
     elements.dataEl.style.display = 'block';
+    stopCountdown();
 
     // Update header with last and next update dates
     const profileUpdateDate = document.getElementById('profileUpdateDate');
@@ -256,6 +295,56 @@
     }).format(amount);
   }
 
+  // Start countdown timer
+  function startCountdown(targetDate) {
+    stopCountdown(); // Clear any existing interval
+
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const target = new Date(targetDate).getTime();
+      const distance = target - now;
+
+      if (distance <= 0) {
+        // Countdown finished
+        stopCountdown();
+        document.getElementById('countdownDays').textContent = '0';
+        document.getElementById('countdownHours').textContent = '0';
+        document.getElementById('countdownMinutes').textContent = '0';
+        document.getElementById('countdownSeconds').textContent = '0';
+
+        // Reload profile to show the request button
+        setTimeout(() => {
+          loadCreditProfile();
+        }, 1000);
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      document.getElementById('countdownDays').textContent = days;
+      document.getElementById('countdownHours').textContent = hours.toString().padStart(2, '0');
+      document.getElementById('countdownMinutes').textContent = minutes.toString().padStart(2, '0');
+      document.getElementById('countdownSeconds').textContent = seconds.toString().padStart(2, '0');
+    };
+
+    // Update immediately
+    updateCountdown();
+
+    // Update every second
+    state.countdownInterval = setInterval(updateCountdown, 1000);
+  }
+
+  // Stop countdown timer
+  function stopCountdown() {
+    if (state.countdownInterval) {
+      clearInterval(state.countdownInterval);
+      state.countdownInterval = null;
+    }
+  }
+
   // Load credit profile status
   async function loadCreditProfile() {
     if (!window.surlinkConfig?.isAuthenticated) {
@@ -275,6 +364,16 @@
       }
 
       const data = await response.json();
+
+      // Update state with restriction info
+      state.canRequestNew = data.canRequestNew !== false;
+      state.waitUntil = data.deletionInfo?.waitUntil || null;
+
+      // Check if user is in wait period
+      if (!state.canRequestNew && state.waitUntil) {
+        showWaitPeriod(state.waitUntil);
+        return;
+      }
 
       if (!data.requests || data.requests.length === 0) {
         showNoData();
@@ -316,7 +415,7 @@
   // Delete credit profile
   async function deleteProfile() {
     if (!window.currentProfileRequestId) {
-      alert('No hay perfil para eliminar');
+      toastWarning('No hay perfil para eliminar');
       return;
     }
 
@@ -352,16 +451,16 @@
       const data = await response.json();
 
       if (response.ok) {
-        alert(data.message || 'Perfil eliminado exitosamente');
+        toastSuccess(data.message || 'Perfil eliminado exitosamente');
         closeDeleteModal();
         // Reload profile data
         loadCreditProfile();
       } else {
-        alert(data.error || 'Error al eliminar el perfil');
+        toastError(data.error || 'Error al eliminar el perfil');
       }
     } catch (error) {
       console.error('Error deleting profile:', error);
-      alert('Error al eliminar el perfil');
+      toastError('Error al eliminar el perfil');
     }
   }
 
@@ -385,7 +484,13 @@
   // Open terms modal
   function openTermsModal() {
     if (!window.surlinkConfig?.isAuthenticated) {
-      alert('Debes iniciar sesión para solicitar tu perfil crediticio');
+      toastWarning('Debes iniciar sesión para solicitar tu perfil crediticio');
+      return;
+    }
+
+    // Check if user can request
+    if (!state.canRequestNew) {
+      toastWarning('Debes esperar 30 días desde la eliminación de tu último perfil');
       return;
     }
 
@@ -402,13 +507,39 @@
       elements.modal.style.display = 'none';
       elements.checkbox.checked = false;
       elements.btnAccept.disabled = true;
+      // Clear cedula input
+      const cedulaInput = document.getElementById('cedulaInput');
+      if (cedulaInput) {
+        cedulaInput.value = '';
+      }
     }, 300);
   }
 
   // Submit credit profile request
   async function submitRequest() {
-    const cedula = await promptCedula();
-    if (!cedula) return;
+    // Get cedula from input
+    const cedulaInput = document.getElementById('cedulaInput');
+    if (!cedulaInput) {
+      toastError('Error: No se encontró el campo de cédula');
+      return;
+    }
+
+    const cedula = cedulaInput.value.trim();
+
+    // Validate cedula
+    if (!cedula) {
+      toastWarning('Por favor ingresá tu número de cédula');
+      cedulaInput.focus();
+      return;
+    }
+
+    const clean = cedula.replace(/\D/g, '');
+
+    if (clean.length < 7 || clean.length > 8) {
+      toastWarning('Formato de cédula inválido. Debe tener entre 7 y 8 dígitos.');
+      cedulaInput.focus();
+      return;
+    }
 
     try {
       elements.btnAccept.disabled = true;
@@ -420,7 +551,7 @@
           'Content-Type': 'application/json'
         },
         credentials: 'include',
-        body: JSON.stringify({ cedula })
+        body: JSON.stringify({ cedula: clean })
       });
 
       const data = await response.json();
@@ -432,11 +563,7 @@
       closeTermsModal();
 
       // Show success message
-      if (window.Notification && window.Notification.showSuccess) {
-        window.Notification.showSuccess('Solicitud creada exitosamente. El proceso puede demorar hasta 24 horas.');
-      } else {
-        alert('Solicitud creada exitosamente. El proceso puede demorar hasta 24 horas.');
-      }
+      toastSuccess('Solicitud creada exitosamente. El proceso puede demorar hasta 24 horas.');
 
       // Reload profile
       setTimeout(() => {
@@ -444,37 +571,11 @@
       }, 500);
     } catch (error) {
       console.error('Error submitting request:', error);
-      if (window.Notification && window.Notification.showError) {
-        window.Notification.showError(error.message);
-      } else {
-        alert('Error: ' + error.message);
-      }
+      toastError('Error: ' + error.message);
     } finally {
       elements.btnAccept.disabled = false;
       elements.btnAccept.textContent = 'Aceptar y Solicitar';
     }
-  }
-
-  // Prompt for cedula
-  async function promptCedula() {
-    return new Promise((resolve) => {
-      const cedula = prompt('Ingresá tu número de cédula de identidad (sin puntos ni guiones):');
-
-      if (!cedula) {
-        resolve(null);
-        return;
-      }
-
-      const clean = cedula.replace(/\D/g, '');
-
-      if (clean.length < 7 || clean.length > 8) {
-        alert('Formato de cédula inválido. Debe tener entre 7 y 8 dígitos.');
-        resolve(null);
-        return;
-      }
-
-      resolve(clean);
-    });
   }
 
   // Attach events
@@ -511,6 +612,15 @@
         if (e.target === elements.modal) {
           closeTermsModal();
         }
+      });
+    }
+
+    // Cedula input validation - only allow numbers
+    const cedulaInput = document.getElementById('cedulaInput');
+    if (cedulaInput) {
+      cedulaInput.addEventListener('input', (e) => {
+        // Remove any non-digit characters
+        e.target.value = e.target.value.replace(/\D/g, '');
       });
     }
 

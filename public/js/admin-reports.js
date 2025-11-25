@@ -312,7 +312,7 @@ async function updateReportStatus(status) {
   const resolution = document.getElementById('resolutionText').value.trim();
 
   if (!resolution && status !== 'reviewed') {
-    alert('Por favor ingresa notas de resolución');
+    toastWarning('Por favor ingresa notas de resolución');
     return;
   }
 
@@ -327,17 +327,17 @@ async function updateReportStatus(status) {
     });
 
     if (response.ok) {
-      alert(`Reporte ${getStatusLabel(status).toLowerCase()} exitosamente`);
+      toastSuccess(`Reporte ${getStatusLabel(status).toLowerCase()} exitosamente`);
       closeReportDetailsModal();
       loadReportsStats();
       loadReports();
     } else {
       const data = await response.json();
-      alert(data.error || 'Error al actualizar reporte');
+      toastError(data.error || 'Error al actualizar reporte');
     }
   } catch (error) {
     console.error('Error updating report:', error);
-    alert('Error al actualizar reporte');
+    toastError('Error al actualizar reporte');
   }
 }
 
@@ -356,17 +356,17 @@ async function deleteReport() {
     });
 
     if (response.ok) {
-      alert('Reporte eliminado exitosamente');
+      toastSuccess('Reporte eliminado exitosamente');
       closeReportDetailsModal();
       loadReportsStats();
       loadReports();
     } else {
       const data = await response.json();
-      alert(data.error || 'Error al eliminar reporte');
+      toastError(data.error || 'Error al eliminar reporte');
     }
   } catch (error) {
     console.error('Error deleting report:', error);
-    alert('Error al eliminar reporte');
+    toastError('Error al eliminar reporte');
   }
 }
 

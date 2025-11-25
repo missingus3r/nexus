@@ -52,7 +52,7 @@ async function handleReportSubmit(e) {
 
   // Validation
   if (!reportData.reason) {
-    alert('Por favor selecciona una razón para el reporte');
+    toastWarning('Por favor selecciona una razón para el reporte');
     return;
   }
 
@@ -69,18 +69,18 @@ async function handleReportSubmit(e) {
     const result = await response.json();
 
     if (response.ok) {
-      alert('Reporte enviado exitosamente. Gracias por ayudar a mantener la comunidad segura.');
+      toastSuccess('Reporte enviado exitosamente. Gracias por ayudar a mantener la comunidad segura.');
       closeReportModal();
     } else {
       if (result.error === 'Ya has reportado este contenido') {
-        alert('Ya has reportado este contenido anteriormente.');
+        toastWarning('Ya has reportado este contenido anteriormente.');
       } else {
-        alert(result.error || 'Error al enviar el reporte');
+        toastError(result.error || 'Error al enviar el reporte');
       }
     }
   } catch (error) {
     console.error('Error submitting report:', error);
-    alert('Error al enviar el reporte. Por favor intenta de nuevo.');
+    toastError('Error al enviar el reporte. Por favor intenta de nuevo.');
   }
 }
 

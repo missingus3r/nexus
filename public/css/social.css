@@ -448,6 +448,8 @@ footer nav a:focus-visible {
     visibility: hidden;
     transition: opacity 0.2s ease, visibility 0.2s ease;
     z-index: 1000;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-backdrop.active {
@@ -461,13 +463,18 @@ footer nav a:focus-visible {
     border: 1px solid rgba(124, 92, 255, 0.35);
     border-radius: 28px;
     padding: clamp(28px, 6vw, 40px);
-    max-width: 500px;
+    max-width: min(500px, calc(100vw - 48px));
+    max-height: calc(100vh - 48px);
     width: 100%;
     display: flex;
     flex-direction: column;
     gap: 16px;
     text-align: center;
     box-shadow: 0 24px 48px rgba(6, 7, 15, 0.45);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: auto;
+    box-sizing: border-box;
 }
 
 .modal h2 {
@@ -498,6 +505,25 @@ footer nav a:focus-visible {
 .modal-close:hover,
 .modal-close:focus-visible {
     color: var(--text-primary);
+}
+
+/* Custom scrollbar for modal */
+.modal::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.modal::-webkit-scrollbar-thumb {
+    background: rgba(124, 92, 255, 0.4);
+    border-radius: 10px;
+}
+
+.modal::-webkit-scrollbar-thumb:hover {
+    background: rgba(124, 92, 255, 0.6);
 }
 
 /* Hamburger Menu Styles */
@@ -662,12 +688,74 @@ footer nav a:focus-visible {
         gap: 12px;
     }
 
+    .modal-backdrop {
+        padding: 16px;
+        align-items: flex-start;
+    }
+
     .modal {
-        padding: 28px 24px 32px;
+        padding: 24px 20px;
+        max-width: calc(100vw - 32px);
+        max-height: calc(100vh - 32px);
+        border-radius: 20px;
+        margin-top: 0;
+    }
+
+    .modal h2 {
+        font-size: 1.6rem;
     }
 
     .campaign-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+    .modal-backdrop {
+        padding: 12px;
+        align-items: flex-start;
+    }
+
+    .modal {
+        padding: 20px 16px;
+        max-width: calc(100vw - 24px);
+        max-height: calc(100vh - 24px);
+        border-radius: 16px;
+        margin-top: 0;
+    }
+
+    .modal h2 {
+        font-size: 1.5rem;
+    }
+
+    .modal p,
+    .modal li {
+        font-size: 0.95rem;
+    }
+}
+
+/* Additional media query for landscape orientation on mobile */
+@media (max-height: 500px) {
+    .modal-backdrop {
+        padding: 12px;
+        align-items: flex-start;
+    }
+
+    .modal {
+        max-width: calc(100vw - 24px);
+        max-height: calc(100vh - 24px);
+        padding: 20px 16px;
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+
+    .modal h2 {
+        font-size: 1.4rem;
+    }
+
+    .modal p {
+        font-size: 0.9rem;
     }
 }
 
