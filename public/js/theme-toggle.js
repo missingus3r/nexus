@@ -36,7 +36,7 @@
         return prefersDarkScheme.matches ? 'dark' : 'light';
     };
 
-    const applyTheme = (theme) => {
+    const applyTheme = (theme, updateCookie = true) => {
         const normalized = normalizeTheme(theme);
         document.documentElement.setAttribute('data-theme', normalized);
         document.documentElement.classList.toggle('dark-mode', normalized === 'dark');
@@ -46,6 +46,12 @@
             document.body.classList.toggle('light-mode', normalized !== 'dark');
         }
         updateToggleButtons(normalized);
+
+        // Update cookie for instant theme on next page load
+        if (updateCookie) {
+            document.cookie = 'austra_theme=' + normalized + '; path=/; max-age=31536000; SameSite=Lax';
+        }
+
         return normalized;
     };
 

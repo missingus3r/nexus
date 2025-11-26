@@ -1,46 +1,76 @@
+<style id="theme-critical-css">
+    /* Critical CSS to prevent flash - applied immediately */
+    html { background: #f5f5f5; }
+    html[data-theme="dark"] { background: #0f1115; }
+    body { opacity: 0; transition: opacity 0.1s ease; }
+    body.theme-ready { opacity: 1; }
+</style>
 <script>
     (function () {
         var theme = 'light';
-        try {
-            // Try to read from PreferencesService storage (austra_guest_preferences)
-            var guestPrefs = localStorage.getItem('austra_guest_preferences');
-            if (guestPrefs) {
-                var prefs = JSON.parse(guestPrefs);
-                var storedTheme = prefs?.ui?.theme;
-                if (storedTheme === 'dark' || storedTheme === 'light') {
-                    theme = storedTheme;
-                } else if (storedTheme !== 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    theme = 'dark';
-                }
-            } else {
-                // Fallback: check old austra-theme key for backwards compatibility
-                var oldTheme = localStorage.getItem('austra-theme');
-                if (oldTheme === 'dark' || oldTheme === 'light') {
-                    theme = oldTheme;
-                    // Migrate to new format
-                    var newPrefs = {
-                        favorites: { construccion: [], academy: [], financial: [], listings: [] },
-                        navigation: {},
-                        welcomeModals: {},
-                        ui: { theme: oldTheme }
-                    };
-                    localStorage.setItem('austra_guest_preferences', JSON.stringify(newPrefs));
-                    localStorage.removeItem('austra-theme');
-                } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    theme = 'dark';
-                }
+
+        // First check cookie (fastest, set by server or previous visit)
+        var cookieTheme = document.cookie.split('; ').find(function(c) { return c.startsWith('austra_theme='); });
+        if (cookieTheme) {
+            var cookieValue = cookieTheme.split('=')[1];
+            if (cookieValue === 'dark' || cookieValue === 'light') {
+                theme = cookieValue;
             }
-        } catch (error) {
-            // localStorage might be unavailable (e.g. Safari private mode)
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                theme = 'dark';
+        } else {
+            // Fallback to localStorage
+            try {
+                var guestPrefs = localStorage.getItem('austra_guest_preferences');
+                if (guestPrefs) {
+                    var prefs = JSON.parse(guestPrefs);
+                    var storedTheme = prefs?.ui?.theme;
+                    if (storedTheme === 'dark' || storedTheme === 'light') {
+                        theme = storedTheme;
+                    } else if (storedTheme === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        theme = 'dark';
+                    }
+                } else {
+                    // Fallback: check old austra-theme key for backwards compatibility
+                    var oldTheme = localStorage.getItem('austra-theme');
+                    if (oldTheme === 'dark' || oldTheme === 'light') {
+                        theme = oldTheme;
+                        // Migrate to new format
+                        var newPrefs = {
+                            favorites: { construccion: [], academy: [], financial: [], listings: [] },
+                            navigation: {},
+                            welcomeModals: {},
+                            ui: { theme: oldTheme }
+                        };
+                        localStorage.setItem('austra_guest_preferences', JSON.stringify(newPrefs));
+                        localStorage.removeItem('austra-theme');
+                    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        theme = 'dark';
+                    }
+                }
+            } catch (error) {
+                // localStorage might be unavailable (e.g. Safari private mode)
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    theme = 'dark';
+                }
             }
         }
 
+        // Apply theme immediately to prevent flash
         var root = document.documentElement;
         root.setAttribute('data-theme', theme);
         root.classList.toggle('dark-mode', theme === 'dark');
         root.classList.toggle('light-mode', theme !== 'dark');
+
+        // Set/update cookie for future page loads (expires in 1 year)
+        document.cookie = 'austra_theme=' + theme + '; path=/; max-age=31536000; SameSite=Lax';
+
+        // Show body when DOM is ready
+        if (document.body) {
+            document.body.classList.add('theme-ready');
+        } else {
+            document.addEventListener('DOMContentLoaded', function() {
+                document.body.classList.add('theme-ready');
+            });
+        }
     })();
 </script>
 <script src="/js/notifications.js" defer></script>

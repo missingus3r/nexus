@@ -90,7 +90,7 @@ const checkThreadRateLimit = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Error checking thread rate limit:', error);
-    next(); // Continue even if check fails
+    next();
   }
 };
 
@@ -120,7 +120,7 @@ const checkCommentRateLimit = async (req, res, next) => {
     next();
   } catch (error) {
     console.error('Error checking comment rate limit:', error);
-    next(); // Continue even if check fails
+    next();
   }
 };
 
