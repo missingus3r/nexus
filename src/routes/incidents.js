@@ -1,7 +1,6 @@
 import express from 'express';
 import { Incident, Validation, Notification } from '../models/index.js';
 import { verifyApiAuth, requireAuth } from '../middleware/apiAuth.js';
-import { writeRateLimiter } from '../middleware/rateLimiter.js';
 import { validateIncident } from '../services/validationService.js';
 import { updateHeatmapForIncident } from '../services/heatmapService.js';
 import { assignNeighborhoodToIncident, updateNeighborhoodHeatmap } from '../services/neighborhoodService.js';
@@ -85,7 +84,7 @@ router.get('/', verifyApiAuth, async (req, res, next) => {
  * Requires: authenticated user
  * Body: multipart/form-data with fields: type, severity, location, description, photos (optional)
  */
-router.post('/', verifyApiAuth, requireAuth, writeRateLimiter, uploadIncidentPhotos, handleUploadErrors, async (req, res, next) => {
+router.post('/', verifyApiAuth, requireAuth, uploadIncidentPhotos, handleUploadErrors, async (req, res, next) => {
   try {
     // Check if user is authenticated
     if (!req.user) {
@@ -242,7 +241,7 @@ router.post('/', verifyApiAuth, requireAuth, writeRateLimiter, uploadIncidentPho
  * Validate (vote on) an incident
  * Requires: authenticated user
  */
-router.post('/:id/validate', verifyApiAuth, requireAuth, writeRateLimiter, async (req, res, next) => {
+router.post('/:id/validate', verifyApiAuth, requireAuth, async (req, res, next) => {
   try {
     // Check if user is authenticated
     if (!req.user) {
@@ -374,7 +373,7 @@ router.post('/:id/validate', verifyApiAuth, requireAuth, writeRateLimiter, async
  * Add photos to an existing incident
  * Requires: authenticated user and must be the reporter
  */
-router.post('/:id/photos', verifyApiAuth, requireAuth, writeRateLimiter, uploadIncidentPhotos, handleUploadErrors, async (req, res, next) => {
+router.post('/:id/photos', verifyApiAuth, requireAuth, uploadIncidentPhotos, handleUploadErrors, async (req, res, next) => {
   try {
     if (!req.user) {
       // Clean up uploaded files if auth fails

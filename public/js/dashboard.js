@@ -495,6 +495,21 @@ function renderCreditProfile(creditProfile) {
         return;
     }
 
+    if (creditProfile.status === 'eliminada') {
+        // Deleted profile with waiting period
+        const days = creditProfile.daysRemaining || 0;
+        content.innerHTML = `
+            <p class="insight-value" style="color: var(--text-muted); font-size: 1.1rem;">Perfil Eliminado</p>
+            <p class="insight-meta" style="margin-top: 0.5rem; margin-bottom: auto; text-align: center;">
+                Podrás solicitar un nuevo perfil en <strong style="color: var(--warning-color);">${days} día${days !== 1 ? 's' : ''}</strong>
+            </p>
+            <button class="insight-btn" disabled style="margin-top: auto; opacity: 0.5; cursor: not-allowed;">
+                En espera
+            </button>
+        `;
+        return;
+    }
+
     if (creditProfile.status === 'pendiente' || creditProfile.status === 'procesando') {
         // Pending request
         const statusText = creditProfile.status === 'pendiente' ? 'Pendiente' : 'Procesando';

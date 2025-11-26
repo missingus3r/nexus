@@ -315,13 +315,17 @@ router.get('/dashboard/data', requireAuth, async (req, res, next) => {
     // Get credit profile status
     let creditProfile = null;
     try {
-      const requests = await CreditProfileRequest.find({ uid: user.uid })
+      // First check for active (non-deleted) requests
+      const activeRequests = await CreditProfileRequest.find({
+        uid: user.uid,
+        status: { $ne: 'eliminada' }
+      })
         .sort({ requestedAt: -1 })
         .limit(1)
         .lean();
 
-      if (requests.length > 0) {
-        const request = requests[0];
+      if (activeRequests.length > 0) {
+        const request = activeRequests[0];
         creditProfile = {
           status: request.status,
           requestedAt: request.requestedAt,
@@ -331,6 +335,27 @@ router.get('/dashboard/data', requireAuth, async (req, res, next) => {
           totalDebt: request.totalDebt,
           hasData: request.status === 'generada' && request.profileData !== null
         };
+      } else {
+        // Check if there's a deleted request with waiting period
+        const deletedRequest = await CreditProfileRequest.findOne({
+          uid: user.uid,
+          status: 'eliminada',
+          deletedByUser: true,
+          deletedAt: { $ne: null }
+        }).sort({ deletedAt: -1 }).lean();
+
+        if (deletedRequest && deletedRequest.deletedAt) {
+          const daysSinceDeletion = Math.floor((Date.now() - new Date(deletedRequest.deletedAt).getTime()) / (1000 * 60 * 60 * 24));
+          const daysRemaining = Math.max(0, 30 - daysSinceDeletion);
+
+          if (daysRemaining > 0) {
+            creditProfile = {
+              status: 'eliminada',
+              deletedAt: deletedRequest.deletedAt,
+              daysRemaining: daysRemaining
+            };
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching credit profile:', error.message);
